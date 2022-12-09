@@ -23,7 +23,7 @@ CE_VRP_TW Class: Parameters and inforamtion
 class CG_VRP_TW(): 
 
     def __init__(self):
-        self.path = '/Users/juanbeta/Library/CloudStorage/OneDrive-UniversidaddelosAndes/WS 2&3/'
+        self.path = '/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/'
         self.colors = ['black', 'red', 'green', 'blue', 'purple', 'orange', 'pink', 'grey', 
                        'yellow', 'tab:red', 'tab:green', 'tab:blue', 'tab:purple', 'tab:orange', 
                        'tab:pink', 'tab:grey', 
@@ -39,7 +39,7 @@ class CG_VRP_TW():
     Load data from txt file
     '''
     def load_data(self, file_name: str):
-        file = open(self.path + '/Instances/' + file_name, mode = 'r');     file = file.readlines()
+        file = open(self.path + 'Instances/' + file_name, mode = 'r');     file = file.readlines()
         
         fila = 1
         att = [i for i in str(file[fila]).split(' ') if i != '']
@@ -238,7 +238,6 @@ class CG_VRP_TW():
                 print(f'- q: {q}')
         
             print('\n')
-
 
 
 
@@ -872,10 +871,18 @@ class Genetic():
     def crossover(self, env:CG_VRP_TW, parent: list, chorizo: list, mode: str, repair_op: Reparator):
         if mode == 'simple_crossover':      return self.simple_crossover(chorizo)
         elif mode == '2opt':                return self.opt2(chorizo)
+        elif mode == 'smart_crossover':     return self.smart_crossover(env, chorizo)
+        elif mode == 'simple_insertion':    return self.simple_insertion(env, chorizo)
         elif mode == 'Hybrid':
-            num = choice([0,1])
+            num = choice([0,1,2,3])
             if num == 0:    return self.simple_crossover(chorizo)
             elif num == 1:  return self.opt2(chorizo)
+            elif num == 2:     return self.smart_crossover(env, chorizo)
+            elif num == 3:     return self.simple_insertion(env, chorizo)
+
+            # Errors
+            else: return chorizo
+        else: return chorizo
         #elif rand == 2:     return repair_op.build_chorizo(env, self.compound_crossover(env, parent))
 
 
@@ -906,39 +913,89 @@ class Genetic():
         return chorizo[:pos1+1] + algo + chorizo[pos2:]
 
 
-    def compound_crossover(self, env: CG_VRP_TW, parent: list):
-        new_individual = []
+    '''
+    Smart crossover   
+    '''
+    def smart_crossover(self, env:CG_VRP_TW, chorizo: list[str]) -> list[str]:
+        best = 0
+        best_candidate = ''
+        best_index = 1e9
+        change = False
         
-        if len(parent) % 2 == 0:
-            finish = len(parent) - 1
+        pos  = randint(0, len(chorizo))
+        for i in range(len(chorizo)):
+            if i != pos and abs(i - pos) > 2:
+                cand = chorizo[i]
+                index = abs(env.C[chorizo[pos]]['DueDate'] - env.C[cand]['DueDate'] + env.C[chorizo[pos]]['ReadyTime'] - env.C[cand]['ReadyTime'])
+                if pos != 0:
+                    index += env.dist[chorizo[pos-1],cand]
+                if pos != len(chorizo) - 1:
+                    index += env.dist[cand,chorizo[pos+1]] 
+                if i != 0:
+                    index += env.dist[chorizo[i-1],chorizo[pos]]
+                if i != len(chorizo) - 1:
+                    index += env.dist[chorizo[pos],chorizo[i+1]] 
+
+                if index < best_index:
+                    change = True
+                    best = i
+                    best_candidate = chorizo[i]
+
+        if change:
+            chorizo[pos], chorizo[best] = chorizo[best], chorizo[pos]
+            return chorizo
         else:
-            finish = len(parent) - 2
-            new_individual.append(parent[-1])
-        for i in range(0, finish, 2):
-            chromosome_1 = parent[i]
-            chromosome_2 = parent[i+1]
+            return chorizo
 
-            new_chromosome_1, new_chromosome_2 = self.cross_route_by_positions(env, chromosome_1, chromosome_2)
 
-            new_individual.extend([new_chromosome_1,new_chromosome_2])
+    '''
+    Simple insertion
+    '''
+    def simple_insertion(self, env: CG_VRP_TW, chorizo: list[str]):
+        pos1 = randint(0, len(chorizo))
+        pos2 = randint(0, len(chorizo))
+
+        if pos1 < pos2:
+            return chorizo[:pos1] + chorizo[pos1+1:pos2] + [chorizo[pos1]] + chorizo[pos2:] 
+        elif pos1 > pos2:
+            return chorizo[:pos2] + [chorizo[pos1]] + chorizo[pos2:pos1] +  chorizo[pos1+1:] 
+        else:
+            return chorizo
+
+
+    # def compound_crossover(self, env: CG_VRP_TW, parent: list):
+    #     new_individual = []
         
-        return new_individual
+    #     if len(parent) % 2 == 0:
+    #         finish = len(parent) - 1
+    #     else:
+    #         finish = len(parent) - 2
+    #         new_individual.append(parent[-1])
+    #     for i in range(0, finish, 2):
+    #         chromosome_1 = parent[i]
+    #         chromosome_2 = parent[i+1]
+
+    #         new_chromosome_1, new_chromosome_2 = self.cross_route_by_positions(env, chromosome_1, chromosome_2)
+
+    #         new_individual.extend([new_chromosome_1,new_chromosome_2])
+        
+    #     return new_individual
             
 
-    def cross_route_by_positions(self, env, chromosome_1: list, chromosome_2: list):
-        found = False
-        while not found:
-            pos = randint(1, min(len(chromosome_1) - 1, len(chromosome_2) - 1))
-            if chromosome_1[pos][0] == 'S' or chromosome_2[pos][0] == 'S':
-                pass
-            else:
-                break
-        new_chromosome_1 = deepcopy(chromosome_1)
-        new_chromosome_1[pos] = chromosome_2[pos]
-        new_chromosome_2 = deepcopy(chromosome_2)
-        new_chromosome_2[pos] = chromosome_1[pos]
+    # def cross_route_by_positions(self, env, chromosome_1: list, chromosome_2: list):
+        # found = False
+        # while not found:
+        #     pos = randint(1, min(len(chromosome_1) - 1, len(chromosome_2) - 1))
+        #     if chromosome_1[pos][0] == 'S' or chromosome_2[pos][0] == 'S':
+        #         pass
+        #     else:
+        #         break
+        # new_chromosome_1 = deepcopy(chromosome_1)
+        # new_chromosome_1[pos] = chromosome_2[pos]
+        # new_chromosome_2 = deepcopy(chromosome_2)
+        # new_chromosome_2[pos] = chromosome_1[pos]
 
-        return new_chromosome_1, new_chromosome_2
+        # return new_chromosome_1, new_chromosome_2
 
 
     def print_initial_population(self, env: CG_VRP_TW, start: float, Population: list, Distances: list, feas_op: Reparator):
@@ -958,3 +1015,126 @@ class Genetic():
         print(f'Best generated individual (dist): {incumbent}')
         print(f'Number of unfeasible individuals: {self.Population_size - sum(feas_op.population_check(env, Population))}')
         print('\n')
+
+
+
+
+class Experiment():
+
+    def __init__(self):
+        pass
+    
+    def generate_intial_population(self, env, constructive, genetic, Population_size, RCL_alpha, RCL_mode, End_slack):
+        '''
+        ------------------------------------------------------------------------------------------------
+        Initial Population
+        ------------------------------------------------------------------------------------------------
+        - Population: (list of lists) Each individual's routes
+        - Objectives: (list of int) Each individual's total time
+        - Distances: (list of list) Each individual's total distance
+        - Times: (list of list) Each individual's route's time
+        - Resluts: (list of lists of lists): Each individual's [q,k]
+        '''
+        start = time()
+        const_parameters = (env, RCL_alpha, RCL_mode, End_slack)
+        Population, Distances, Times, Details = genetic.generate_population(constructive, const_parameters)
+        generation = 0
+
+        incumbent = 1e9
+        best_individual, Incumbents, TTimes = [], [], []
+        for i in range(Population_size):
+            if Distances[i] < incumbent:
+                incumbent = Distances[i]
+                best_individual = [Population[i], Distances[i], Times[i], Details[i]]
+                
+        Incumbents.append(incumbent)
+        TTimes.append(time() - start)
+    
+        return Population, Distances, Times, generation, best_individual, incumbent, Incumbents, TTimes, start
+
+    
+
+    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, generation, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_generations, max_time,  RCL_alpha, RCL_mode, End_slack, crossover_rate, cross_mode):
+        '''
+        ------------------------------------------------------------------------------------------------
+        Genetic proccess
+        ------------------------------------------------------------------------------------------------
+        '''
+        start_g = time()
+
+        while generation <= max_generations and time() - start_g <= max_time:
+            generation += 1
+
+            ### Selecting elite class
+            Elite = [x for _, x in sorted(zip(Distances,[i for i in range(Population_size)]))][:Elite_size] 
+
+
+            ### Selection: From a population, which parents are able to reproduce
+            # Fitness function
+            tots = sum(Distances)
+            probs = [Distances[i]/tots for i in range(len(Distances))]
+            
+
+            # Intermediate population: Sample of the initial population    
+            inter_population = choice([i for i in range(Population_size)], size = int(Population_size - Elite_size), replace = True, p = probs)
+            inter_population = Elite + list(inter_population)
+
+
+            ### Tournament: Select two individuals and leave the best to reproduce
+            Parents = genetic.tournament(inter_population, Distances)
+            
+
+            ### Recombination: Combine 2 parents to produce 1 offsprings 
+            New_chorizos = []
+            for index in range(len(Parents)):
+                couple = Parents[index]
+                chosen_parent = choice([couple[0], couple[1]])
+                chorizo = repair_op.build_chorizo(env, Population[chosen_parent])
+                
+                if random() < crossover_rate:
+                    new_chorizo = genetic.crossover(env, Population[chosen_parent], chorizo, cross_mode, repair_op)
+                else:
+                    new_chorizo = chorizo
+            
+                New_chorizos.append(new_chorizo)
+
+
+            ### Mutation: 'Shake' an individual
+            
+
+            ### Repair solutions
+            Population, Distances, Times = [],[],[]
+            for i in range(Population_size):
+                parent, distance, distances, ttime, times  = repair_op.repair_chorizo(env, New_chorizos[i], RCL_alpha, RCL_mode, End_slack)
+
+                Population.append(parent);  Distances.append(distance); 
+                Times.append(times)#;  Details.append((distances, times))
+
+                if distance < incumbent:
+                    incumbent = distance
+                    best_individual = [parent, distance, ttime, (distances, times)]
+                
+            # if generation % 50 == 0:
+            #     genetic.print_evolution(env, start, Population, generation, Distances, feas_op, incumbent)
+
+            Incumbents.append(incumbent)
+            TTimes.append(round(time()-start,2))
+            
+        Results.append((Incumbents,TTimes))
+    
+        return Incumbents, TTimes, Results, best_individual, incumbent
+
+
+
+    def save_performance(self, Results, instance, path):
+        colors = ['blue', 'red', 'black', 'purple', 'green', 'orange']
+        for algorithm in range(len(Results)):
+            plt.plot(Results[algorithm][1], Results[algorithm][0], color = colors[algorithm])
+        plt.title(f'Performance of algorithms on: {instance[:-4]}')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Objective (d)')
+        plt.savefig(f'{path}', dpi = 600)
+
+
+
+
