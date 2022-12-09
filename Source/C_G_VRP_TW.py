@@ -20,7 +20,7 @@ import os
 CE_VRP_TW Class: Parameters and inforamtion
 - render method 
 '''
-class CG_VRP_TW():
+class CG_VRP_TW(): 
 
     def __init__(self):
         self.path = '/Users/juanbeta/Library/CloudStorage/OneDrive-UniversidaddelosAndes/WS 2&3/'
