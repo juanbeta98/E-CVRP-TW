@@ -182,8 +182,9 @@ class CG_VRP_TW():
         nx.draw_networkx(G, pos = pos, with_labels = True, nodelist = nodes_to_draw, 
                          node_color = node_color, edge_color = edge_colors, alpha = 0.8, 
                          font_size = 7, node_size = 200)
+        plt.savefig('results.png', dpi = 600)
         plt.show()
-        plt.savefig('results', dpi = 600)
+        
 
 
     def plot_evolution(self, Incumbents: list, color: str = 'purple'):
@@ -1054,7 +1055,7 @@ class Experiment():
 
     
 
-    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, generation, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_generations, max_time,  RCL_alpha, RCL_mode, End_slack, crossover_rate, cross_mode):
+    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, generation, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_generations, max_time,  RCL_alpha, RCL_mode, End_slack, crossover_rate):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
@@ -1072,7 +1073,8 @@ class Experiment():
             ### Selection: From a population, which parents are able to reproduce
             # Fitness function
             tots = sum(Distances)
-            probs = [Distances[i]/tots for i in range(len(Distances))]
+            fit_f = [tots/Distances[i] for i in range(len(Distances))]
+            probs = [fit_f[i]/sum(fit_f) for i in range(len(Distances))]
             
 
             # Intermediate population: Sample of the initial population    
@@ -1092,6 +1094,7 @@ class Experiment():
                 chorizo = repair_op.build_chorizo(env, Population[chosen_parent])
                 
                 if random() < crossover_rate:
+                    cross_mode = choice(['2opt', 'simple_insertion', 'smart_crossover'])
                     new_chorizo = genetic.crossover(env, Population[chosen_parent], chorizo, cross_mode, repair_op)
                 else:
                     new_chorizo = chorizo
@@ -1117,7 +1120,7 @@ class Experiment():
             # if generation % 50 == 0:
             #     genetic.print_evolution(env, start, Population, generation, Distances, feas_op, incumbent)
 
-            Incumbents.append(incumbent)
+            Incumbents.append(round(incumbent,3))
             TTimes.append(round(time()-start,2))
             
         Results.append((Incumbents,TTimes))
@@ -1126,14 +1129,20 @@ class Experiment():
 
 
 
-    def save_performance(self, Results, instance, path):
-        colors = ['blue', 'red', 'black', 'purple', 'green', 'orange']
-        for algorithm in range(len(Results)):
+    def save_performance(self, Results, instance, path, xlim = None, cols = None):
+        colors = ['blue' ,'black', 'red', 'purple', 'green', 'orange', 'pink', 'brown']
+        if len(Results) == 1: colors = choice(colors)
+        for algorithm in range(5):
+            print(algorithm)
             plt.plot(Results[algorithm][1], Results[algorithm][0], color = colors[algorithm])
-        plt.title(f'Performance of algorithms on: {instance[:-4]}')
+        plt.title(f'Performance of Genetic A. on: {instance[:-4]}')
         plt.xlabel('Time (s)')
         plt.ylabel('Objective (d)')
+        if xlim != None:
+            plt.xlim(0, xlim)
         plt.savefig(f'{path}', dpi = 600)
+        #plt.show()
+
 
 
 
