@@ -17,12 +17,12 @@ End_slack = 20               # Slack to send veicles to depot
 '''
 Genetic algorithm
 '''
-Population_size = 750  
+Population_size = 1500  
 Elite_size = int(Population_size * 0.05)
 
 genetic = Genetic(Population_size, Elite_size)
 max_generations = 1e9
-max_time = 1800/6 # 30 mins
+max_time = 3600
 
 crossover_rate = 0.6
 mutation_rate = 0.5
@@ -76,7 +76,8 @@ Instances = ['c101C10.txt',
  'r104C5.txt',
  'r104_21.txt']
 Resultss = []
-for instance in ['rc207_21.txt']:
+
+for instance in ['c102_21.txt']:
     for test in Test:
         '''
         Environment and general parameters
@@ -103,7 +104,7 @@ for instance in ['rc207_21.txt']:
         Incumbents, TTimes, Results, best_individual, incumbent = lab.evolution(Population, Distances, Times, Incumbents, TTimes, Results, generation, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_generations, max_time,  RCL_alpha, RCL_mode, End_slack, crossover_rate)
 
 
-    with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/EEST_{instance}', 'a') as f:
+    with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/NEW_{instance}', 'a') as f:
         f.write(str(Results))
 
 
@@ -113,7 +114,7 @@ for instance in ['rc207_21.txt']:
     #     f.write(str(best_individual))
 
 
-    lab.save_performance(Results, instance, f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/EEST_{instance[:-4]}.png')
+    lab.save_performance(Results, instance, f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/NEW_{instance[:-4]}.png')
 
 
 
