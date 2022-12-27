@@ -1,5 +1,5 @@
 '''
-Capacitated Electric Vehicle Routing Problem
+Capacitated Electric Vehicle Routing Problem with Time windows
 E-CVRP-TW
 
 Authors:
@@ -191,7 +191,6 @@ class E_CVRP_TW():
         plt.show()
         
 
-
     def plot_evolution(self, Incumbents: list, color: str = 'purple'):
         plt.plot(range(len(Incumbents)), Incumbents, color = color)
         plt.title('Evolution of best individual')
@@ -253,13 +252,15 @@ Algorithms Class: Compilation of heuristics to generate a feasible route
 '''
 class Constructive():
 
-    def __init__(self):
-        pass
+    def __init__(self, RCL_alpha: float, End_slack: int):
+        self.RCL_alpha = RCL_alpha
+        self.End_slack = End_slack
+
     
     '''
     Reset the environment to restart experimentation (another parent)
     '''
-    def reset(self, env):
+    def reset(self, env: E_CVRP_TW):
 
         self.pending_c = deepcopy(env.Costumers)
 
@@ -269,7 +270,7 @@ class Constructive():
     - DISTANCES
     - OPENING TIME WINDOW
     '''
-    def generate_candidate_from_RCL(self, env, node, t, q, k, RCL_alpha, End_slack):
+    def generate_candidate_from_RCL(self, env: E_CVRP_TW, node: str, t: float, q: float, k: int):
         feasible_candidates = []
         max_crit = -1e9
         min_crit = 1e9
@@ -280,7 +281,7 @@ class Constructive():
         for target in self.pending_c:
             distance = env.dist[node,target]
 
-            global_c, energy_feasible = self.evaluate_cadidate(env, target, distance, t, k, q, energy_feasible)
+            global_c, energy_feasible = self.evaluate_candidate(env, target, distance, t, q, k, energy_feasible)
 
             if global_c:
                 feasible_candidates.append(target)
@@ -291,13 +292,13 @@ class Constructive():
                 max_crit = max(crit, max_crit)
                 min_crit = min(crit, min_crit)
 
-        upper_bound = min_crit + RCL_alpha * (max_crit - min_crit)
+        upper_bound = min_crit + self.RCL_alpha * (max_crit - min_crit)
         if RCL_mode == 'distance':
             feasible_candidates = [i for i in feasible_candidates if env.dist[node, i] <= upper_bound]
         else:
             feasible_candidates = [i for i in feasible_candidates if env.C[i]['DueDate'] <= upper_bound]
         
-        if node != 'D' and t + env.dist[node,'D'] / env.v + End_slack >= env.T:
+        if node != 'D' and t + env.dist[node,'D'] / env.v + self.End_slack >= env.T:
             return False, False
         if feasible_candidates != []:
             target = choice(feasible_candidates)
@@ -313,7 +314,7 @@ class Constructive():
         2. Time windows
         3. Charge at least to go to target and go to closest station 
     '''
-    def evaluate_cadidate(self, env, target, distance, t, k, q, energy_feasible):
+    def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance, t: float, q: float, k: int, energy_feasible: bool):
         capacity_c = k + env.C[target]['d'] <= env.K
         time_c = t + distance / env.v  <= env.C[target]['DueDate']
         energy_c = q - distance / env.r - env.dist[target,env.closest[target]] / env.r >= 0
@@ -331,7 +332,7 @@ class Constructive():
     '''
     Find closest station to both the current costumer and the depot
     '''
-    def optimal_station(self, env, node, target = 'D'):
+    def optimal_station(self, env: E_CVRP_TW, node: str, target: str = 'D'):
         if node != 'D':
             distances = {s: env.dist[node,s] + env.dist[s,target] for s in env.Stations if s != node}
             min_station = min(distances, key = distances.get)
@@ -347,7 +348,7 @@ class Constructive():
     returns:
     -   route in list (excluding current node)
     '''
-    def route_to_depot(self, env, node, t, d, q):
+    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float):
         route = []
 
         # The vehicle can go directly to depot
@@ -412,7 +413,7 @@ class Constructive():
     '''
     Routes between to ca costumer
     '''
-    def simple_routing(self, env, node, target, route, t, d, q, k):
+    def simple_routing(self, env: E_CVRP_TW, node: str, target: str, route: list, t: float, d: float, q: float, k: int):
         tgt = env.C[target]
 
         # Time update
@@ -433,7 +434,7 @@ class Constructive():
         route.append(target)
         self.pending_c.remove(target)
 
-        return route, t, d, q, k
+        return t, d, q, k, route
 
 
     '''
@@ -449,18 +450,18 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env, RCL_alpha: float, RCL_mode: str, End_slack: int):
+    def RCL_based_constructive(self, env: E_CVRP_TW):
         t, d, q, k = 0, 0, env.Q, 0     # Initialize parameters
         node = 'D'; route = [node]   # Initialize route
 
         # Adding nodes to route
         while True:
 
-            target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k, RCL_alpha, RCL_mode, End_slack)
+            target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
 
             # Found a target
             if target != False:
-                route, t, d, q, k = self.simple_routing(env, node, target, route, t, d, q, k)
+                t, d, q, k, route = self.simple_routing(env, node, target, route, t, d, q, k)
                 node = target
                 
             # No feasible target
@@ -484,9 +485,9 @@ class Constructive():
                     route.append(node)
 
                     # Chose candidate from RCL
-                    target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k, RCL_alpha, RCL_mode, End_slack)
+                    target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
                     if target != False:
-                        route, t, d, q, k = self.simple_routing(env, node, target, route, t, d, q, k)
+                        t, d, q, k, route = self.simple_routing(env, node, target, route, t, d, q, k)
                         node = target
                 
                     # No feasible target
@@ -550,7 +551,7 @@ class Feasibility():
     '''
     Check feasibility for al whole population
     '''
-    def population_check(self, env, Population):
+    def population_check(self, env: E_CVRP_TW, Population: list):
         # Intial population feasibility check
         datas = []
         for individual in Population:
@@ -562,7 +563,7 @@ class Feasibility():
     '''
     Checks the feasibility of an individual (all the routes)
     '''
-    def individual_check(self, env: CG_VRP_TW, individual):
+    def individual_check(self, env: E_CVRP_TW, individual: list):
         feasible = True
         for route in range(len(individual)):
             route = individual[route]
@@ -582,7 +583,7 @@ class Feasibility():
         return feasible
 
                 
-    def transition_check(self, env: CG_VRP_TW, node, target, t, q, k):
+    def transition_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
         time_feasible, t = self.time_check(env, node, target, t, q)
         energy_feasible, q = self.energy_check(env, node, target, q)
         load_feasible, k = self.load_check(env, target, k)
@@ -593,7 +594,7 @@ class Feasibility():
             return False, t, q, k
 
 
-    def time_check(self, env: CG_VRP_TW, node, target, t, q):
+    def time_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float):
         feasible = True
         travel_time = env.dist[node,target] / env.v
         # Total time check
@@ -613,7 +614,7 @@ class Feasibility():
         return feasible, t
 
 
-    def energy_check(self, env: CG_VRP_TW, node, target, q):
+    def energy_check(self, env: E_CVRP_TW, node: str, target: str, q: float):
         if q - env.dist[node, target] / env.r >= 0:
             q -= env.dist[node, target] / env.r
             if target in env.Stations:
@@ -623,7 +624,7 @@ class Feasibility():
             return False, q
 
 
-    def load_check(self, env: CG_VRP_TW, target, k):
+    def load_check(self, env: E_CVRP_TW, target: str, k: int):
         if target in env.Costumers:
             if k + env.C[target]['d'] <= env.K:
                 k += env.C[target]['d']
@@ -648,7 +649,7 @@ class Reparator(Constructive):
     '''
     Repair protocol
     '''
-    def repair_individual(self, env: CG_VRP_TW, individual):
+    def repair_individual(self, env: E_CVRP_TW, individual: list):
         if individual[0] != 'D' or individual[-1] != 'D':
             pass
         visited = []
@@ -662,13 +663,13 @@ class Reparator(Constructive):
                     pass
 
 
-    def repair_termination(self, env: CG_VRP_TW, node, target, t, q, k):
+    def repair_termination(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
         # Not enough time
         travel_time = env.dist[node,target] / env.v
         extra_tiem = 0
 
 
-    def repair_chorizo(self, env: CG_VRP_TW, chorizo: list, RCL_alpha: float, RCL_mode: str, End_slack: int):
+    def repair_chorizo(self, env: E_CVRP_TW, chorizo: list):
         if type(chorizo[0]) == list:
             chorizo = self.build_chorizo(env, chorizo)
         parent = []
@@ -775,7 +776,7 @@ class Reparator(Constructive):
 
         self.pending_c = pending_c
         while len(self.pending_c) > 0:
-            t, d, q, k, route = self.RCL_based_constructive(env, RCL_alpha, RCL_mode, End_slack)
+            t, d, q, k, route = self.RCL_based_constructive(env)
             parent.append(route)
             distance += d
             distances.append(d)
@@ -785,7 +786,7 @@ class Reparator(Constructive):
         return parent, distance, distances, ttime, times
 
 
-    def build_chorizo(self, env, individual):
+    def build_chorizo(self, env: E_CVRP_TW, individual: list):
         chorizo = []
         for route in individual:
             for j in route[1:-1]:
@@ -801,14 +802,14 @@ Genetic algorithm:
 '''
 class Genetic():
 
-    def __init__(self, Population_size, Elite_size):
+    def __init__(self, Population_size: int, Elite_size: int):
         self.Population_size = Population_size
         self.Elite_size = Elite_size
 
     '''
     Initial population generator
     '''
-    def generate_population(self, constructive, const_parameters: tuple, verbose = False):
+    def generate_population(self, constructive: Constructive, const_parameters: tuple, verbose: bool = False):
         env, RCL_alpha, End_slack = const_parameters
 
         # Initalizing data storage
@@ -873,7 +874,7 @@ class Genetic():
     '''
     RECOMBINATION/COSS-OVER
     '''
-    def crossover(self, env:CG_VRP_TW, parent: list, chorizo: list, mode: str, repair_op: Reparator):
+    def crossover(self, env: E_CVRP_TW, parent: list, chorizo: list, mode: str, repair_op: Reparator):
         if mode == 'simple_crossover':      return self.simple_crossover(chorizo)
         elif mode == '2opt':                return self.opt2(chorizo)
         elif mode == 'smart_crossover':     return self.smart_crossover(env, chorizo)
@@ -921,7 +922,7 @@ class Genetic():
     '''
     Smart crossover   
     '''
-    def smart_crossover(self, env:CG_VRP_TW, chorizo: list[str]) -> list[str]:
+    def smart_crossover(self, env:E_CVRP_TW, chorizo: list[str]) -> list[str]:
         best = 0
         best_candidate = ''
         best_index = 1e9
@@ -956,7 +957,7 @@ class Genetic():
     '''
     Simple insertion
     '''
-    def simple_insertion(self, env: CG_VRP_TW, chorizo: list[str]):
+    def simple_insertion(self, env: E_CVRP_TW, chorizo: list[str]):
         pos1 = randint(0, len(chorizo))
         pos2 = randint(0, len(chorizo))
 
@@ -1003,7 +1004,7 @@ class Genetic():
         # return new_chromosome_1, new_chromosome_2
 
 
-    def print_initial_population(self, env: CG_VRP_TW, start: float, Population: list, Distances: list, feas_op: Reparator):
+    def print_initial_population(self, env: E_CVRP_TW, start: float, Population: list, Distances: list, feas_op: Reparator):
         print('\n###################   Initial Population   ####################\n')
         print(f'Total generation time: {time() - start} s')
         print(f'Number of individuals: {self.Population_size}')
@@ -1013,7 +1014,7 @@ class Genetic():
         print('\n')
 
 
-    def print_evolution(self, env: CG_VRP_TW, start: float, Population: list, generation: int, Distances: list, feas_op: Reparator, incumbent: float):
+    def print_evolution(self, env: E_CVRP_TW, start: float, Population: list, generation: int, Distances: list, feas_op: Reparator, incumbent: float):
         print(f'\n###################   Generation {generation}   ####################\n')
         print(f'Total evolution time: {time() - start} s')
         print(f'Number of individuals: {len(Population)}')
@@ -1029,7 +1030,7 @@ class Experiment():
     def __init__(self):
         pass
     
-    def generate_intial_population(self, env, constructive, genetic, Population_size, RCL_alpha, End_slack):
+    def generate_intial_population(self, env: E_CVRP_TW, constructive: Constructive, genetic: Genetic, Population_size: int):
         '''
         ------------------------------------------------------------------------------------------------
         Initial Population
@@ -1058,7 +1059,7 @@ class Experiment():
 
     
 
-    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_time,  RCL_alpha, End_slack, crossover_rate):
+    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, best_individual, incumbent, start, env, genetic, repair_op, max_time, crossover_rate):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
@@ -1071,7 +1072,7 @@ class Experiment():
             generation += 1
 
             ### Selecting elite class
-            Elite = [x for _, x in sorted(zip(Distances,[i for i in range(Population_size)]))][:Elite_size] 
+            Elite = [x for _, x in sorted(zip(Distances,[i for i in range(genetic.Population_size)]))][:genetic.Elite_size] 
 
 
             ### Selection: From a population, which parents are able to reproduce
@@ -1082,7 +1083,7 @@ class Experiment():
             
 
             # Intermediate population: Sample of the initial population    
-            inter_population = choice([i for i in range(Population_size)], size = int(Population_size - Elite_size), replace = True, p = probs)
+            inter_population = choice([i for i in range(genetic.Population_size)], size = int(genetic.Population_size - genetic.Elite_size), replace = True, p = probs)
             inter_population = Elite + list(inter_population)
 
 
@@ -1111,8 +1112,8 @@ class Experiment():
 
             ### Repair solutions
             Population, Distances, Times = [],[],[]
-            for i in range(Population_size):
-                parent, distance, distances, ttime, times  = repair_op.repair_chorizo(env, New_chorizos[i], RCL_alpha, End_slack)
+            for i in range(genetic.Population_size):
+                parent, distance, distances, ttime, times  = repair_op.repair_chorizo(env, New_chorizos[i])
 
                 Population.append(parent);  Distances.append(distance); 
                 Times.append(times)
@@ -1146,8 +1147,4 @@ class Experiment():
             plt.xlim(0, xlim)
         plt.savefig(f'{path}', dpi = 600)
         #plt.show()
-
-
-
-
 

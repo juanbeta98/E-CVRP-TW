@@ -29,7 +29,6 @@ Genetic algorithm
 '''
 Population_size: int = 2000  
 Elite_size: int = int(Population_size * 0.05)
-
 genetic: Genetic = Genetic(Population_size, Elite_size)
 
 max_time: int = 3600
@@ -40,7 +39,7 @@ mutation_rate: float = 0.5
 '''
 Repair operators
 '''
-repair_op: Reparator = Reparator()
+repair_op: Reparator = Reparator(RCL_alpha, End_slack)
 
 
 '''
@@ -53,7 +52,7 @@ feas_op: Feasibility = Feasibility()
 '''
 EXPERIMENT
 '''
-lab = Experiment()
+lab: Experiment = Experiment()
 Operators = ['simple_crossover', '2opt', 'simple_insertion', 'smart_crossover' , 'Hybrid']
 colors = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 III = []
