@@ -7,7 +7,7 @@ General parameters
 '''
 rd_seed: int = 0
 seed(rd_seed)
-path = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/' ##### CHANGE IF NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/' ##### CHANGE IF NECESSARY!!!
 
 
 '''
@@ -53,44 +53,11 @@ feas_op: Feasibility = Feasibility()
 EXPERIMENT
 '''
 lab: Experiment = Experiment()
-Operators = ['simple_crossover', '2opt', 'simple_insertion', 'smart_crossover' , 'Hybrid']
-colors = ['blue', 'red', 'black', 'purple', 'green', 'orange']
-III = []
+Operators: list = ['simple_crossover', '2opt', 'simple_insertion', 'smart_crossover' , 'Hybrid']
+colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
+III: list = []
 
 # Hardest = ['c204_21.txt', 'r201_21.txt', 'rc207_21.txt', 'rc208_21.txt']
-env = CG_VRP_TW()
-Instances = ['c101C10.txt',
- 'c101C5.txt',
- 'c101_21.txt',
- 'c102_21.txt',
- 'c103C15.txt',
- 'c103C5.txt',
- 'c103_21.txt',
- 'c104C10.txt',
- 'c105_21.txt',
- 'c106C15.txt',
- 'c107_21.txt',
- 'c108_21.txt',
- 'c109_21.txt',
- 'c201_21.txt',
- 'c202C10.txt',
- 'c202C15.txt',
- 'c203_21.txt',
- 'c204_21.txt',
- 'c205C10.txt',
- 'c205_21.txt',
- 'c206C5.txt',
- 'c206_21.txt',
- 'c208C5.txt',
- 'c208_21.txt',
- 'r101_21.txt',
- 'r102C10.txt',
- 'r102C15.txt',
- 'r102_21.txt',
- 'r103C10.txt',
- 'r103_21.txt',
- 'r104C5.txt',
- 'r104_21.txt']
 
 
 Results = []
