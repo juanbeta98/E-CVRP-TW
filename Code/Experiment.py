@@ -1,43 +1,60 @@
 from numpy.random import seed, choice, random
-from C_G_VRP_TW import  CG_VRP_TW, Constructive, Genetic, Feasibility, Reparator, Experiment
+from E_CVRP_TW import  E_CVRP_TW, Constructive, Genetic, Feasibility, Reparator, Experiment
 from time import time
 
-rd_seed = 0
+'''
+General parameters
+'''
+rd_seed: int = 0
 seed(rd_seed)
+path = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/' ##### CHANGE IF NECESSARY!!!
+
+
+'''
+Environment
+'''
+env: E_CVRP_TW = E_CVRP_TW(path)
+
 
 '''
 Constructive heuristic
 '''
-constructive = Constructive()
-RCL_alpha = 0.5             # RCL alpha
-RCL_mode = 'Hybrid'
-End_slack = 20               # Slack to send veicles to depot
+RCL_alpha: float = 0.35             # RCL alpha
+End_slack: int = 20                 # Slack to send veicles to depot
+constructive: Constructive = Constructive(RCL_alpha, End_slack)
 
 
 '''
 Genetic algorithm
 '''
-Population_size = 2000  
-Elite_size = int(Population_size * 0.05)
+Population_size: int = 2000  
+Elite_size: int = int(Population_size * 0.05)
 
-genetic = Genetic(Population_size, Elite_size)
-max_generations = 1e9
-max_time = 3600
+genetic: Genetic = Genetic(Population_size, Elite_size)
 
-crossover_rate = 0.6
-mutation_rate = 0.5
+max_time: int = 3600
+crossover_rate: float = 0.6
+mutation_rate: float = 0.5
+
+
+'''
+Repair operators
+'''
+repair_op: Reparator = Reparator()
 
 
 '''
 Feasibility operators
 '''
-feas_op = Feasibility()
+feas_op: Feasibility = Feasibility()
 
 
 
-'EXPERIMENT'
+'''
+EXPERIMENT
+'''
 lab = Experiment()
-Test = ['simple_crossover', '2opt', 'simple_insertion', 'smart_crossover' , 'Hybrid']
+Operators = ['simple_crossover', '2opt', 'simple_insertion', 'smart_crossover' , 'Hybrid']
 colors = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 III = []
 
@@ -75,36 +92,35 @@ Instances = ['c101C10.txt',
  'r103_21.txt',
  'r104C5.txt',
  'r104_21.txt']
+
+
 Results = []
 
 for instance in ['c102_21.txt']:
-    for test in Test:
-        '''
-        Environment and general parameters
-        '''
-        env = CG_VRP_TW()
-        env.load_data(instance)
-        env.generate_parameters()
+    '''
+    Reseting experimentation
+    '''
+    env.load_data(instance)
+    env.generate_parameters()
+    
+    for operator in Operators:
+        
+        repair_op.reset(env)
 
         best_obj = 1e9
         best_ind = []
-
-        '''
-        Repair operators
-        '''
-        repair_op = Reparator()
-        repair_op.reset(env)
 
 
         '''
         Evolution
         '''
-        Population, Distances, Times, generation, best_individual, incumbent, Incumbents, TTimes, start = lab.generate_intial_population(env, constructive, genetic, Population_size, RCL_alpha, RCL_mode, End_slack)
+        Population, Distances, Times, best_individual, incumbent, Incumbents, TTimes, start = lab.generate_intial_population(env, constructive, genetic, Population_size, RCL_alpha, End_slack)
         best_initial = incumbent
-        Incumbents, TTimes, Results, best_individual, incumbent = lab.evolution(Population, Distances, Times, Incumbents, TTimes, Results, generation, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_generations, max_time,  RCL_alpha, RCL_mode, End_slack, crossover_rate)
+        Incumbents, TTimes, Results, best_individual, incumbent = \
+            lab.evolution(Population, Distances, Times, Incumbents, TTimes, Results, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_time,  RCL_alpha, End_slack, crossover_rate)
 
 
-    with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/NEW_{instance}', 'a') as f:
+    with open(path + f'Results/{instance}', 'a') as f:
         f.write(str(Results))
 
 
@@ -114,7 +130,7 @@ for instance in ['c102_21.txt']:
     #     f.write(str(best_individual))
 
 
-    lab.save_performance(Results, instance, f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/NEW_{instance[:-4]}.png')
+    lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')
 
 
 

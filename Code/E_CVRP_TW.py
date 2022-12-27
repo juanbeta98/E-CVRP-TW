@@ -1,14 +1,15 @@
 '''
-Metaheurísticas 2022-2
-Universidad de los Andes
-Workshop 3-4
+Capacitated Electric Vehicle Routing Problem
+E-CVRP-TW
 
+Authors:
 Juan Betancourt
-201632544
+jm.betancourt@uniandes.edu.co
 
 Daniel Giraldo
-201920055
+ds.giraldoh@uniandes.edu.co
 '''
+
 from copy import copy, deepcopy
 from time import time
 import matplotlib.pyplot as plt
@@ -17,22 +18,26 @@ import networkx as nx
 import os
 
 '''
-CE_VRP_TW Class: Parameters and inforamtion
+CE_VRP_TW Class: Parameters and information
 - render method 
 '''
-class CG_VRP_TW(): 
+class E_CVRP_TW(): 
 
-    def __init__(self):
-        self.path = '/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/'
+    def __init__(self, path: str = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/'):
+        self.path = path
         self.colors = ['black', 'red', 'green', 'blue', 'purple', 'orange', 'pink', 'grey', 
                        'yellow', 'tab:red', 'tab:green', 'tab:blue', 'tab:purple', 'tab:orange', 
                        'tab:pink', 'tab:grey', 
                        'black', 'red', 'green', 'blue', 'purple', 'orange', 'pink', 'grey', 
                        'yellow', 'tab:red', 'tab:green', 'tab:blue', 'tab:purple', 'tab:orange', 
-                        'tab:pink', 'tab:grey', ]
+                        'tab:pink', 'tab:grey']
 
-        self.instances = os.listdir(self.path+'Instances/')
+        self.instances = os.listdir(self.path + 'Instances/')
         self.instances.remove('readme.txt')
+
+        # self.l_instances = ['c101_21.txt', ]
+        # self.m_instances = []
+        # self.s_instances = ['c101C5.txt', 'c101C10.txt']
 
 
     '''
@@ -60,7 +65,7 @@ class CG_VRP_TW():
                 self.Stations.append(ID)
 
             else:
-                d, ReadyTime, DueDate, ServiceTime = [float(i) for i in [i for i in str(file[fila]).split(' ') if i != ''][4:8] ]
+                d, ReadyTime, DueDate, ServiceTime = [float(i) for i in [i for i in str(file[fila]).split(' ') if i != ''][4:8]]
                 self.C[ID] = { 'type': typ, 'x': x, 'y': y, 'd': d, 'ReadyTime': ReadyTime, 
                                'DueDate': DueDate, 'ServiceTime': ServiceTime}
                 self.Costumers.append(ID)
@@ -264,13 +269,12 @@ class Constructive():
     - DISTANCES
     - OPENING TIME WINDOW
     '''
-    def generate_candidate_from_RCL(self, env, node, t, q, k, RCL_alpha, RCL_mode, End_slack):
+    def generate_candidate_from_RCL(self, env, node, t, q, k, RCL_alpha, End_slack):
         feasible_candidates = []
         max_crit = -1e9
         min_crit = 1e9
 
-        if RCL_mode == 'Hybrid':
-            RCL_mode = choice(['distance', 'TimeWindow'])
+        RCL_mode = choice(['distance', 'TimeWindow'])
 
         energy_feasible = False
         for target in self.pending_c:
@@ -805,7 +809,7 @@ class Genetic():
     Initial population generator
     '''
     def generate_population(self, constructive, const_parameters: tuple, verbose = False):
-        env, RCL_alpha, RCL_mode, End_slack = const_parameters
+        env, RCL_alpha, End_slack = const_parameters
 
         # Initalizing data storage
         Population = []
@@ -1025,7 +1029,7 @@ class Experiment():
     def __init__(self):
         pass
     
-    def generate_intial_population(self, env, constructive, genetic, Population_size, RCL_alpha, RCL_mode, End_slack):
+    def generate_intial_population(self, env, constructive, genetic, Population_size, RCL_alpha, End_slack):
         '''
         ------------------------------------------------------------------------------------------------
         Initial Population
@@ -1037,9 +1041,8 @@ class Experiment():
         - Resluts: (list of lists of lists): Each individual's [q,k]
         '''
         start = time()
-        const_parameters = (env, RCL_alpha, RCL_mode, End_slack)
+        const_parameters = (env, RCL_alpha, End_slack)
         Population, Distances, Times, Details = genetic.generate_population(constructive, const_parameters)
-        generation = 0
 
         incumbent = 1e9
         best_individual, Incumbents, TTimes = [], [], []
@@ -1051,19 +1054,20 @@ class Experiment():
         Incumbents.append(incumbent)
         TTimes.append(time() - start)
     
-        return Population, Distances, Times, generation, best_individual, incumbent, Incumbents, TTimes, start
+        return Population, Distances, Times, best_individual, incumbent, Incumbents, TTimes, start
 
     
 
-    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, generation, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_generations, max_time,  RCL_alpha, RCL_mode, End_slack, crossover_rate):
+    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, best_individual, incumbent, start, env, genetic, repair_op, Population_size, Elite_size, max_time,  RCL_alpha, End_slack, crossover_rate):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
         ------------------------------------------------------------------------------------------------
         '''
         start_g = time()
+        generation = 0
 
-        while generation <= max_generations and time() - start_g <= max_time:
+        while time() - start_g <= max_time:
             generation += 1
 
             ### Selecting elite class
@@ -1108,10 +1112,10 @@ class Experiment():
             ### Repair solutions
             Population, Distances, Times = [],[],[]
             for i in range(Population_size):
-                parent, distance, distances, ttime, times  = repair_op.repair_chorizo(env, New_chorizos[i], RCL_alpha, RCL_mode, End_slack)
+                parent, distance, distances, ttime, times  = repair_op.repair_chorizo(env, New_chorizos[i], RCL_alpha, End_slack)
 
                 Population.append(parent);  Distances.append(distance); 
-                Times.append(times)#;  Details.append((distances, times))
+                Times.append(times)
 
                 if distance < incumbent:
                     incumbent = distance
