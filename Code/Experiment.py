@@ -24,15 +24,14 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 Constructive heuristic
 '''
 RCL_alpha: float = 0.3              # RCL alpha
-End_slack: int = 20                 # Slack to send veicles to depot
 
-constructive: Constructive = Constructive(RCL_alpha, End_slack)
+constructive: Constructive = Constructive(RCL_alpha)
 
 
 '''
 Genetic algorithm
 '''
-Population_size: int = 2000
+Population_size: int = 3000
 Elite_size: int = int(Population_size * 0.05)
 crossover_rate: float = 0.6
 mutation_rate: float = 0.5
@@ -43,7 +42,7 @@ genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation
 '''
 Repair operators
 '''
-repair_op: Reparator = Reparator(RCL_alpha, End_slack)
+repair_op: Reparator = Reparator(RCL_alpha)
 
 
 '''
@@ -95,8 +94,8 @@ for instance in ['c102_21.txt']:
         '''
         Evolution
         '''
-        Incumbents, T_Times, Results, incumbent, best_individual = \
-            lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
+        # Incumbents, T_Times, Results, incumbent, best_individual = \
+        #     lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
 
 
     # with open(path + f'Results/{instance}', 'a') as f:
@@ -111,6 +110,9 @@ for instance in ['c102_21.txt']:
 
     # lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')
 
-print('All worked ok')
-print(incumbent)
-
+print('\n')
+print('############## Testing done ################')
+print(f'total time: {round(time() - start,2)}')
+print(f'incumbent: {round(incumbent,2)}')
+print(f'best solution: {initial_best[0]}')
+print('\n')

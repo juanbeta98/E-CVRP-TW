@@ -265,16 +265,14 @@ Algorithms Class: Compilation of heuristics to generate a feasible route
 '''
 class Constructive():
 
-    def __init__(self, RCL_alpha: float, End_slack: int):
+    def __init__(self, RCL_alpha: float):
         self.RCL_alpha = RCL_alpha
-        self.End_slack = End_slack
 
     
     '''
     Reset the environment to restart experimentation (another parent)
     '''
     def reset(self, env: E_CVRP_TW):
-
         self.pending_c = deepcopy(env.Costumers)
 
 
@@ -290,7 +288,7 @@ class Constructive():
 
         RCL_mode = choice(['distance', 'TimeWindow'])
 
-        energy_feasible = False
+        energy_feasible = False     # Indicates if there is at least one candidate feasible by time and load but not charge
         for target in self.pending_c:
             distance = env.dist[node,target]
 
@@ -311,9 +309,9 @@ class Constructive():
         else:
             feasible_candidates = [i for i in feasible_candidates if env.C[i]['DueDate'] <= upper_bound]
         
-        if node != 'D' and t + env.dist[node,'D'] / env.v + self.End_slack >= env.T:
+        if node != 'D' and t + env.dist[node,'D'] / env.v >= env.T:
             return False, False
-        if feasible_candidates != []:
+        if len(feasible_candidates) != 0:
             target = choice(feasible_candidates)
             return target, energy_feasible
         else:
@@ -454,8 +452,6 @@ class Constructive():
     RCL based constructive
     parametrs:
     -   RCL_alpha
-    -   RCL_mode: {'distance', 'TimeWindow}
-    -   End_slack: Energy remaining to route to depot
 
     returns:
     -   t: Total time of route
@@ -543,9 +539,10 @@ class Constructive():
                         route += finish_route
                         break
             
-        if round(q) < 0:
-            print(q)
-            print("ERROR FATAL")
+        assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
+
+            
+            
 
         return t, d, q, k, route
 
