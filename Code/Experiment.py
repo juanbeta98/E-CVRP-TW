@@ -23,7 +23,7 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 '''
 Constructive heuristic
 '''
-RCL_alpha: float = 0.3            # RCL alpha
+RCL_alpha: float = 0.3              # RCL alpha
 End_slack: int = 20                 # Slack to send veicles to depot
 
 constructive: Constructive = Constructive(RCL_alpha, End_slack)
@@ -85,7 +85,7 @@ for instance in ['c102_21.txt']:
         '''
         Population generation
         '''
-        Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive) 
+        Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive)
         
         Incumbents: list[float] = [incumbent]
         T_Times: list[float] = [round(time() - start,2)]

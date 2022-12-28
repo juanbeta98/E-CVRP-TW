@@ -34,10 +34,23 @@ class E_CVRP_TW():
 
         self.instances = os.listdir(self.path + 'Instances/')
         self.instances.remove('readme.txt')
+        if '.DS_Store' in self.instances:
+            self.instances.remove('.DS_Store')
 
-        # self.l_instances = ['c101_21.txt', ]
-        # self.m_instances = []
-        # self.s_instances = ['c101C5.txt', 'c101C10.txt']
+        self.sizes = {'s': ['c103C5.txt', 'rc208C5.txt', 'c101C5.txt', 'c206C5.txt', 'rc108C5.txt', 'r104C5.txt', 'r203C5.txt', 
+        'r105C5.txt', 'c208C5.txt', 'rc105C5.txt', 'r202C5.txt', 'rc204C5.txt'], 
+                      'm': ['rc108C10.txt', 'r202C15.txt', 'r103C10.txt', 'rc205C10.txt', 'rc108C15.txt', 'rc201C10.txt', 
+        'c205C10.txt', 'rc102C10.txt', 'c104C10.txt', 'r105C15.txt', 'c106C15.txt', 'c103C15.txt', 'r102C10.txt', 'rc204C15.txt', 
+        'c101C10.txt', 'c202C10.txt', 'r201C10.txt', 'r203C10.txt', 'c202C15.txt', 
+        'r102C15.txt', 'r209C15.txt', 'rc202C15.txt', 'c208C15.txt', 'rc103C15.txt'], 
+                      'l': ['c202_21.txt', 'r201_21.txt', 'rc105_21.txt', 'r102_21.txt', 'rc206_21.txt', 'c101_21.txt',
+        'r110_21.txt', 'r112_21.txt', 'c103_21.txt', 'rc208_21.txt', 'rc204_21.txt', 'rc107_21.txt', 'r203_21.txt', 'r211_21.txt', 
+        'r104_21.txt', 'r108_21.txt', 'c107_21.txt', 'c204_21.txt', 'rc103_21.txt', 'c208_21.txt', 'r207_21.txt', 'r205_21.txt', 
+        'rc101_21.txt', 'c206_21.txt', 'r209_21.txt', 'c105_21.txt', 'r106_21.txt', 'rc202_21.txt', 'c109_21.txt', 'rc207_21.txt', 
+        'r103_21.txt', 'r111_21.txt', 'rc108_21.txt', 'c203_21.txt', 'rc104_21.txt', 'r202_21.txt', 'rc106_21.txt', 'c201_21.txt', 
+        'r210_21.txt', 'c102_21.txt', 'r101_21.txt', 'rc205_21.txt', 'c205_21.txt', 'r206_21.txt', 'rc102_21.txt', 'r105_21.txt', 
+        'rc201_21.txt', 'c106_21.txt', 'r109_21.txt', 'c104_21.txt', 'c108_21.txt', 'rc203_21.txt', 'r107_21.txt', 'r204_21.txt', 
+        'r208_21.txt', 'c207_21.txt']}
 
 
     '''
@@ -1122,4 +1135,3 @@ class Experiment():
             plt.xlim(0, xlim)
         plt.savefig(f'{path}', dpi = 600)
         #plt.show()
-
