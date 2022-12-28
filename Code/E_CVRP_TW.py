@@ -641,9 +641,6 @@ class Feasibility():
 Reparation class
 '''
 class Reparator(Constructive):
-
-    def __init__(self):
-        pass
     
     
     '''
@@ -693,7 +690,7 @@ class Reparator(Constructive):
 
             node = chorizo[i]
             if node in env.Costumers:
-                route, t, d, q, k = self.simple_routing(env, 'D', node, route, t, d, q, k)
+                t, d, q, k, route = self.simple_routing(env, 'D', node, route, t, d, q, k)
             else:
                 t += env.dist['D',node]/env.v
                 q -= env.dist['D',node]/env.r
@@ -756,7 +753,7 @@ class Reparator(Constructive):
 
 
                 else:
-                    route, t, d, q, k = self.simple_routing(env, node, target, route, t, d, q, k)
+                    t, d, q, k, route = self.simple_routing(env, node, target, route, t, d, q, k)
                     node = target
                     i += 1
                     if i + 1 >= len(chorizo):
@@ -802,54 +799,60 @@ Genetic algorithm:
 '''
 class Genetic():
 
-    def __init__(self, Population_size: int, Elite_size: int):
-        self.Population_size = Population_size
-        self.Elite_size = Elite_size
+    def __init__(self, Population_size: int, Elite_size: int, crossover_rate: float, mutation_rate: float) -> None:
+        self.Population_size: int = Population_size
+        self.Elite_size: int = Elite_size
+        self.crossover_rate: float = crossover_rate
+        self.mutation_rate: float = mutation_rate
 
     '''
     Initial population generator
     '''
-    def generate_population(self, constructive: Constructive, const_parameters: tuple, verbose: bool = False):
-        env, RCL_alpha, End_slack = const_parameters
+    def generate_population(self, env: E_CVRP_TW, constructive: Constructive, verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
 
         # Initalizing data storage
-        Population = []
-        Distances = []
-        Times = []
-        Details = []
+        Population: list = []
+        Distances: list[float] = []
+        Times: list[float] = []
+        Details: list[tuple] = []
+
+        incumbent: float = 1e9
+        best_individual: list = []
 
         # Generating initial population
         for individual in range(self.Population_size):
             if verbose and individual%20 == 0:     
                 print(f'Generation progress: {round(individual/self.Population_size)}')
 
-            parent = []
-            distance = 0
-            distances = []
-            ttime = 0
-            times = []
+            individual: list = []
+            distance: float = 0
+            distances: list = []
+            t_time: float = 0
+            times: list = []
 
 
             # Intitalizing environemnt
             constructive.reset(env)
             while len(constructive.pending_c) > 0:
 
-                RCL_mode = 'Hybrid'
-
-                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_mode, End_slack)
-                parent.append(route)
+                t, d, q, k, route = constructive.RCL_based_constructive(env)
+                individual.append(route)
                 distance += d
                 distances.append(d)
-                ttime += t
+                t_time += t
                 times.append(t)
                 
             
-            Population.append(parent)
+            Population.append(individual)
             Distances.append(distance)
-            Times.append(ttime)
+            Times.append(t_time)
             Details.append((distances, times))
+            
+            if distance < incumbent:
+                incumbent = distance
+                best_individual: list = [individual, distance, t_time, (distances, times)]
         
-        return Population, Distances, Times, Details
+        return Population, Distances, Times, Details, incumbent, best_individual
 
 
     '''
@@ -1004,7 +1007,7 @@ class Genetic():
         # return new_chromosome_1, new_chromosome_2
 
 
-    def print_initial_population(self, env: E_CVRP_TW, start: float, Population: list, Distances: list, feas_op: Reparator):
+    def print_initial_population(self, env: E_CVRP_TW, start: float, Population: list[list], Distances: list[float], feas_op: Reparator):
         print('\n###################   Initial Population   ####################\n')
         print(f'Total generation time: {time() - start} s')
         print(f'Number of individuals: {self.Population_size}')
@@ -1014,7 +1017,7 @@ class Genetic():
         print('\n')
 
 
-    def print_evolution(self, env: E_CVRP_TW, start: float, Population: list, generation: int, Distances: list, feas_op: Reparator, incumbent: float):
+    def print_evolution(self, env: E_CVRP_TW, start: float, Population: list[list], generation: int, Distances: list, feas_op: Reparator, incumbent: float):
         print(f'\n###################   Generation {generation}   ####################\n')
         print(f'Total evolution time: {time() - start} s')
         print(f'Number of individuals: {len(Population)}')
@@ -1030,45 +1033,17 @@ class Experiment():
     def __init__(self):
         pass
     
-    def generate_intial_population(self, env: E_CVRP_TW, constructive: Constructive, genetic: Genetic, Population_size: int):
-        '''
-        ------------------------------------------------------------------------------------------------
-        Initial Population
-        ------------------------------------------------------------------------------------------------
-        - Population: (list of lists) Each individual's routes
-        - Objectives: (list of int) Each individual's total time
-        - Distances: (list of list) Each individual's total distance
-        - Times: (list of list) Each individual's route's time
-        - Resluts: (list of lists of lists): Each individual's [q,k]
-        '''
-        start = time()
-        const_parameters = (env, RCL_alpha, End_slack)
-        Population, Distances, Times, Details = genetic.generate_population(constructive, const_parameters)
 
-        incumbent = 1e9
-        best_individual, Incumbents, TTimes = [], [], []
-        for i in range(Population_size):
-            if Distances[i] < incumbent:
-                incumbent = Distances[i]
-                best_individual = [Population[i], Distances[i], Times[i], Details[i]]
-                
-        Incumbents.append(incumbent)
-        TTimes.append(time() - start)
-    
-        return Population, Distances, Times, best_individual, incumbent, Incumbents, TTimes, start
-
-    
-
-    def evolution(self,  Population, Distances, Times, Incumbents, TTimes, Results, best_individual, incumbent, start, env, genetic, repair_op, max_time, crossover_rate):
+    def evolution(self, env: E_CVRP_TW, genetic: Genetic, repair_op: Reparator, Population: list[list], Distances: list[float], Incumbents: list[float], T_Times: list[float], Results: list, best_individual: list, start: float, max_time: int):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
         ------------------------------------------------------------------------------------------------
         '''
-        start_g = time()
-        generation = 0
+        generation: int = 0
+        incumbent = Incumbents[0]
 
-        while time() - start_g <= max_time:
+        while time() - start <= max_time:
             generation += 1
 
             ### Selecting elite class
@@ -1098,7 +1073,7 @@ class Experiment():
                 chosen_parent = choice([couple[0], couple[1]])
                 chorizo = repair_op.build_chorizo(env, Population[chosen_parent])
                 
-                if random() < crossover_rate:
+                if random() < genetic.crossover_rate:
                     cross_mode = choice(['2opt', 'simple_insertion', 'smart_crossover'])
                     new_chorizo = genetic.crossover(env, Population[chosen_parent], chorizo, cross_mode, repair_op)
                 else:
@@ -1113,24 +1088,24 @@ class Experiment():
             ### Repair solutions
             Population, Distances, Times = [],[],[]
             for i in range(genetic.Population_size):
-                parent, distance, distances, ttime, times  = repair_op.repair_chorizo(env, New_chorizos[i])
+                individual, distance, distances, t_time, times  = repair_op.repair_chorizo(env, New_chorizos[i])
 
-                Population.append(parent);  Distances.append(distance); 
-                Times.append(times)
+                Population.append(individual);  Distances.append(distance); 
+                Times.append(t_time)
 
                 if distance < incumbent:
                     incumbent = distance
-                    best_individual = [parent, distance, ttime, (distances, times)]
+                    best_individual = [individual, distance, t_time, (distances, times)]
                 
             # if generation % 50 == 0:
             #     genetic.print_evolution(env, start, Population, generation, Distances, feas_op, incumbent)
 
             Incumbents.append(round(incumbent,3))
-            TTimes.append(round(time()-start,2))
+            T_Times.append(round(time() - start,2))
             
-        Results.append((Incumbents,TTimes))
+        Results.append((Incumbents,T_Times))
     
-        return Incumbents, TTimes, Results, best_individual, incumbent
+        return Incumbents, T_Times, Results, incumbent, best_individual
 
 
 
