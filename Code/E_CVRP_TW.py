@@ -67,6 +67,7 @@ class E_CVRP_TW():
         
         self.S, self.Stations  = {}, []             # Charging stations
         self.C, self.Costumers = {}, []             # Costumers
+        self.node_type = {}
 
         while True:
             
@@ -76,12 +77,14 @@ class E_CVRP_TW():
             if typ == 'f':
                 self.S[ID] = {'type': 's', 'x': x, 'y': y}
                 self.Stations.append(ID)
+                self.node_type[ID] = 's'
 
             else:
                 d, ReadyTime, DueDate, ServiceTime = [float(i) for i in [i for i in str(file[fila]).split(' ') if i != ''][4:8]]
                 self.C[ID] = { 'type': typ, 'x': x, 'y': y, 'd': d, 'ReadyTime': ReadyTime, 
                                'DueDate': DueDate, 'ServiceTime': ServiceTime}
                 self.Costumers.append(ID)
+                self.node_type[ID] = 'c'
 
             fila += 1
             if file[fila][0] == "\n":
@@ -101,14 +104,6 @@ class E_CVRP_TW():
     def generate_parameters(self):
         self.compute_distances()
         self.closest_stations()
-
-
-    '''
-    Compute euclidean distance between two nodes
-    '''
-    def euclidean_distance(self,x: float, y: float):
-        distance = ((x['x'] - y['x'])**2 + (x['y'] - y['y'])**2)**(1/2)
-        return distance
 
 
     '''
@@ -148,6 +143,14 @@ class E_CVRP_TW():
                     self.dist[s1, s] = self.dist[s, s1]
     
     
+    '''
+    Compute euclidean distance between two nodes
+    '''
+    def euclidean_distance(self,x: float, y: float):
+        distance = ((x['x'] - y['x'])**2 + (x['y'] - y['y'])**2)**(1/2)
+        return distance
+
+
     '''
     Generates the closest station to each costumer
     '''
@@ -282,13 +285,13 @@ class Constructive():
     - OPENING TIME WINDOW
     '''
     def generate_candidate_from_RCL(self, env: E_CVRP_TW, node: str, t: float, q: float, k: int):
-        feasible_candidates = []
-        max_crit = -1e9
-        min_crit = 1e9
+        feasible_candidates: list = []
+        max_crit: float = -1e9
+        min_crit: float = 1e9
 
-        RCL_mode = choice(['distance', 'TimeWindow'])
+        RCL_mode: str = choice(['distance', 'TimeWindow'])
 
-        energy_feasible = False     # Indicates if there is at least one candidate feasible by time and load but not charge
+        energy_feasible: bool = False     # Indicates if there is at least one candidate feasible by time and load but not charge
         for target in self.pending_c:
             distance = env.dist[node,target]
 
@@ -328,6 +331,7 @@ class Constructive():
     def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance, t: float, q: float, k: int, energy_feasible: bool):
         capacity_c = k + env.C[target]['d'] <= env.K
         time_c = t + distance / env.v  <= env.C[target]['DueDate']
+        # Energy enough to go to target and then to closest station
         energy_c = q - distance / env.r - env.dist[target,env.closest[target]] / env.r >= 0
 
         if capacity_c and time_c and energy_c:
@@ -424,27 +428,41 @@ class Constructive():
     '''
     Routes between to ca costumer
     '''
-    def simple_routing(self, env: E_CVRP_TW, node: str, target: str, route: list, t: float, d: float, q: float, k: int):
-        tgt = env.C[target]
-
+    def direct_routing(self, env: E_CVRP_TW, node: str, target: str, t: float, d: float, q: float, k: int, route: list):
         # Time update
         tv = env.dist[node, target] / env.v
-        start_service = max(t + tv, tgt['ReadyTime'])
-        t = start_service + tgt['ServiceTime']
 
         # Distance update
         d += env.dist[node, target]
-        
-        # Load update
-        k += tgt['d']
 
         # Charge update
         q -= env.dist[node, target] / env.r
+
+        # Target is costumer
+        if env.node_type[target] == 'c':
+            tgt = env.C[target]
+
+            # Time update
+            start_service = max(t + tv, tgt['ReadyTime'])
+            t = start_service + tgt['ServiceTime']
+
+            # Load update
+            k += tgt['d']
+            
+            # Route update
+            self.pending_c.remove(target)
+
+        # Target is station
+        else:
+            # Time update
+            t += (env.Q - q) * env.g
+
+            ## Charge update
+            q = env.Q
         
         # Route update
         route.append(target)
-        self.pending_c.remove(target)
-
+        
         return t, d, q, k, route
 
 
@@ -460,7 +478,10 @@ class Constructive():
     -   route: list with sequence of nodes of route
     '''
     def RCL_based_constructive(self, env: E_CVRP_TW):
-        t, d, q, k = 0, 0, env.Q, 0     # Initialize parameters
+        t: float = 0
+        d: float = 0
+        q: float = env.Q
+        k: int = 0     
         node = 'D'; route = [node]   # Initialize route
 
         # Adding nodes to route
@@ -470,33 +491,22 @@ class Constructive():
 
             # Found a target
             if target != False:
-                t, d, q, k, route = self.simple_routing(env, node, target, route, t, d, q, k)
+                t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
                 node = target
                 
             # No feasible target
             else:
-                
                 # One candidate but not enough energy to travel
                 if energy_feasible:
                     # Route to closest station and charge
-                    ## Time update
-                    t += env.dist[node,env.closest[node]] / env.v 
-                    t += (env.Q - q) * env.g
-
-                    # Distance update
-                    d += env.dist[node,env.closest[node]] 
-
-                    ## Charge update
-                    q = env.Q 
-
-                    ## Update route 
-                    node = env.closest[node]
-                    route.append(node)
+                    target = env.closest[node]
+                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                    node = target
 
                     # Chose candidate from RCL
                     target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
                     if target != False:
-                        t, d, q, k, route = self.simple_routing(env, node, target, route, t, d, q, k)
+                        t, d, q, k, route = self.simple_routing(env, node, target, t, d, q, k, route)
                         node = target
                 
                     # No feasible target
@@ -540,10 +550,9 @@ class Constructive():
                         break
             
         assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
-
+        assert round(q) >= 0, f'The vehicle ran out of charge'
+        assert k < env.K, f'The vehicles capacity is exceeded \n-Max load: {env.K} \n- Current load: {k}'
             
-            
-
         return t, d, q, k, route
 
 
@@ -700,7 +709,7 @@ class Reparator(Constructive):
 
             node = chorizo[i]
             if node in env.Costumers:
-                t, d, q, k, route = self.simple_routing(env, 'D', node, route, t, d, q, k)
+                t, d, q, k, route = self.simple_routing(env, 'D', node, t, d, q, k, route)
             else:
                 t += env.dist['D',node]/env.v
                 q -= env.dist['D',node]/env.r
@@ -763,7 +772,7 @@ class Reparator(Constructive):
 
 
                 else:
-                    t, d, q, k, route = self.simple_routing(env, node, target, route, t, d, q, k)
+                    t, d, q, k, route = self.simple_routing(env, node, target, t, d, q, k, route)
                     node = target
                     i += 1
                     if i + 1 >= len(chorizo):
