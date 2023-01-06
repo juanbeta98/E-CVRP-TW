@@ -203,7 +203,7 @@ class E_CVRP_TW():
         nx.draw_networkx(G, pos = pos, with_labels = True, nodelist = nodes_to_draw, 
                          node_color = node_color, edge_color = edge_colors, alpha = 0.8, 
                          font_size = 7, node_size = 200)
-        plt.savefig('results.png', dpi = 600)
+        plt.savefig(self.path + 'Results/sexting.png', dpi = 600)
         plt.show()
         
 
