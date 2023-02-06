@@ -331,17 +331,20 @@ class Constructive():
     def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance, t: float, q: float, k: int, energy_feasible: bool):
         capacity_c = k + env.C[target]['d'] <= env.K
         time_c = t + distance / env.v  <= env.C[target]['DueDate']
+        t_time_c = t + distance / env.v + env.C[target]['ServiceTime'] + env.dist[target,'D'] / env.v < env.T
         # Energy enough to go to target and then to closest station
         energy_c = q - distance / env.r - env.dist[target,env.closest[target]] / env.r >= 0
 
-        if capacity_c and time_c and energy_c:
+        # The candidate is completely feasible
+        if capacity_c and time_c and t_time_c and energy_c:
             return True, True
-        elif capacity_c and time_c:
-            return False, False
-        elif energy_c:
+        # The candidate is completely feasible but not reachable by energy
+        elif capacity_c and time_c and t_time_c:
             return False, True
+        # The candidate is unfeasible by any condition 
         else:
             return False, energy_feasible
+
     
 
     '''
@@ -363,15 +366,19 @@ class Constructive():
     returns:
     -   route in list (excluding current node)
     '''
-    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float):
-        route = []
+    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, route: list):
+        finish_route = []
+        extra_t = 0
+        extra_d = 0
+        extra_q = 0
+        
 
         # The vehicle can go directly to depot
         if env.dist[node,'D'] / env.v < q:
-            route += ['D']
-            t += env.dist[node,'D']
-            d += env.dist[node,'D']
-            q -= env.dist[node,'D'] / env.v
+            finish_route += ['D']
+            extra_t += env.dist[node,'D']
+            extra_d += env.dist[node,'D']
+            extra_q -= env.dist[node,'D'] / env.v
         
         # Vehicle hasn't enough energy to get to depot
         else:
@@ -380,53 +387,52 @@ class Constructive():
             # Optimal station on route to depot exists and is reachable
             if q - env.dist[node,s] / env.r >= 0:
                 # Update to station
-                t += env.dist[node, s] / env.v
-                d += env.dist[node,s]
-                q -= env.dist[node,s] / env.r
+                extra_t += env.dist[node, s] / env.v
+                extra_d += env.dist[node,s]
+                extra_q -= env.dist[node,s] / env.r
 
                 # Update in station
-                route.append(s)
+                finish_route.append(s)
                 recarga = env.dist[s,'D'] / env.r - q 
-                t += recarga * env.g
-                q += recarga
+                extra_t += recarga * env.g
+                extra_q += recarga
 
-                # Update to depop
-                route.append('D')
-                t += env.dist[s,'D'] / env.v
-                d += env.dist[s,'D']
-                q -= env.dist[s,'D'] / env.r
-
-                if env.dist[s,'D'] / env.r > env.Q:     
-                    print('Daniel es un marica \nDepot is not reachable from station')
+                # Update to depot
+                finish_route.append('D')
+                extra_t += env.dist[s,'D'] / env.v
+                extra_d += env.dist[s,'D']
+                extra_q -= env.dist[s,'D'] / env.r   
                 
             # Optimal station is not reachable
             else:
                 s = env.closest[node]
                 # Update to station
-                t += env.dist[node, s] / env.v
-                d += env.dist[node,s]
-                q -= env.dist[node,s] / env.r
+                extra_t += env.dist[node, s] / env.v
+                extra_d += env.dist[node,s]
+                extra_q -= env.dist[node,s] / env.r
 
                 # Update in station
-                route.append(s)
+                finish_route.append(s)
                 recarga = env.dist[s,'D'] / env.r - q 
-                t += recarga * env.g
-                q += recarga
+                extra_t += recarga * env.g
+                extra_q += recarga
 
-                # Update to depto
-                route.append('D')
-                t += env.dist[s,'D'] / env.v
-                d += env.dist[s,'D']
-                q -= env.dist[s,'D'] / env.r
+                # Update to dep
+                finish_route.append('D')
+                extra_t += env.dist[s,'D'] / env.v
+                extra_d += env.dist[s,'D']
+                extra_q -= env.dist[s,'D'] / env.r 
 
-                if env.dist[s,'D'] / env.r > env.Q:     
-                    print('Daniel es un marica \nDepot is not reachable from station')
-        
-        return t, d, q, route
+        if t + extra_t >= env.T:
+            route.remove(route[-1])
+            node = route[-1]
+            self.route_to_depot(env, node, t, d, q, route)  
+        else:
+            return t + extra_t, d + extra_d, q + extra_q, route + finish_route
 
 
     '''
-    Routes between to ca costumer
+    Routes between costumers to costumers or stations
     '''
     def direct_routing(self, env: E_CVRP_TW, node: str, target: str, t: float, d: float, q: float, k: int, route: list):
         # Time update
@@ -455,7 +461,7 @@ class Constructive():
         # Target is station
         else:
             # Time update
-            t += (env.Q - q) * env.g
+            t += tv + (env.Q - q) * env.g
 
             ## Charge update
             q = env.Q
@@ -488,66 +494,35 @@ class Constructive():
         while True:
 
             target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
-
+            
             # Found a target
             if target != False:
                 t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
                 node = target
                 
-            # No feasible target
+            # No feasible direct target
             else:
+
                 # One candidate but not enough energy to travel
                 if energy_feasible:
                     # Route to closest station and charge
                     target = env.closest[node]
-                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                    node = target
 
-                    # Chose candidate from RCL
-                    target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
-                    if target != False:
-                        t, d, q, k, route = self.simple_routing(env, node, target, t, d, q, k, route)
+                    # Check for total time
+                    if t + env.dist[node,target] / env.v + ((env.Q - q - (env.dist[node,target] / env.r)) * env.g) < env.T:
+                        t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
                         node = target
-                
-                    # No feasible target
+
+                    # Total time unfeasible
                     else:
                         # Nothing to do , go to depot
-                        t, d, q, finish_route = self.route_to_depot(env, node, t, d, q)
-                        route += finish_route
+                        t, d, q, route = self.route_to_depot(env, node, t, d, q, route)
                         break
-
+                
+                # Nothing to do , go to depot
                 else:
-                    # Pending node but not enough energy to get there and then to station
-                    if len(self.pending_c) == 1 and t + env.C[self.pending_c[0]]['DueDate'] / env.v <= env.C[self.pending_c[0]]['DueDate']:
-                        s = self.optimal_station(env, node, self.pending_c[0])
-
-                        # Optimal station on route to depot exists and is reachable
-                        if q - env.dist[node,s] / env.r >= 0:
-                            pass
-                        elif q - env.dist[node,env.closest[self.pending_c[0]]] / env.r >= 0:
-                            s = self.closest[env.pending_c[0]]
-                        else:
-                            break
-
-                        # Update to station
-                        t += env.dist[node, s] / env.v
-                        d += env.dist[node,s]
-                        q -= env.dist[node,s] / env.r
-
-                        # Update in station
-                        route.append(s)
-                        recarga = env.Q - q
-                        t += recarga * env.g
-                        q = env.Q
-
-                        # Update to depop
-                        node = s
-
-                    # Nothing to do , go to depot
-                    else:
-                        t, d, q, finish_route = self.route_to_depot(env, node, t, d, q)
-                        route += finish_route
-                        break
+                    t, d, q, route = self.route_to_depot(env, node, t, d, q, route)
+                    break
             
         assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
         assert round(q) >= 0, f'The vehicle ran out of charge'
@@ -663,26 +638,23 @@ class Reparator(Constructive):
     
     
     '''
-    Repair protocol
+    Repair protocol for a
     '''
-    def repair_individual(self, env: E_CVRP_TW, individual: list):
-        if individual[0] != 'D' or individual[-1] != 'D':
-            pass
-        visited = []
+    # def repair_route_termination(self, env: E_CVRP_TW, t: float, d: float, q: float, k: int, route: list):
+    #     if route[-1] in env.Costumers:
+    #         # Remove updates from route indicators
+    #         # Load
+    #         k -= env.C[route[-1]]['d']
 
-        for route in individual:
+    #         # Distance
+    #         d -= env.dist[route[-2], route[-1]]
 
-            for node in route[1:-1]:
-                if node not in env.Stations and node in visited:
-                    route.remove(node)
-                elif node not in env.Stations:
-                    pass
+    #         # Time
+    #         t -= env.C[route[-1]]['ServiceTime']
+    #         start_time = max(t, env.)
+    #         t -= env.dist[route[-2], route[-1]] / env.v
+            
 
-
-    def repair_termination(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
-        # Not enough time
-        travel_time = env.dist[node,target] / env.v
-        extra_tiem = 0
 
 
     def repair_chorizo(self, env: E_CVRP_TW, chorizo: list):
@@ -838,8 +810,10 @@ class Genetic():
         incumbent: float = 1e9
         best_individual: list = []
 
+        ind = 0
         # Generating initial population
         for individual in range(self.Population_size):
+            print(f'Ind: {ind}'); ind += 1
             if verbose and individual%20 == 0:     
                 print(f'Generation progress: {round(individual/self.Population_size)}')
 
@@ -848,12 +822,14 @@ class Genetic():
             distances: list = []
             t_time: float = 0
             times: list = []
+            num_routes = 0
 
 
             # Intitalizing environemnt
             constructive.reset(env)
+            rou = 0
             while len(constructive.pending_c) > 0:
-
+                print(f'\tRou: {rou}'); rou += 1
                 t, d, q, k, route = constructive.RCL_based_constructive(env)
                 individual.append(route)
                 distance += d

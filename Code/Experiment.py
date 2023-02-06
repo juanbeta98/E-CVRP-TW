@@ -11,7 +11,7 @@ max_time: int = 3600
 rd_seed: int = 0
 seed(rd_seed)
 
-path: str = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/' ##### CHANGE IF NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/' ##### CHANGE WHEN NECESSARY!!!
 
 
 '''
