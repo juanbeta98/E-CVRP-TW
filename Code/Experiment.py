@@ -68,51 +68,81 @@ III: list = []
 # Hardest = ['c204_21.txt', 'r201_21.txt', 'rc207_21.txt', 'rc208_21.txt']
 
 
-Results: list = []
-
-for instance in ['c102_21.txt']:
-    '''
-    Reseting experimentation
-    '''
-    env.load_data(instance)
-    env.generate_parameters()
-    
-    for operator in [1]:
-        
-        repair_op.reset(env)
-
-        '''
-        Population generation
-        '''
-        Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive)
-        
-        Incumbents: list[float] = [incumbent]
-        T_Times: list[float] = [round(time() - start,2)]
-        initial_best: list = best_individual
-        
-
-        '''
-        Evolution
-        '''
-        # Incumbents, T_Times, Results, incumbent, best_individual = \
-        #     lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
 
 
-    # with open(path + f'Results/{instance}', 'a') as f:
-    #     f.write(str(Results))
 
 
-    # with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/R_res_{instance}', 'w') as f:
-    #     f.write(str(best_initial) + '\n')
-    #     f.write(str(incumbent) + '\n')
-    #     f.write(str(best_individual))
+'''
+Single instance testing
+'''
+instance = 'c102_21.txt'
+env.load_data(instance)
+env.generate_parameters()
+repair_op.reset(env)
 
-
-    # lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')
+# Population generation
+Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive)
 
 print('\n')
 print('############## Testing done ################')
 print(f'total time: {round(time() - start,2)}')
 print(f'incumbent: {round(incumbent,2)}')
-print(f'best solution: {initial_best[0]}')
+print(f'best solution: {best_individual}')
 print('\n')
+
+
+
+
+
+
+
+# Results: list = []
+
+# for instance in ['c102_21.txt']:
+#     '''
+#     Reseting experimentation
+#     '''
+#     env.load_data(instance)
+#     env.generate_parameters()
+    
+#     for operator in [1]:
+        
+#         repair_op.reset(env)
+
+#         '''
+#         Population generation
+#         '''
+#         Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive)
+        
+#         Incumbents: list[float] = [incumbent]
+#         T_Times: list[float] = [round(time() - start,2)]
+#         initial_best: list = best_individual
+        
+
+#         '''
+#         Evolution
+#         '''
+#         # Incumbents, T_Times, Results, incumbent, best_individual = \
+#         #     lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
+
+
+#     # with open(path + f'Results/{instance}', 'a') as f:
+#     #     f.write(str(Results))
+
+
+#     # with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/R_res_{instance}', 'w') as f:
+#     #     f.write(str(best_initial) + '\n')
+#     #     f.write(str(incumbent) + '\n')
+#     #     f.write(str(best_individual))
+
+
+#     # lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')
+
+# print('\n')
+# print('############## Testing done ################')
+# print(f'total time: {round(time() - start,2)}')
+# print(f'incumbent: {round(incumbent,2)}')
+# print(f'best solution: {initial_best[0]}')
+# print('\n')
+
+

@@ -413,7 +413,7 @@ class Constructive():
 
                 # Update in station
                 finish_route.append(s)
-                recarga = env.dist[s,'D'] / env.r - q 
+                recarga = env.dist[s,'D'] / env.r - extra_q 
                 extra_t += recarga * env.g
                 extra_q += recarga
 
@@ -426,6 +426,7 @@ class Constructive():
         if t + extra_t >= env.T:
             route.remove(route[-1])
             node = route[-1]
+            #TODO CHANGE UPDATE ON T D AND Q TO PREVIOUS TRANSITION ON RECURSION
             self.route_to_depot(env, node, t, d, q, route)  
         else:
             return t + extra_t, d + extra_d, q + extra_q, route + finish_route
