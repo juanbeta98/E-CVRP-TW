@@ -509,7 +509,7 @@ class Constructive():
                     # Route to closest station and charge
                     target = env.closest[node]
 
-                    # Check for total time
+                    # Check for total time, station is reachable 
                     if t + env.dist[node,target] / env.v + ((env.Q - q - (env.dist[node,target] / env.r)) * env.g) < env.T:
                         t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
                         node = target
