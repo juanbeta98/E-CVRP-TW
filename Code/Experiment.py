@@ -31,7 +31,7 @@ constructive: Constructive = Constructive(RCL_alpha)
 '''
 Genetic algorithm
 '''
-Population_size: int = 3000
+Population_size: int = 1000
 Elite_size: int = int(Population_size * 0.05)
 crossover_rate: float = 0.6
 mutation_rate: float = 0.5
@@ -75,7 +75,7 @@ III: list = []
 '''
 Single instance testing
 '''
-instance = 'c102_21.txt'
+instance = 'c103C5.txt'
 env.load_data(instance)
 env.generate_parameters()
 repair_op.reset(env)

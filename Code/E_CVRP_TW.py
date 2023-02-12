@@ -328,10 +328,10 @@ class Constructive():
         2. Time windows
         3. Charge at least to go to target and go to closest station 
     '''
-    def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance, t: float, q: float, k: int, energy_feasible: bool):
+    def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance: float, t: float, q: float, k: int, energy_feasible: bool):
         capacity_c = k + env.C[target]['d'] <= env.K
         time_c = t + distance / env.v  <= env.C[target]['DueDate']
-        t_time_c = t + distance / env.v + env.C[target]['ServiceTime'] + env.dist[target,'D'] / env.v < env.T
+        t_time_c = t + distance / env.v + env.C[target]['ServiceTime']  + env.dist[target,'D'] / env.v < env.T
         # Energy enough to go to target and then to closest station
         energy_c = q - distance / env.r - env.dist[target,env.closest[target]] / env.r >= 0
 
@@ -366,7 +366,7 @@ class Constructive():
     returns:
     -   route in list (excluding current node)
     '''
-    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, route: list):
+    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, k: int, route: list, dep_times: list[float]):
         finish_route = []
         extra_t = 0
         extra_d = 0
@@ -397,6 +397,7 @@ class Constructive():
                 extra_t += recarga * env.g
                 extra_q += recarga
 
+
                 # Update to depot
                 finish_route.append('D')
                 extra_t += env.dist[s,'D'] / env.v
@@ -424,12 +425,21 @@ class Constructive():
                 extra_q -= env.dist[s,'D'] / env.r 
 
         if t + extra_t >= env.T:
-            route.remove(route[-1])
+            removed = route.pop()
+
             node = route[-1]
-            #TODO CHANGE UPDATE ON T D AND Q TO PREVIOUS TRANSITION ON RECURSION
-            self.route_to_depot(env, node, t, d, q, route)  
+            d -= env.dist[node,removed]
+            q += env.dist[node,removed] / env.r
+            k -= env.C[removed]['d']
+            
+            del dep_times[-1]
+            t = dep_times[-1]
+            
+            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_times)  
+            return t, d, q, k, route
+
         else:
-            return t + extra_t, d + extra_d, q + extra_q, route + finish_route
+            return t + extra_t, d + extra_d, q + extra_q, k, route + finish_route
 
 
     '''
@@ -489,7 +499,9 @@ class Constructive():
         d: float = 0
         q: float = env.Q
         k: int = 0     
-        node = 'D'; route = [node]   # Initialize route
+        node = 'D'
+        route = [node]   # Initialize route
+        dep_times = [0] # Auxiliary list with departure times
 
         # Adding nodes to route
         while True:
@@ -499,6 +511,7 @@ class Constructive():
             # Found a target
             if target != False:
                 t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                dep_times.append(t)
                 node = target
                 
             # No feasible direct target
@@ -512,17 +525,18 @@ class Constructive():
                     # Check for total time, station is reachable 
                     if t + env.dist[node,target] / env.v + ((env.Q - q - (env.dist[node,target] / env.r)) * env.g) < env.T:
                         t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                        dep_times.append(t)
                         node = target
 
                     # Total time unfeasible
                     else:
                         # Nothing to do , go to depot
-                        t, d, q, route = self.route_to_depot(env, node, t, d, q, route)
+                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_times)
                         break
                 
                 # Nothing to do , go to depot
                 else:
-                    t, d, q, route = self.route_to_depot(env, node, t, d, q, route)
+                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_times)
                     break
             
         assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
