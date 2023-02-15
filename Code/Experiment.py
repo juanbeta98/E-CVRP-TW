@@ -92,7 +92,8 @@ print('\n')
 
 
 
-
+env.detail_route(['D', 'C65', 'C57', 'D'])
+env.detail_route(['D', 'C98', 'S0', 'C24', 'C20', 'D'])
 
 
 

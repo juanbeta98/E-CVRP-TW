@@ -216,37 +216,42 @@ class E_CVRP_TW():
 
 
     def detail_route(self, route: list):
-        t, q, k = 0, self.Q, 0
-        print('########## Departure from the depot ##########\n')
+        # TODO: update method to display distances
+        t, d, q, k = 0, 0, self.Q, 0
+        print('########## Route started ##########\n')
         for i in range(len(route) - 1):
             node = route[i]
             target = route[i+1]
             if target in self.Costumers:
-                print('Travel')
-                print(f'- travel_t {round(self.dist[node, target] / self.v,2)}')
+                print(f'Travel from {node} to {target}')
+                print(f'- travel time {round(self.dist[node, target] / self.v,2)}')
                 t += round(self.dist[node, target]/self.v,2)
                 print(f'- t: {t}')
+                d += round(self.dist[node, target],2)
+                print(f'- d: {d}')
                 q -= round(self.dist[node, target] / self.r,2)
                 print(f'- q: {q}')
                 print('\n')
 
 
                 print(f'COSTUMER {target}')
-                print(f'R \tD \tSt')
+                print(f'Rea \tDue \tSt')
                 print(f'{round(self.C[target]["ReadyTime"],2)} \t{round(self.C[target]["DueDate"],2)} \t{round(self.C[target]["ServiceTime"],2)}')
                 print('------------------------')
                 t = round(max(t, self.C[target]['ReadyTime']),2)
                 print(f'- start_time: {t}')
                 t += self.C[target]['ServiceTime']
-                print(f'- t: {t}')
+                print(f'- departure_time: {t}')
                 k += self.C[target]['d']
                 print(f'- k: {k}')
             
             elif target in self.Stations:
-                print('Travel')
-                print(f'- travel_t {round(self.dist[node, target] / self.v,2)}')
+                print(f'Travel from {node} to {target}')
+                print(f'- travel time {round(self.dist[node, target] / self.v,2)}')
                 t += round(self.dist[node, target]/self.v,2)
                 print(f'- t: {t}')
+                d += round(self.dist[node, target],2)
+                print(f'- d: {d}')
                 q -= round(self.dist[node, target] / self.r,2)
                 print(f'- q: {q}')
                 print('\n')
@@ -259,6 +264,12 @@ class E_CVRP_TW():
                 print(f'- q: {q}')
         
             print('\n')
+        
+        print('########## Route finished ##########\n')
+        print(f'Total time: {t}')
+        print(f'Total load: {k}')
+        print(f'total distance: {d}')
+
 
 
 
@@ -453,7 +464,7 @@ class Constructive():
         d += env.dist[node, target]
 
         # Charge update
-        q -= env.dist[node, target] / env.r
+        q -= (env.dist[node, target] / env.r)
 
         # Target is costumer
         if env.node_type[target] == 'c':
@@ -523,7 +534,7 @@ class Constructive():
                     target = env.closest[node]
 
                     # Check for total time, station is reachable 
-                    if t + env.dist[node,target] / env.v + ((env.Q - q - (env.dist[node,target] / env.r)) * env.g) < env.T:
+                    if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
                         t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
                         dep_times.append(t)
                         node = target
