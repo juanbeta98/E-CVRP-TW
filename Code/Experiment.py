@@ -75,8 +75,9 @@ III: list = []
 '''
 Single instance testing
 '''
-instance = 'c103C5.txt'
-# instance = env.sizes['l'][0]
+# instance = 'c103C5.txt'
+instance = env.sizes['l'][0]
+print(instance)
 env.load_data(instance)
 env.generate_parameters()
 repair_op.reset(env)
@@ -93,8 +94,9 @@ print('\n')
 
 
 
-env.detail_route(['D', 'C65', 'C57', 'D'])
-env.detail_route(['D', 'C98', 'S0', 'C24', 'C20', 'D'])
+env.detail_route(['D', 'C11', 'C92', 'C97', 'C95', 'C99', 'C100', 'C1', 'C2', 'S3', 'C21', 'C22', 'D'])
+print(env.T)
+# env.detail_route(['D', 'C98', 'S0', 'C24', 'C20', 'D'])
 
 
 

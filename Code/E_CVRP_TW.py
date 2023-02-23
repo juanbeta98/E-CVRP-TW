@@ -377,7 +377,7 @@ class Constructive():
     returns:
     -   route in list (excluding current node)
     '''
-    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, k: int, route: list, dep_times: list[float]):
+    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, k: int, route: list, dep_t: list[float], dep_q: list[float]):
         finish_route = []
         extra_t = 0
         extra_d = 0
@@ -437,16 +437,20 @@ class Constructive():
 
         if t + extra_t >= env.T:
             removed = route.pop()
-
             node = route[-1]
-            d -= env.dist[node,removed]
-            q += env.dist[node,removed] / env.r
-            k -= env.C[removed]['d']
+
+            if removed in env.Costumers:
+                d -= env.dist[node,removed]
+                k -= env.C[removed]['d']
+            else:
+                d -= env.dist[node,removed]
             
-            del dep_times[-1]
-            t = dep_times[-1]
+            del dep_t[-1]
+            t = dep_t[-1]
+            del dep_q[-1]
+            q = dep_q[-1]
             
-            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_times)  
+            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)  
             return t, d, q, k, route
 
         else:
@@ -512,7 +516,9 @@ class Constructive():
         k: int = 0     
         node = 'D'
         route = [node]   # Initialize route
-        dep_times = [0] # Auxiliary list with departure times
+    
+        dep_t = [0] # Auxiliary list with departure times
+        dep_q = [env.Q]
 
         # Adding nodes to route
         while True:
@@ -522,7 +528,7 @@ class Constructive():
             # Found a target
             if target != False:
                 t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                dep_times.append(t)
+                dep_t.append(t); dep_q.append(q)
                 node = target
                 
             # No feasible direct target
@@ -536,18 +542,18 @@ class Constructive():
                     # Check for total time, station is reachable 
                     if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
                         t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                        dep_times.append(t)
+                        dep_t.append(t); dep_q.append(q)
                         node = target
 
                     # Total time unfeasible
                     else:
                         # Nothing to do , go to depot
-                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_times)
+                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                         break
                 
                 # Nothing to do , go to depot
                 else:
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_times)
+                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                     break
             
         assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
