@@ -11,7 +11,7 @@ max_time: int = 3600
 rd_seed: int = 0
 seed(rd_seed)
 
-path: str = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 
 '''
@@ -76,6 +76,7 @@ III: list = []
 Single instance testing
 '''
 instance = 'c103C5.txt'
+# instance = env.sizes['l'][0]
 env.load_data(instance)
 env.generate_parameters()
 repair_op.reset(env)
