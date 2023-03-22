@@ -3,7 +3,11 @@ from numpy.random import seed
 from time import time
 import sys
 import pickle
-sys.path.insert(0,'/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/')
+
+#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy//E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+
+sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Genetic, Feasibility, Reparator, Experiment
 
 '''
@@ -14,7 +18,6 @@ start: float = time()
 rd_seed: int = 0
 seed(rd_seed)
 
-path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 '''
 Environment
