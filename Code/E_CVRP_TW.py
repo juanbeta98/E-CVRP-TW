@@ -23,7 +23,7 @@ CE_VRP_TW Class: Parameters and information
 '''
 class E_CVRP_TW(): 
 
-    def __init__(self, path: str = '/Users/juanbeta/My Drive/Research/Energy/CG-VRP-TW/'):
+    def __init__(self, path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/'):
         self.path = path
         self.colors = ['black', 'red', 'green', 'blue', 'purple', 'orange', 'pink', 'grey', 
                        'yellow', 'tab:red', 'tab:green', 'tab:blue', 'tab:purple', 'tab:orange', 
@@ -203,7 +203,7 @@ class E_CVRP_TW():
         nx.draw_networkx(G, pos = pos, with_labels = True, nodelist = nodes_to_draw, 
                          node_color = node_color, edge_color = edge_colors, alpha = 0.8, 
                          font_size = 7, node_size = 200)
-        plt.savefig(self.path + 'Results/sexting.png', dpi = 600)
+        plt.savefig(self.path + 'sexting.png', dpi = 600)
         plt.show()
         
 
@@ -541,24 +541,30 @@ class Constructive():
                     
                 # No feasible direct target
                 else:
-
+                    
                     # One candidate but not enough energy to travel
                     if energy_feasible:
-                        # Route to closest station and charge
-                        target = env.closest[node]
+                        
+                        # One candidate left but unreachable from depot bc energy 
+                        if node == 'D' and len(self.pending_c) == 1:
+                            target = self.optimal_station(env, node, self.pending_c[0])
 
-                        # Check for total time, station is reachable 
-                        if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
-                            t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                            dep_t.append(t); dep_q.append(q)
-                            node = target
-
-                        # Total time unfeasible
                         else:
-                            # Nothing to do , go to depot
-                            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                            break
-                    
+                            # Route to closest station and charge
+                            target = env.closest[node]
+
+                            # Check for total time, station is reachable 
+                            if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
+                                t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                                dep_t.append(t); dep_q.append(q)
+                                node = target
+
+                            # Total time unfeasible
+                            else:
+                                # Nothing to do , go to depot
+                                t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                                break
+
                     # Nothing to do , go to depot
                     else:
                         t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)

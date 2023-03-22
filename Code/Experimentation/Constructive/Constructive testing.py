@@ -1,3 +1,4 @@
+#%%
 from numpy.random import seed
 from time import time
 import sys
@@ -36,7 +37,6 @@ Variable convention:
 '''
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
-III: list = []
 
 
 '''
@@ -49,16 +49,18 @@ Results = {}
 Incumbents = []
 Times = []
 
-
 for instance in env.instances:
+    print(f'Instance {instance}')
     # Constructive
     start = time()
     env.load_data(instance)
     env.generate_parameters()
     constructive.reset(env)
     incumbent = 1e9
+    ind = 0
 
     while time() - start < max_time:
+        # print(f'ind: {ind}');ind += 1
         individual: list = []
         distance: float = 0
         distances: list = []
@@ -67,7 +69,6 @@ for instance in env.instances:
 
         # Intitalizing environemnt
         constructive.reset(env)
-        rou = 0
         while len(constructive.pending_c) > 0:
             t, d, q, k, route = constructive.RCL_based_constructive(env)
             individual.append(route)
@@ -76,9 +77,9 @@ for instance in env.instances:
             t_time += t
             times.append(t)
             
-            if distance < incumbent:
-                incumbent = distance
-                best_individual: list = [individual, distance, t_time, (distances, times)]
+        if distance < incumbent:
+            incumbent = distance
+            best_individual: list = [individual, distance, t_time, (distances, times)]
 
         Incumbents.append(incumbent)
         Times.append(time() - start)
@@ -93,7 +94,7 @@ for instance in env.instances:
 
     ### Print performance
     print('\n')
-    print(f'############## Testing done instance {instance} ################')
+    print(f'############## Testing done inst {instance} ################')
     print(f'total time: {round(time() - start,2)}')
     print(f'incumbent: {round(incumbent,2)}')
     #print(f'best solution: {best_individual}')
@@ -114,3 +115,5 @@ for instance in env.instances:
 # file.close()
 
 # print(data)
+
+# %%
