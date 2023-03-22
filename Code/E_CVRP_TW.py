@@ -297,6 +297,7 @@ class Constructive():
     '''
     def generate_candidate_from_RCL(self, env: E_CVRP_TW, node: str, t: float, q: float, k: int):
         feasible_candidates: list = []
+        feasible_energy_candidates: list = []
         max_crit: float = -1e9
         min_crit: float = 1e9
 
@@ -306,10 +307,12 @@ class Constructive():
         for target in self.pending_c:
             distance = env.dist[node,target]
 
-            global_c, energy_feasible = self.evaluate_candidate(env, target, distance, t, q, k, energy_feasible)
+            global_c, energy_feasible, feasible_energy_candidates = self.evaluate_candidate(env, target, distance, t, q, k, energy_feasible, feasible_energy_candidates)
 
             if global_c:
                 feasible_candidates.append(target)
+            elif energy_feasible: 
+                feasible_energy_candidates.append(target)
 
                 if RCL_mode == 'distance':      crit = distance
                 elif RCL_mode == 'TimeWindow':  crit = env.C[target]['DueDate']
@@ -324,12 +327,12 @@ class Constructive():
             feasible_candidates = [i for i in feasible_candidates if env.C[i]['DueDate'] <= upper_bound]
         
         if node != 'D' and t + env.dist[node,'D'] / env.v >= env.T:
-            return False, False
+            return False, False, feasible_energy_candidates
         if len(feasible_candidates) != 0:
             target = choice(feasible_candidates)
-            return target, energy_feasible
+            return target, energy_feasible, feasible_energy_candidates
         else:
-            return False, energy_feasible
+            return False, energy_feasible, feasible_energy_candidates
 
 
     '''
@@ -339,7 +342,7 @@ class Constructive():
         2. Time windows
         3. Charge at least to go to target and go to closest station 
     '''
-    def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance: float, t: float, q: float, k: int, energy_feasible: bool):
+    def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance: float, t: float, q: float, k: int, energy_feasible: bool, feasible_energy_candidates: list):
         capacity_c = k + env.C[target]['d'] <= env.K
         time_c = t + distance / env.v  <= env.C[target]['DueDate']
         t_time_c = t + distance / env.v + env.C[target]['ServiceTime']  + env.dist[target,'D'] / env.v < env.T
@@ -348,13 +351,14 @@ class Constructive():
 
         # The candidate is completely feasible
         if capacity_c and time_c and t_time_c and energy_c:
-            return True, True
+            return True, True, feasible_energy_candidates
         # The candidate is completely feasible but not reachable by energy
         elif capacity_c and time_c and t_time_c:
-            return False, True
+            feasible_energy_candidates.append(target)
+            return False, True, feasible_energy_candidates
         # The candidate is unfeasible by any condition 
         else:
-            return False, energy_feasible
+            return False, energy_feasible, feasible_energy_candidates
 
     
 
@@ -509,7 +513,7 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env: E_CVRP_TW, st_stations = False):
+    def RCL_based_constructive(self, env: E_CVRP_TW, st_stations:bool = False):
         t: float = 0
         d: float = 0
         q: float = env.Q
@@ -531,7 +535,7 @@ class Constructive():
                     dep_t.append(t); dep_q.append(q)
             
             else:
-                target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
+                target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, node, t, q, k)
 
                 # Found a target
                 if target != False:
@@ -548,11 +552,21 @@ class Constructive():
                         # One candidate left but unreachable from depot bc energy 
                         if node == 'D' and len(self.pending_c) == 1:
                             target = self.optimal_station(env, node, self.pending_c[0])
+                            t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                            node = target
 
                         else:
-                            # Route to closest station and charge
-                            target = env.closest[node]
 
+                            if node != 'D' and env.node_type[node] == 'c':
+                                # Route to closest station and charge
+                                target = env.closest[node]
+                                
+                            else:
+                                # Route to closes station to feasible candidate
+                                new_dict = {(node,j):env.dist[node,j] for j in feasible_energy_candiadates}
+                                target = self.optimal_station(env, node, min(new_dict, key = new_dict.get)[1])
+
+                                
                             # Check for total time, station is reachable 
                             if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
                                 t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)

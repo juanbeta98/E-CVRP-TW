@@ -4,8 +4,8 @@ from time import time
 import sys
 import pickle
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy//E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+#path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy//E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Genetic, Feasibility, Reparator, Experiment
@@ -45,14 +45,14 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Single instance testing
 '''
-max_time: int = 300 # 5 minutes
+max_time: int = 1000 # 5 minutes
 
 # Saving performance
 Results = {}
 Incumbents = []
 Times = []
 
-for instance in env.instances:
+for instance in [env.instances[2]]:
     print(f'Instance {instance}')
     # Constructive
     start = time()
@@ -63,7 +63,7 @@ for instance in env.instances:
     ind = 0
 
     while time() - start < max_time:
-        # print(f'ind: {ind}');ind += 1
+        print(f'ind: {ind}');ind += 1
         individual: list = []
         distance: float = 0
         distances: list = []
@@ -104,7 +104,7 @@ for instance in env.instances:
     print('\n')
 
     ### Save performance
-    a_file = open(path + f'Experimentation/Constructive/Results/RCL Heuristic/results_{instance}', "wb")
+    a_file = open(path + f'Experimentation/Constructive/Deterministic RCL Heu/results_{instance}', "wb")
     pickle.dump(Results, a_file)
     a_file.close()
 
