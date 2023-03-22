@@ -24,7 +24,6 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 Constructive heuristic
 '''
 RCL_alpha: float = 0.3              # RCL alpha
-
 constructive: Constructive = Constructive(RCL_alpha)
 
 

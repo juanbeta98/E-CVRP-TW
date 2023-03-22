@@ -13,7 +13,7 @@ ds.giraldoh@uniandes.edu.co
 from copy import copy, deepcopy
 from time import time
 import matplotlib.pyplot as plt
-from numpy.random import random, choice, seed, randint
+from numpy.random import random, choice, seed, randint, binomial
 import networkx as nx
 import os
 
@@ -509,7 +509,7 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env: E_CVRP_TW):
+    def RCL_based_constructive(self, env: E_CVRP_TW, st_stations = False):
         t: float = 0
         d: float = 0
         q: float = env.Q
@@ -523,39 +523,47 @@ class Constructive():
         # Adding nodes to route
         while True:
 
-            target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
-            
-            # Found a target
-            if target != False:
-                t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                dep_t.append(t); dep_q.append(q)
-                node = target
-                
-            # No feasible direct target
-            else:
-
-                # One candidate but not enough energy to travel
-                if energy_feasible:
-                    # Route to closest station and charge
+            if st_stations and env.node_type[node] != 's':
+                p = q/env.Q
+                if binomial(1,p):
                     target = env.closest[node]
+                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                    dep_t.append(t); dep_q.append(q)
+            
+            else:
+                target, energy_feasible = self.generate_candidate_from_RCL(env, node, t, q, k)
 
-                    # Check for total time, station is reachable 
-                    if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
-                        t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                        dep_t.append(t); dep_q.append(q)
-                        node = target
+                # Found a target
+                if target != False:
+                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                    dep_t.append(t); dep_q.append(q)
+                    node = target
+                    
+                # No feasible direct target
+                else:
 
-                    # Total time unfeasible
+                    # One candidate but not enough energy to travel
+                    if energy_feasible:
+                        # Route to closest station and charge
+                        target = env.closest[node]
+
+                        # Check for total time, station is reachable 
+                        if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
+                            t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                            dep_t.append(t); dep_q.append(q)
+                            node = target
+
+                        # Total time unfeasible
+                        else:
+                            # Nothing to do , go to depot
+                            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                            break
+                    
+                    # Nothing to do , go to depot
                     else:
-                        # Nothing to do , go to depot
                         t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                         break
                 
-                # Nothing to do , go to depot
-                else:
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                    break
-            
         assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
         assert round(q) >= 0, f'The vehicle ran out of charge'
         assert k < env.K, f'The vehicles capacity is exceeded \n-Max load: {env.K} \n- Current load: {k}'
@@ -1054,7 +1062,9 @@ class Genetic():
 
 
 
+'''
 
+'''
 class Experiment():
 
     def __init__(self):
@@ -1135,8 +1145,12 @@ class Experiment():
         return Incumbents, T_Times, Results, incumbent, best_individual
 
 
-
     def save_performance(self, Results, instance, path, xlim = None, cols = None):
+        pass
+
+
+
+    def plot_performance(self, Results, instance, path, xlim = None, cols = None):
         colors = ['blue' ,'black', 'red', 'purple', 'green', 'orange', 'pink', 'brown']
         if len(Results) == 1: colors = choice(colors)
         for algorithm in range(5):
