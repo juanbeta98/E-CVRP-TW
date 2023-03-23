@@ -46,14 +46,14 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Single instance testing
 '''
-max_time: int = 1000 # 5 minutes
+max_time: int = 300 # 5 minutes
 
 # Saving performance
 Results = {}
 Incumbents = []
 Times = []
 
-for instance in [env.instances[2]]:
+for instance in env.instances:
     if verbose: print(f'Instance {instance}')
     # Constructive
     start = time()

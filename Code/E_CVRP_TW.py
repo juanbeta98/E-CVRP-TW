@@ -390,6 +390,9 @@ class Constructive():
 
         # The vehicle can go directly to depot
         if env.dist[node,'D'] / env.v < q:
+
+            # TODO Vehicle is on a station and going to depot, it can charge partially to save time
+
             finish_route += ['D']
             extra_t += env.dist[node,'D'] / env.v
             extra_d += env.dist[node,'D']
@@ -408,7 +411,7 @@ class Constructive():
 
                 # Update in station
                 finish_route.append(s)
-                recarga = env.dist[s,'D'] / env.r - q 
+                recarga = env.dist[s,'D'] / env.r - extra_q - q 
                 extra_t += recarga * env.g
                 extra_q += recarga
 
@@ -429,7 +432,7 @@ class Constructive():
 
                 # Update in station
                 finish_route.append(s)
-                recarga = env.dist[s,'D'] / env.r - extra_q 
+                recarga = env.dist[s,'D'] / env.r - extra_q - q
                 extra_t += recarga * env.g
                 extra_q += recarga
 
