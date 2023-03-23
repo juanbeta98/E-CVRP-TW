@@ -366,7 +366,7 @@ class Constructive():
     Find closest station to both the current costumer and the depot
     '''
     def optimal_station(self, env: E_CVRP_TW, node: str, target: str = 'D'):
-        if node != 'D':
+        if node != 'D' and target != 'D':
             distances = {s: env.dist[node,s] + env.dist[s,target] for s in env.Stations if s != node}
             min_station = min(distances, key = distances.get)
         else:
@@ -391,9 +391,9 @@ class Constructive():
         # The vehicle can go directly to depot
         if env.dist[node,'D'] / env.v < q:
             finish_route += ['D']
-            extra_t += env.dist[node,'D']
+            extra_t += env.dist[node,'D'] / env.v
             extra_d += env.dist[node,'D']
-            extra_q -= env.dist[node,'D'] / env.v
+            extra_q -= env.dist[node,'D'] / env.r
         
         # Vehicle hasn't enough energy to get to depot
         else:
@@ -433,7 +433,7 @@ class Constructive():
                 extra_t += recarga * env.g
                 extra_q += recarga
 
-                # Update to dep
+                # Update to depot
                 finish_route.append('D')
                 extra_t += env.dist[s,'D'] / env.v
                 extra_d += env.dist[s,'D']
@@ -583,7 +583,8 @@ class Constructive():
                     else:
                         t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                         break
-                
+        
+
         assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
         assert round(q) >= 0, f'The vehicle ran out of charge'
         assert k < env.K, f'The vehicles capacity is exceeded \n-Max load: {env.K} \n- Current load: {k}'

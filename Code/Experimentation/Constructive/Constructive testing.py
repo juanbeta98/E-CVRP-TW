@@ -18,6 +18,7 @@ start: float = time()
 rd_seed: int = 0
 seed(rd_seed)
 
+verbose = True
 
 '''
 Environment
@@ -53,7 +54,7 @@ Incumbents = []
 Times = []
 
 for instance in [env.instances[2]]:
-    print(f'Instance {instance}')
+    if verbose: print(f'Instance {instance}')
     # Constructive
     start = time()
     env.load_data(instance)
@@ -63,7 +64,7 @@ for instance in [env.instances[2]]:
     ind = 0
 
     while time() - start < max_time:
-        print(f'ind: {ind}');ind += 1
+        if verbose: print(f'    Individual: {ind}');ind += 1
         individual: list = []
         distance: float = 0
         distances: list = []
@@ -73,6 +74,7 @@ for instance in [env.instances[2]]:
         # Intitalizing environemnt
         constructive.reset(env)
         while len(constructive.pending_c) > 0:
+            if verbose: print(f'        Route: {len(individual)}')
             t, d, q, k, route = constructive.RCL_based_constructive(env)
             individual.append(route)
             distance += d
