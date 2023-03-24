@@ -588,9 +588,9 @@ class Constructive():
                         break
         
 
-        assert t < env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
+        assert t <= env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
         assert round(q) >= 0, f'The vehicle ran out of charge'
-        assert k < env.K, f'The vehicles capacity is exceeded \n-Max load: {env.K} \n- Current load: {k}'
+        assert k <= env.K, f'The vehicles capacity is exceeded \n-Max load: {env.K} \n- Current load: {k}'
             
         return t, d, q, k, route
 

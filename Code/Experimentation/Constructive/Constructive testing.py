@@ -53,7 +53,7 @@ Results = {}
 Incumbents = []
 Times = []
 
-for instance in env.instances:
+for instance in env.instances[2:]:
     if verbose: print(f'Instance {instance}')
     # Constructive
     start = time()
