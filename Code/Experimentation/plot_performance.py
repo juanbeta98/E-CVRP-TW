@@ -17,4 +17,3 @@ def plot_const_performance(instance, path, station_placement):
     plt.ylabel('Incumbent')
 
     plt.show()
-

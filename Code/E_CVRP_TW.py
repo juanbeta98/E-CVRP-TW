@@ -34,6 +34,7 @@ class E_CVRP_TW():
 
         self.instances = os.listdir(self.path + 'Instances/')
         self.instances.remove('readme.txt')
+        self.instances.sort()
         if '.DS_Store' in self.instances:
             self.instances.remove('.DS_Store')
 
@@ -595,6 +596,10 @@ class Constructive():
         return t, d, q, k, route
 
 
+    def print_constructive(self, t: float, ind: int, Incumbent: float, routes: int):
+        print(*[round(t,2), ind, round(Incumbent,2), routes], sep = '\t \t')
+        
+        
 
 
 '''

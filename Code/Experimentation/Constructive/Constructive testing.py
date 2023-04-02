@@ -3,12 +3,13 @@ from numpy.random import seed
 from time import time
 import sys
 import pickle
+import matplotlib.pyplot as plt
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+#path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
-from E_CVRP_TW import  E_CVRP_TW, Constructive, Genetic, Feasibility, Reparator, Experiment
+from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
 
 '''
 General parameters
@@ -18,7 +19,7 @@ start: float = time()
 rd_seed: int = 0
 seed(rd_seed)
 
-verbose = False
+verbose = True
 
 '''
 Environment
@@ -48,23 +49,28 @@ Single instance testing
 '''
 max_time: int = 300 # 5 minutes
 
-# Saving performance
-Results = {}
-Incumbents = []
-Times = []
 
-for instance in env.instances[2:]:
-    if verbose: print(f'Instance {instance}')
+
+for instance in ['c101_21.txt']:
+    # Saving performance
+    Results = {}
+    Incumbents = []
+    Times = []
+
+    if verbose: 
+        print(f'\n\n################# Instance {instance} #################')
+        print(f'Time \t \tInd \t \tIncumbent \t#Routes')
+
     # Constructive
     start = time()
     env.load_data(instance)
     env.generate_parameters()
     constructive.reset(env)
     incumbent = 1e9
-    ind = 0
+    ind = -1
 
     while time() - start < max_time:
-        if verbose: print(f'    Individual: {ind}');ind += 1
+        ind += 1
         individual: list = []
         distance: float = 0
         distances: list = []
@@ -74,7 +80,6 @@ for instance in env.instances[2:]:
         # Intitalizing environemnt
         constructive.reset(env)
         while len(constructive.pending_c) > 0:
-            if verbose: print(f'        Route: {len(individual)}')
             t, d, q, k, route = constructive.RCL_based_constructive(env)
             individual.append(route)
             distance += d
@@ -84,7 +89,8 @@ for instance in env.instances[2:]:
             
         if distance < incumbent:
             incumbent = distance
-            best_individual: list = [individual, distance, t_time, (distances, times)]
+            best_individual: list = [individual, distance, t_time, (distances, times), time() - start]
+            constructive.print_constructive(time() - start, ind, incumbent, len(individual))
 
         Incumbents.append(incumbent)
         Times.append(time() - start)
@@ -93,15 +99,17 @@ for instance in env.instances[2:]:
     Results['best distance'] = best_individual[1]
     Results['total time'] = best_individual[2]
     Results['others'] = best_individual[3]
+    Results['time to find'] = best_individual[4]
     Results['incumbents'] = Incumbents
     Results['inc times'] = Times
 
 
     ### Print performance
     print('\n')
-    print(f'############## Testing done inst {instance} ################')
+    print(f'##### Testing done inst {instance} #####')
     print(f'total time: {round(time() - start,2)}')
     print(f'incumbent: {round(incumbent,2)}')
+    print(f'time to find: {round(Results["time to find"],2)}')
     #print(f'best solution: {best_individual}')
     print('\n')
 
@@ -109,6 +117,7 @@ for instance in env.instances[2:]:
     a_file = open(path + f'Experimentation/Constructive/Deterministic RCL Heu/results_{instance}', "wb")
     pickle.dump(Results, a_file)
     a_file.close()
+
 
 
 # file = open('un archivo', 'rb')
