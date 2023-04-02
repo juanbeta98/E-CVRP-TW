@@ -30,7 +30,7 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 '''
 Constructive heuristic
 '''
-RCL_alpha: float = 0.3              # RCL alpha
+RCL_alpha: float = 0.5              # RCL alpha
 constructive: Constructive = Constructive(RCL_alpha)
 
 
@@ -45,13 +45,12 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
 
 '''
-Single instance testing
+Instance testing
 '''
 max_time: int = 300 # 5 minutes
+test_bed = env.sizes['s'][:2] + env.sizes['m'][:2] + env.sizes['l'][:3]
 
-
-
-for instance in ['c101_21.txt']:
+for instance in test_bed:
     # Saving performance
     Results = {}
     Incumbents = []
@@ -114,7 +113,7 @@ for instance in ['c101_21.txt']:
     print('\n')
 
     ### Save performance
-    a_file = open(path + f'Experimentation/Constructive/Deterministic RCL Heu/results_{instance}', "wb")
+    a_file = open(path + f'Experimentation/Constructive/alpha/{str(RCL_alpha)}/results_{instance}', "wb")
     pickle.dump(Results, a_file)
     a_file.close()
 

@@ -312,14 +312,16 @@ class Constructive():
 
             if global_c:
                 feasible_candidates.append(target)
-            elif energy_feasible: 
-                feasible_energy_candidates.append(target)
 
                 if RCL_mode == 'distance':      crit = distance
                 elif RCL_mode == 'TimeWindow':  crit = env.C[target]['DueDate']
                 
                 max_crit = max(crit, max_crit)
                 min_crit = min(crit, min_crit)
+                
+            elif energy_feasible: 
+                feasible_energy_candidates.append(target)
+
 
         upper_bound = min_crit + self.RCL_alpha * (max_crit - min_crit)
         if RCL_mode == 'distance':
@@ -517,7 +519,7 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env: E_CVRP_TW, st_stations:bool = False):
+    def RCL_based_constructive(self, env: E_CVRP_TW):
         t: float = 0
         d: float = 0
         q: float = env.Q
@@ -530,63 +532,54 @@ class Constructive():
 
         # Adding nodes to route
         while True:
+            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, node, t, q, k)
 
-            if st_stations and env.node_type[node] != 's':
-                p = q/env.Q
-                if binomial(1,p):
-                    target = env.closest[node]
-                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                    dep_t.append(t); dep_q.append(q)
-            
+            # Found a target
+            if target != False:
+                t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                dep_t.append(t); dep_q.append(q)
+                node = target
+                
+            # No feasible direct target
             else:
-                target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, node, t, q, k)
+                
+                # One candidate but not enough energy to travel
+                if energy_feasible:
+                    
+                    # One candidate left but unreachable from depot bc energy 
+                    if node == 'D' and len(self.pending_c) == 1:
+                        target = self.optimal_station(env, node, self.pending_c[0])
+                        t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                        node = target
 
-                # Found a target
-                if target != False:
-                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                    dep_t.append(t); dep_q.append(q)
-                    node = target
-                    
-                # No feasible direct target
-                else:
-                    
-                    # One candidate but not enough energy to travel
-                    if energy_feasible:
-                        
-                        # One candidate left but unreachable from depot bc energy 
-                        if node == 'D' and len(self.pending_c) == 1:
-                            target = self.optimal_station(env, node, self.pending_c[0])
+                    else:
+
+                        if node != 'D' and env.node_type[node] == 'c':
+                            # Route to closest station and charge
+                            target = env.closest[node]
+                            
+                        else:
+                            # Route to closes station to feasible candidate
+                            new_dict = {(node,j):env.dist[node,j] for j in feasible_energy_candiadates}
+                            target = self.optimal_station(env, node, min(new_dict, key = new_dict.get)[1])
+
+                            
+                        # Check for total time, station is reachable 
+                        if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
                             t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                            dep_t.append(t); dep_q.append(q)
                             node = target
 
+                        # Total time unfeasible
                         else:
+                            # Nothing to do , go to depot
+                            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                            break
 
-                            if node != 'D' and env.node_type[node] == 'c':
-                                # Route to closest station and charge
-                                target = env.closest[node]
-                                
-                            else:
-                                # Route to closes station to feasible candidate
-                                new_dict = {(node,j):env.dist[node,j] for j in feasible_energy_candiadates}
-                                target = self.optimal_station(env, node, min(new_dict, key = new_dict.get)[1])
-
-                                
-                            # Check for total time, station is reachable 
-                            if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
-                                t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                                dep_t.append(t); dep_q.append(q)
-                                node = target
-
-                            # Total time unfeasible
-                            else:
-                                # Nothing to do , go to depot
-                                t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                                break
-
-                    # Nothing to do , go to depot
-                    else:
-                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                        break
+                # Nothing to do , go to depot
+                else:
+                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                    break
         
 
         assert t <= env.T, f'The vehicle exceeds the maximum time \n- Max time: {env.T} \n- Route time: {t}'
