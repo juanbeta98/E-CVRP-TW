@@ -284,9 +284,8 @@ Algorithms Class: Compilation of heuristics to generate a feasible route
 '''
 class Constructive():
 
-    def __init__(self, RCL_alpha: float):
-        self.RCL_alpha = RCL_alpha
-
+    def __init__(self):
+        pass
     
     '''
     Reset the environment to restart experimentation (another parent)
@@ -300,7 +299,7 @@ class Constructive():
     - DISTANCES
     - OPENING TIME WINDOW
     '''
-    def generate_candidate_from_RCL(self, env: E_CVRP_TW, node: str, t: float, q: float, k: int):
+    def generate_candidate_from_RCL(self, env: E_CVRP_TW, RCL_alpha: float, node: str, t: float, q: float, k: int):
         feasible_candidates: list = []
         feasible_energy_candidates: list = []
         max_crit: float = -1e9
@@ -327,7 +326,7 @@ class Constructive():
                 feasible_energy_candidates.append(target)
 
 
-        upper_bound = min_crit + self.RCL_alpha * (max_crit - min_crit)
+        upper_bound = min_crit + RCL_alpha * (max_crit - min_crit)
         if RCL_mode == 'distance':
             feasible_candidates = [i for i in feasible_candidates if env.dist[node, i] <= upper_bound]
         else:
@@ -523,7 +522,7 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env: E_CVRP_TW):
+    def RCL_based_constructive(self, env: E_CVRP_TW, RCL_alpha: float):
         t: float = 0
         d: float = 0
         q: float = env.Q
@@ -536,7 +535,7 @@ class Constructive():
 
         # Adding nodes to route
         while True:
-            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, node, t, q, k)
+            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, node, t, q, k, RCL_alpha)
 
             # Found a target
             if target != False:

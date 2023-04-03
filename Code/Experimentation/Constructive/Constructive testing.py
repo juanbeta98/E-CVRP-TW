@@ -30,8 +30,9 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 '''
 Constructive heuristic
 '''
-RCL_alpha: float = 0.5              # RCL alpha
-constructive: Constructive = Constructive(RCL_alpha)
+RCL_list: list[float] = [0.15, 0.25, 0.35, 0.5]
+training_prop = 0.4
+constructive: Constructive = Constructive()
 
 
 '''
@@ -56,21 +57,8 @@ for instance in env.instances:
     Incumbents = []
     Times = []
 
-    if instance in env.sizes['s']:  
-        max_time = 60*2
-        RCL_alpha = 0.5
-
-    elif instance in env.sizes['m']:   
-        max_time = 60*4
-        RCL_alpha = 0.3
-
-    else:   
-        max_time = 60*8
-        RCL_alpha = 0.15
-
-
     if verbose: 
-        print(f'\n\n################# Instance {instance} a = ({RCL_alpha})#################')
+        print(f'\n\n################# Instance {instance} a = ({RCL_alpha}) #################')
         print(f'Time \t \tInd \t \tIncumbent \t#Routes')
 
     # Constructive
