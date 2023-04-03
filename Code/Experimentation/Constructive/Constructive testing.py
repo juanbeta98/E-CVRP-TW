@@ -5,8 +5,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+#path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
@@ -33,7 +33,7 @@ Constructive heuristic
 RCL_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.4
 constructive: Constructive = Constructive()
-
+RCL_alpha = RCL_list[1]
 
 '''
 EXPERIMENTATION
@@ -51,7 +51,7 @@ Instance testing
 max_time: int = 60*5 # 5 minutes
 test_bed = env.sizes['s'][:2] + env.sizes['m'][:2] + env.sizes['l'][:3]
 
-for instance in env.instances:
+for instance in env.sizes['l']:
     # Saving performance
     Results = {}
     Incumbents = []
@@ -62,15 +62,6 @@ for instance in env.instances:
     if instance in env.sizes['s']:  max_time = 60*4
     else:   max_time = 60*8
    
-    
-    # Printing results
-    if verbose: 
-        print(f'\n\n#######################################################')
-        print(f'################# Instance {instance} #################')
-        print(f'#######################################################')
-        print(f'Inst')
-        print(f'Time \t \tInd \t \tIncumbent \t#Routes')
-
     # Constructive
     start = time()
     env.load_data(instance)
@@ -80,6 +71,17 @@ for instance in env.instances:
     ind = -1
 
     # Adaptative
+
+    # Printing results
+    if verbose: 
+        print(f'\n\n########################################################################')
+        print(f'######################### Instance {instance} #########################')
+        print(f'########################################################################')
+        print(f'- size: {len(list(env.C.keys()))}')
+        print(f'- bkFO: {env.bkFO[instance]}')
+        print(f'- bkEV: {env.bkEV[instance]}')
+
+        print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#Routes')
 
     while time() - start < max_time:
         ind += 1
@@ -92,7 +94,7 @@ for instance in env.instances:
         # Intitalizing environemnt
         constructive.reset(env)
         while len(constructive.pending_c) > 0:
-            t, d, q, k, route = constructive.RCL_based_constructive(env)
+            t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha)
             individual.append(route)
             distance += d
             distances.append(d)
@@ -102,7 +104,7 @@ for instance in env.instances:
         if distance < incumbent:
             incumbent = distance
             best_individual: list = [individual, distance, t_time, (distances, times), time() - start]
-            constructive.print_constructive(time() - start, ind, incumbent, len(individual))
+            constructive.print_constructive(env, instance, time() - start, ind, incumbent, len(individual))
 
         Incumbents.append(incumbent)
         Times.append(time() - start)
@@ -119,8 +121,9 @@ for instance in env.instances:
     ### Print performance
     print('\n')
     print(f'##### Testing done inst {instance} #####')
-    print(f'total time: {round(time() - start,2)}')
+    print(f'total running time: {round(time() - start,2)}')
     print(f'incumbent: {round(incumbent,2)}')
+    print(f'gap: {round(lab.compute_gap(instance, incumbent),2)}')
     print(f'time to find: {round(Results["time to find"],2)}')
     #print(f'best solution: {best_individual}')
     print('\n')

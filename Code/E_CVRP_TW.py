@@ -319,7 +319,6 @@ class E_CVRP_TW():
 
 
 
-
 '''
 Algorithms Class: Compilation of heuristics to generate a feasible route
 - RCL based constructive
@@ -577,7 +576,7 @@ class Constructive():
 
         # Adding nodes to route
         while True:
-            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, node, t, q, k, RCL_alpha)
+            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, RCL_alpha, node, t, q, k)
 
             # Found a target
             if target != False:
@@ -634,8 +633,9 @@ class Constructive():
         return t, d, q, k, route
 
 
-    def print_constructive(self, t: float, ind: int, Incumbent: float, routes: int):
-        print(*[round(t,2), ind, round(Incumbent,2), routes], sep = '\t \t')
+    def print_constructive(self, env: E_CVRP_TW, instance: str, t: float, ind: int, Incumbent: float, routes: int):
+        gap = round((Incumbent - env.bkFO[instance])/env.bkFO[instance],4)
+        print(*[round(t,2), ind, round(Incumbent,2), f'{round(gap*100,2)}%', routes], sep = '\t \t')
         
         
 
@@ -1216,7 +1216,6 @@ class Experiment():
         pass
 
 
-
     def plot_performance(self, Results, instance, path, xlim = None, cols = None):
         colors = ['blue' ,'black', 'red', 'purple', 'green', 'orange', 'pink', 'brown']
         if len(Results) == 1: colors = choice(colors)
@@ -1230,3 +1229,8 @@ class Experiment():
             plt.xlim(0, xlim)
         plt.savefig(f'{path}', dpi = 600)
         #plt.show()
+    
+
+    def compute_gap(env: E_CVRP_TW, instance: str, incumbent: float) -> float:
+        return (incumbent - env.bkFO[instance])/env.bkFO[instance]
+
