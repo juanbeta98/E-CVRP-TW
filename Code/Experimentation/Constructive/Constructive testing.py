@@ -57,8 +57,18 @@ for instance in env.instances:
     Incumbents = []
     Times = []
 
+    # Setting runnign times
+    if instance in env.sizes['s']:  max_time = 60*2
+    if instance in env.sizes['s']:  max_time = 60*4
+    else:   max_time = 60*8
+   
+    
+    # Printing results
     if verbose: 
-        print(f'\n\n################# Instance {instance} a = ({RCL_alpha}) #################')
+        print(f'\n\n#######################################################')
+        print(f'################# Instance {instance} #################')
+        print(f'#######################################################')
+        print(f'Inst')
         print(f'Time \t \tInd \t \tIncumbent \t#Routes')
 
     # Constructive
@@ -68,6 +78,8 @@ for instance in env.instances:
     constructive.reset(env)
     incumbent = 1e9
     ind = -1
+
+    # Adaptative
 
     while time() - start < max_time:
         ind += 1
@@ -114,7 +126,7 @@ for instance in env.instances:
     print('\n')
 
     ### Save performance
-    a_file = open(path + f'Experimentation/Constructive/alpha/{str(RCL_alpha)}/results_{instance}', "wb")
+    a_file = open(path + f'Experimentation/Constructive/alpha/Adaptative-Reactive/results_{instance}', "wb")
     pickle.dump(Results, a_file)
     a_file.close()
 
