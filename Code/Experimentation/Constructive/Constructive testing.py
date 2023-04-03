@@ -30,10 +30,10 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 '''
 Constructive heuristic
 '''
-RCL_list: list[float] = [0.15, 0.25, 0.35, 0.5]
+RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.4
 constructive: Constructive = Constructive()
-RCL_alpha = RCL_list[1]
+
 
 '''
 EXPERIMENTATION
@@ -52,7 +52,7 @@ max_time: int = 60*5 # 5 minutes
 test_bed = env.sizes['s'][:2] + env.sizes['m'][:2] + env.sizes['l'][:3]
 
 for instance in env.sizes['l']:
-    # Saving performance
+    # Saving performance 
     Results = {}
     Incumbents = []
     Times = []
@@ -70,7 +70,8 @@ for instance in env.sizes['l']:
     incumbent = 1e9
     ind = -1
 
-    # Adaptative
+    # Adaptative format
+    results = {alpha: 0 for alpha in RCL_alpha_list}
 
     # Printing results
     if verbose: 
