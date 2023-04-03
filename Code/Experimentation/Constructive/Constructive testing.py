@@ -62,7 +62,7 @@ for instance in env.instances:
 
     elif instance in env.sizes['m']:   
         max_time = 60*4
-        RCL_alpha = 0.25
+        RCL_alpha = 0.3
 
     else:   
         max_time = 60*8
@@ -70,7 +70,7 @@ for instance in env.instances:
 
 
     if verbose: 
-        print(f'\n\n################# Instance {instance} #################')
+        print(f'\n\n################# Instance {instance} a = ({RCL_alpha})#################')
         print(f'Time \t \tInd \t \tIncumbent \t#Routes')
 
     # Constructive

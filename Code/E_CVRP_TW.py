@@ -52,6 +52,10 @@ class E_CVRP_TW():
         'r210_21.txt', 'c102_21.txt', 'r101_21.txt', 'rc205_21.txt', 'c205_21.txt', 'r206_21.txt', 'rc102_21.txt', 'r105_21.txt', 
         'rc201_21.txt', 'c106_21.txt', 'r109_21.txt', 'c104_21.txt', 'c108_21.txt', 'rc203_21.txt', 'r107_21.txt', 'r204_21.txt', 
         'r208_21.txt', 'c207_21.txt']}
+        self.sizes['s'].sort()
+        self.sizes['m'].sort()
+        self.sizes['l'].sort()
+        
 
 
     '''
