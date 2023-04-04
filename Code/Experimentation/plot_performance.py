@@ -3,7 +3,6 @@ import matplotlib.pyplot as plt
 import sys
 
 def retrieve_const_performance(instance, path):
-    path += 'Constructive/'
 
     file = open(path + f'results_{instance}', 'rb')
     data = pickle.load(file)
