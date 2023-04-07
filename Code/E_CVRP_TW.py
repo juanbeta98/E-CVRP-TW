@@ -1231,6 +1231,6 @@ class Experiment():
         #plt.show()
     
 
-    def compute_gap(env: E_CVRP_TW, instance: str, incumbent: float) -> float:
-        return (incumbent - env.bkFO[instance])/env.bkFO[instance]
+    def compute_gap(self, env: E_CVRP_TW, instance: str, incumbent: float) -> float:
+        return round((incumbent - env.bkFO[instance])/env.bkFO[instance],4)
 
