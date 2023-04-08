@@ -11,12 +11,12 @@ def retrieve_const_performance(instance, path):
     return data
 
 
-def plot_const_performance(instance, path):
-
-    data = retrieve_const_performance(instance, path)
-
-    plt.plot(data['inc times'], data['incumbents'], color = 'purple')
-    plt.title(f"Constructive's performance {instance}")
+def plot_performance(data, instance, testing = 'Constructive'):
+    colors = ['red', 'green', 'purple', 'orange', 'blue' ,'black', 'pink', 'brown']
+    i = 0
+    for key, value in data.items():
+        plt.plot(value['inc times'], value['incumbents'], color = colors[i]);i+=1
+    plt.title(f"{testing}'s performance {instance}")
     plt.xlabel('Time (s)')
     plt.ylabel('Incumbent')
 

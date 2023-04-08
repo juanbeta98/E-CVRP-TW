@@ -103,8 +103,8 @@ class E_CVRP_TW():
     '''
     Load data from txt file
     '''
-    def load_data(self, file_name: str):
-        file = open(self.path + 'Instances/' + file_name, mode = 'r');     file = file.readlines()
+    def load_data(self, instance: str):
+        file = open(self.path + 'Instances/' + instance, mode = 'r');     file = file.readlines()
         
         fila = 1
         att = [i for i in str(file[fila]).split(' ') if i != '']

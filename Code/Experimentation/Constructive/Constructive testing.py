@@ -4,8 +4,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+#path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
@@ -50,7 +50,7 @@ Instance testing
 max_time: int = 60*5 # 5 minutes
 test_bed = env.sizes['s'][:2] + env.sizes['m'][:2] + env.sizes['l'][:3]
 
-for instance in env.instances[74:]:
+for instance in ['c104C10.txt']:
     # Saving performance 
     Results = {}
     Incumbents = []
@@ -130,6 +130,7 @@ for instance in env.instances[74:]:
     # Storing overall performance
     Results['best individual'] = best_individual[0]
     Results['best distance'] = best_individual[1]
+    Results['gap'] = round(lab.compute_gap(env, instance, incumbent)*100,2)
     Results['total time'] = best_individual[2]
     Results['others'] = best_individual[3]
     Results['time to find'] = best_individual[4]
