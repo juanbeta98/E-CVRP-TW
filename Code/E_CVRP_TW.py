@@ -211,7 +211,7 @@ class E_CVRP_TW():
     '''
     Plots nodes of the VRP
     '''
-    def render(self, routes: list):
+    def render(self, routes: list, save:bool = False):
         G = nx.MultiDiGraph()
 
         # Nodes
@@ -250,7 +250,8 @@ class E_CVRP_TW():
         nx.draw_networkx(G, pos = pos, with_labels = True, nodelist = nodes_to_draw, 
                          node_color = node_color, edge_color = edge_colors, alpha = 0.8, 
                          font_size = 7, node_size = 200)
-        plt.savefig(self.path + 'sexting.png', dpi = 600)
+        if save:
+            plt.savefig(self.path + 'sexting.png', dpi = 600)
         plt.show()
         
 
