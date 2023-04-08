@@ -47,7 +47,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = env.sizes['s'] + env.sizes['m']
+test_bed = env.sizes['m']
 
 for instance in test_bed:
     # Saving performance 
@@ -57,7 +57,7 @@ for instance in test_bed:
 
     # Setting runnign times depending on instance size
     if instance in env.sizes['s']:  max_time = 30
-    if instance in env.sizes['m']:  max_time = 60*3
+    elif instance in env.sizes['m']:  max_time = 60*3
     else:   max_time = 60*8
    
     # Constructive
