@@ -491,6 +491,8 @@ class Constructive():
 
         if t + extra_t >= env.T:
             removed = route.pop()
+            if env.node_type[removed]=='c':
+                self.pending_c.append(removed)
             node = route[-1]
 
             if removed in env.Costumers:

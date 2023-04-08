@@ -57,8 +57,8 @@ for instance in ['c104C10.txt']:
     Times = []
 
     # Setting runnign times depending on instance size
-    if instance in env.sizes['s']:  max_time = 60*2
-    if instance in env.sizes['s']:  max_time = 60*4
+    if instance in env.sizes['s']:  max_time = 30
+    if instance in env.sizes['m']:  max_time = 60*3
     else:   max_time = 60*8
    
     # Constructive
@@ -85,7 +85,6 @@ for instance in ['c104C10.txt']:
 
     
     while time() - start < max_time:
-
 
         # Storing individual
         ind += 1
