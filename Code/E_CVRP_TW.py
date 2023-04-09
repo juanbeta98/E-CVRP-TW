@@ -778,7 +778,7 @@ class Reparator(Constructive):
         pending_c = []
         self.reset(env)
         
-        ### Construct repaired routes
+        ### Construct routes
         i = 0
         while i < len(chorizo) - 1:
             # Append removed nodes
@@ -894,7 +894,6 @@ class Reparator(Constructive):
 
 
 
-
 '''
 Genetic algorithm: 
 '''
@@ -922,9 +921,8 @@ class Genetic():
         best_individual: list = []
 
         if verbose:
-            print(f'\nGenerating {self.Population_size} individuals ...')
-            print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#EV')
-        
+            print(f'\nPopulation generation started: {self.Population_size} individuals')
+
         # Adaptative-Reactive Constructive
         RCL_alpha_list:list[float] = [0.15, 0.25, 0.35, 0.5]
         alpha_performance = {alpha:0 for alpha in RCL_alpha_list}
@@ -935,12 +933,17 @@ class Genetic():
             tr_distance: float = 0
             RCL_alpha = choice(RCL_alpha_list)
             while len(constructive.pending_c) > 0:
-                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha)
+                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, 'Intra-Hybrid')
                 tr_distance += d
             alpha_performance[RCL_alpha] += 1/tr_distance
+        
+        if verbose:
+            print(f'\n- Generated {training_ind} training ind in {round(time() - start,2)}s')
+            print(f'\n- Starting real population generation')
+            print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#EV')
 
         # Generating initial population
-        for individual in range(self.Population_size):
+        for ind in range(self.Population_size):
 
             # Storing individual
             individual: list = []
@@ -957,9 +960,7 @@ class Genetic():
 
             # Generating individual
             while len(constructive.pending_c) > 0:
-
-                print(f'\tRou: {rou}'); rou += 1
-                t, d, q, k, route = constructive.RCL_based_constructive(env)
+                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, 'Intra-Hybrid')
                 individual.append(route)
                 distance += d
                 distances.append(d)
@@ -970,7 +971,9 @@ class Genetic():
             if distance < incumbent:
                 incumbent = distance
                 best_individual: list = [individual, distance, t_time, (distances, times), time() - start]
-                constructive.print_constructive(env, instance, time() - start, individual, incumbent, len(individual))
+
+                if verbose:
+                    constructive.print_constructive(env, instance, time() - start, ind, incumbent, len(individual))
                 
             Population.append(individual)
             Distances.append(distance)
@@ -978,6 +981,21 @@ class Genetic():
             Details.append((distances, times))
 
         return Population, Distances, Times, Details, incumbent, best_individual
+
+
+    ''' Elite class '''
+    def elite_class(self, Distances: list):
+        return [x for _, x in sorted(zip(Distances,[i for i in range(self.Population_size)]))][:self.Elite_size] 
+
+
+    ''' Intermediate population'''
+    def intermediate_population(self, Distances):
+        # Fitness function
+        tots = sum(Distances)
+        fit_f = [tots/Distances[i] for i in range(len(Distances))]
+        probs = [fit_f[i]/sum(fit_f) for i in range(len(Distances))]
+
+        return choice([i for i in range(self.Population_size)], size = int(self.Population_size - self.Elite_size), replace = True, p = probs)
 
 
     '''
@@ -1142,14 +1160,6 @@ class Genetic():
         print('\n')
 
 
-    def print_evolution(self, env: E_CVRP_TW, start: float, Population: list[list], generation: int, Distances: list, feas_op: Reparator, incumbent: float):
-        print(f'\n###################   Generation {generation}   ####################\n')
-        print(f'Total evolution time: {time() - start} s')
-        print(f'Number of individuals: {len(Population)}')
-        print(f'Best generated individual (dist): {incumbent}')
-        print(f'Number of unfeasible individuals: {self.Population_size - sum(feas_op.population_check(env, Population))}')
-        print('\n')
-
 
 
 '''
@@ -1173,25 +1183,16 @@ class Experiment():
         while time() - start <= max_time:
             generation += 1
 
-            ### Selecting elite class
-            Elite = [x for _, x in sorted(zip(Distances,[i for i in range(genetic.Population_size)]))][:genetic.Elite_size] 
-
+            ### Elitism
+            Elite = genetic.elite_class(Distances)
 
             ### Selection: From a population, which parents are able to reproduce
-            # Fitness function
-            tots = sum(Distances)
-            fit_f = [tots/Distances[i] for i in range(len(Distances))]
-            probs = [fit_f[i]/sum(fit_f) for i in range(len(Distances))]
-            
-
-            # Intermediate population: Sample of the initial population    
-            inter_population = choice([i for i in range(genetic.Population_size)], size = int(genetic.Population_size - genetic.Elite_size), replace = True, p = probs)
+            # Intermediate population: Sample of the initial population 
+            inter_population = genetic.intermediate_population(Distances)            
             inter_population = Elite + list(inter_population)
-
 
             ### Tournament: Select two individuals and leave the best to reproduce
             Parents = genetic.tournament(inter_population, Distances)
-            
 
             ### Recombination: Combine 2 parents to produce 1 offsprings 
             New_chorizos = []
@@ -1233,25 +1234,6 @@ class Experiment():
         Results.append((Incumbents,T_Times))
     
         return Incumbents, T_Times, Results, incumbent, best_individual
-
-
-    def save_performance(self, Results, instance, path, xlim = None, cols = None):
-        pass
-
-
-    def plot_performance(self, Results, instance, path, xlim = None, cols = None):
-        colors = ['blue' ,'black', 'red', 'purple', 'green', 'orange', 'pink', 'brown']
-        if len(Results) == 1: colors = choice(colors)
-        for algorithm in range(5):
-            print(algorithm)
-            plt.plot(Results[algorithm][1], Results[algorithm][0], color = colors[algorithm])
-        plt.title(f'Performance of Genetic A. on: {instance[:-4]}')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Objective (d)')
-        if xlim != None:
-            plt.xlim(0, xlim)
-        plt.savefig(f'{path}', dpi = 600)
-        #plt.show()
     
 
     def compute_gap(self, env: E_CVRP_TW, instance: str, incumbent: float) -> float:
