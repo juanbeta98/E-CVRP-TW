@@ -788,15 +788,19 @@ class Reparator(Constructive):
             # Initialize first route
             route = ['D']
             t, d, q, k = 0, 0, env.Q, 0
+            dep_t = [0] # Auxiliary list with departure times
+            dep_q = [env.Q]
 
             node = chorizo[i]
-            if node in env.Costumers:
-                t, d, q, k, route = self.simple_routing(env, 'D', node, t, d, q, k, route)
+            if env.node_type[node] == 'c':
+                t, d, q, k, route = self.direct_routing(env, 'D', node, t, d, q, k, route)
+                dep_t.append(t); dep_q.append(q)
             else:
-                t += env.dist['D',node]/env.v
-                q -= env.dist['D',node]/env.r
-                t += (env.Q - q)*env.g
-                q = env.Q
+                # t += env.dist['D',node]/env.v
+                # q -= env.dist['D',node]/env.r
+                # t += (env.Q - q)*env.g
+                # q = env.Q
+                print('Primer nodo de la ruta no es un cliente, no debería pasar')
 
             route_done = False
 
@@ -804,30 +808,25 @@ class Reparator(Constructive):
 
                 target = chorizo[i+1]
    
-                # Load unfeasible:
+                # Load unfeasible: Finish route and route to depot
                 if k + env.C[target]['d'] >= env.K:           
-                    t, d, q, finish_route = self.route_to_depot(env, node, t, d, q)
-                    route += finish_route
+                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                     i += 1
                     route_done = True
                 
-                # Total time unfeasible
-                elif t + env.dist[node,'D'] / env.v > env.T:
-                    i -= 1
-                    node = chorizo[i]
-                    t, d, q, finish_route = self.route_to_depot(env, node, t, d, q)
-                    route += finish_route[:1]
-                    i += 2
+                # Total time unfeasible: Finish route and go to depot
+                elif t + env.dist[node,target]/env.v + env.C[target]['ServiceTime'] + env.dist[target,'D']/env.v  > env.T:
+                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                    i += 1
                     route_done = True
                 
-
-                # Time window unfeasible
+                # Time window unfeasible: Send costumer to end of line
+                #TODO Evaluate if a max number of bubbles helps performance
                 elif t + env.dist[node, target] / env.v > env.C[target]['DueDate']:
                     missed = chorizo.pop(i+1)
                     pending_c.append(missed)
                     if i + 1 >= len(chorizo):
-                        t, d, q, finish_route = self.route_to_depot(env, node, t, d, q)
-                        route += finish_route[:1]
+                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                         i += 1
                         route_done = True
 
@@ -838,15 +837,8 @@ class Reparator(Constructive):
                     if env.dist[node,s] / env.r > q:
                         s = env.closest[node]
                     
-                    ## Time update
-                    t += env.dist[node,s] / env.v 
-                    t += (env.Q - q) * env.g
-
-                    # Distance update
-                    d += env.dist[node,s] 
-
-                    ## Charge update
-                    q = env.Q 
+                    t, d, q, k, route = self.direct_routing(env, node, s, t, d, q, k, route)
+                    dep_t.append(t); dep_q.append(q)
 
                     ## Update route 
                     node = s
@@ -854,12 +846,12 @@ class Reparator(Constructive):
 
 
                 else:
-                    t, d, q, k, route = self.simple_routing(env, node, target, t, d, q, k, route)
+                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                    dep_t.append(t); dep_q.append(q)
                     node = target
                     i += 1
                     if i + 1 >= len(chorizo):
-                        t, d, q, finish_route = self.route_to_depot(env, node, t, d, q)
-                        route += finish_route[:1]
+                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                         i += 1
                         route_done = True
 
@@ -874,7 +866,7 @@ class Reparator(Constructive):
 
         self.pending_c = pending_c
         while len(self.pending_c) > 0:
-            t, d, q, k, route = self.RCL_based_constructive(env)
+            t, d, q, k, route = self.RCL_based_constructive(env, 0.3, 'Intra-Hybrid')
             parent.append(route)
             distance += d
             distances.append(d)
@@ -892,6 +884,13 @@ class Reparator(Constructive):
                     chorizo.append(j)
         return chorizo
 
+
+    def generate_chorizos_population(self, env, Population):
+        c_Population = []
+        for i in range(len(Population)):
+            c_Population.append(self.build_chorizo(env, Population[i]))
+        
+        return c_Population
 
 
 '''
@@ -1150,14 +1149,9 @@ class Genetic():
         # return new_chromosome_1, new_chromosome_2
 
 
-    def print_initial_population(self, env: E_CVRP_TW, start: float, Population: list[list], Distances: list[float], feas_op: Reparator):
-        print('\n###################   Initial Population   ####################\n')
-        print(f'Total generation time: {time() - start} s')
-        print(f'Number of individuals: {self.Population_size}')
-        print(f'Best generated individual:  {round(min(Distances), 2)}')
-        print(f'Worst generated individual: {round(max(Distances), 2)}')
-        print(f'Number of unfeasible individuals: {self.Population_size - sum(feas_op.population_check(env, Population))}')
-        print('\n')
+    def print_evolution(self, env: E_CVRP_TW, instance: str, t: float, generation: int, Incumbent: float, routes: int):
+        gap = round((Incumbent - env.bkFO[instance])/env.bkFO[instance],4)
+        print(*[round(t,2), generation, round(Incumbent,2), f'{round(gap*100,2)}%', routes], sep = '\t \t')
 
 
 
@@ -1194,12 +1188,14 @@ class Experiment():
             ### Tournament: Select two individuals and leave the best to reproduce
             Parents = genetic.tournament(inter_population, Distances)
 
+            # For operators, a chorizo format is needed, this representation is generated
+            c_Population = repair_op.generate_chorizos_population(env, Population)
+
             ### Recombination: Combine 2 parents to produce 1 offsprings 
-            New_chorizos = []
-            for index in range(len(Parents)):
-                couple = Parents[index]
-                chosen_parent = choice([couple[0], couple[1]])
-                chorizo = repair_op.build_chorizo(env, Population[chosen_parent])
+            New_c_Population = []
+            for i in range(len(Parents)):
+                chosen_parent = choice([Parents[i][0], Parents[i][1]])
+                chorizo = c_Population[chosen_parent]
                 
                 if random() < genetic.crossover_rate:
                     cross_mode = choice(['2opt', 'simple_insertion', 'smart_crossover'])

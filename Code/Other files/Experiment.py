@@ -121,18 +121,18 @@ for instance in ['c102_21.txt']:
         '''
         Evolution
         '''
-        # Incumbents, T_Times, Results, incumbent, best_individual = \
-        #     lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
+        Incumbents, T_Times, Results, incumbent, best_individual = \
+            lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
 
 
-    # with open(path + f'Results/{instance}', 'a') as f:
-    #     f.write(str(Results))
+    with open(path + f'Results/{instance}', 'a') as f:
+        f.write(str(Results))
 
 
-    # with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/R_res_{instance}', 'w') as f:
-    #     f.write(str(best_initial) + '\n')
-    #     f.write(str(incumbent) + '\n')
-    #     f.write(str(best_individual))
+    with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/R_res_{instance}', 'w') as f:
+        f.write(str(best_initial) + '\n')
+        f.write(str(incumbent) + '\n')
+        f.write(str(best_individual))
 
 
     # lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')

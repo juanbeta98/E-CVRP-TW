@@ -29,8 +29,10 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 '''
 Constructive heuristic
 '''
-training_ind_prop = 0.5
+training_ind_prop = 1
 RCL_criterion:str = 'Exo-Hybrid'
+
+constructive_verbose = True
 
 constructive:Constructive = Constructive()
 
@@ -39,7 +41,7 @@ constructive:Constructive = Constructive()
 Genetic algorithm
 '''
 Population_size:int = 1000
-training_ind:int = Population_size * 0.5
+training_ind:int = int(round(Population_size * 0.5,0))
 Elite_size:int = int(Population_size * 0.05)
 
 crossover_rate:float = 0.5
@@ -47,6 +49,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
+Operator:str = 'Testing'
 
 '''
 Repair operators
@@ -68,7 +71,7 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':0.5, 'm':2, 'l':6}
+testing_times = {'s':0.5, 'm':3, 'l':7}
 
 '''
 Instance testing
@@ -79,12 +82,12 @@ for instance in test_bed:
     # Saving performance 
     Results = {}
     Incumbents = []
-    Times = []
+    ploting_Times = []
 
     # Setting runnign times depending on instance size
-    if instance in env.sizes['s']:  max_time = testing_times['s']
-    elif instance in env.sizes['m']:  max_time = testing_times['m']
-    else:   max_time = testing_times['l']
+    if instance in env.sizes['s']:  max_time = 60 * testing_times['s']
+    elif instance in env.sizes['m']:  max_time = 60 * testing_times['m']
+    else:   max_time = 60 * testing_times['l']
    
     # Constructive
     g_start = time()
@@ -92,7 +95,7 @@ for instance in test_bed:
     env.generate_parameters()
     constructive.reset(env)
 
-    # Printing results
+    # Printing progress
     if verbose: 
         print(f'\n\n########################################################################')
         print(f'################ Instance {instance} / {Operator} ################')
@@ -101,21 +104,84 @@ for instance in test_bed:
         print(f'- bkFO: {env.bkFO[instance]}')
         print(f'- bkEV: {env.bkEV[instance]}')
 
-    Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive, training_ind, start, instance, True)
+    # Population generation
+    Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive, training_ind, 
+                                                                                                    g_start, instance, constructive_verbose)
+    Results['Constructive'] = best_individual
+    Incumbents.append(incumbent)
+    ploting_Times.append(time() - g_start)
 
-    ### Print performance
+    # Print progress
     if verbose: 
         print('\n')
-        print(f'########## Performance ##########')
-        print(f'total running time: {round(time() - start,2)}')
-        print(f'incumbent: {round(incumbent,2)}')
-        print(f'gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
-        print(f'time to find: {round(Results["time to find"],2)}')
-        #print(f'best solution: {best_individual}')
+        print(f'Population generation finished')
+        print(f'- total running time: {round(time() - g_start,2)}s')
+        print(f'- incumbent: {round(incumbent,2)}')
+        print(f'- gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
+        print(f'- time to find: {round(best_individual[4],2)}s')
         print('\n')
+        print(f'Genetic process started at {round(time() - g_start,2)}')
+        print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#Routes')
+    
+    # Genetic process
+    generation = 0
+    while time() - g_start < max_time:
+
+        ### Elitism
+        Elite = genetic.elite_class(Distances)
+
+        ### Selection: From a population, which parents are able to reproduce
+        # Intermediate population: Sample of the initial population 
+        inter_population = genetic.intermediate_population(Distances)            
+        inter_population = Elite + list(inter_population)
+
+        ### Tournament: Select two individuals and leave the best to reproduce
+        Parents = genetic.tournament(inter_population, Distances)
+
+        # For operators, a chorizo format is needed, this representation is generated
+        c_Population = repair_op.generate_chorizos_population(env, Population)
+
+        ### Recombination: Combine 2 parents to produce 1 offsprings 
+        New_c_Population = []
+        for i in range(len(Parents)):
+            chosen_parent = choice([Parents[i][0], Parents[i][1]])
+            chorizo = c_Population[chosen_parent]
+
+            # Crossover Operators
+
+            New_c_Population.append(chorizo)
+
+        ### Repair solutions
+        Population, Distances, Times = [],[],[]
+        for i in range(genetic.Population_size):
+            individual, distance, distances, t_time, times  = repair_op.repair_chorizo(env, New_c_Population[i])
+
+            Population.append(individual);  Distances.append(distance); Times.append(t_time)
+
+            if distance < incumbent:
+                incumbent = distance
+                best_individual = [individual, distance, t_time, (distances, times), time() - g_start]
+
+                if verbose: genetic.print_evolution(env, instance, time() - g_start, generation, incumbent, len(individual))
+        
+        ### Store progress
+        Incumbents.append(incumbent)
+        ploting_Times.append(time() - g_start)
+        generation += 1
+
+
+    # Storing overall performance
+    Results['best individual'] = best_individual[0]
+    Results['best distance'] = best_individual[1]
+    Results['gap'] = round(lab.compute_gap(env, instance, incumbent)*100,2)
+    Results['total time'] = best_individual[2]
+    Results['others'] = best_individual[3]
+    Results['time to find'] = best_individual[4]
+    Results['incumbents'] = Incumbents
+    Results['inc times'] = ploting_Times
 
     ### Save performance
-    a_file = open(path + f'Experimentation/Operators/RCL criterion/{RCL_criterion}/results_{instance}', "wb")
+    a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
     pickle.dump(Results, a_file)
     a_file.close()
 
