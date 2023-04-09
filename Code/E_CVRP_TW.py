@@ -909,7 +909,8 @@ class Genetic():
     '''
     Initial population generator
     '''
-    def generate_population(self, env: E_CVRP_TW, constructive: Constructive, verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
+    def generate_population(self, env: E_CVRP_TW, constructive: Constructive, training_ind:int = 500, start:float = 0,
+                            instance:str = '', verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
 
         # Initalizing data storage
         Population: list = []
@@ -920,25 +921,43 @@ class Genetic():
         incumbent: float = 1e9
         best_individual: list = []
 
-        ind = 0
+        if verbose:
+            print(f'\nGenerating {self.Population_size} individuals ...')
+            print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#EV')
+        
+        # Adaptative-Reactive Constructive
+        RCL_alpha_list:list[float] = [0.15, 0.25, 0.35, 0.5]
+        alpha_performance = {alpha:0 for alpha in RCL_alpha_list}
+
+        # Calibrating alphas
+        for tr_ind in range(training_ind):
+            constructive.reset(env)
+            tr_distance: float = 0
+            RCL_alpha = choice(RCL_alpha_list)
+            while len(constructive.pending_c) > 0:
+                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha)
+                tr_distance += d
+            alpha_performance[RCL_alpha] += 1/tr_distance
+
         # Generating initial population
         for individual in range(self.Population_size):
-            print(f'Ind: {ind}'); ind += 1
-            if verbose and individual%20 == 0:     
-                print(f'Generation progress: {round(individual/self.Population_size)}')
 
+            # Storing individual
             individual: list = []
             distance: float = 0
             distances: list = []
             t_time: float = 0
             times: list = []
-            num_routes = 0
-
 
             # Intitalizing environemnt
             constructive.reset(env)
-            rou = 0
+
+            # Choosing alpha
+            RCL_alpha = choice(RCL_alpha_list, p = [alpha_performance[alpha]/sum(alpha_performance.values()) for alpha in RCL_alpha_list])
+
+            # Generating individual
             while len(constructive.pending_c) > 0:
+
                 print(f'\tRou: {rou}'); rou += 1
                 t, d, q, k, route = constructive.RCL_based_constructive(env)
                 individual.append(route)
@@ -946,17 +965,18 @@ class Genetic():
                 distances.append(d)
                 t_time += t
                 times.append(t)
-                
             
+            # Updating incumbent
+            if distance < incumbent:
+                incumbent = distance
+                best_individual: list = [individual, distance, t_time, (distances, times), time() - start]
+                constructive.print_constructive(env, instance, time() - start, individual, incumbent, len(individual))
+                
             Population.append(individual)
             Distances.append(distance)
             Times.append(t_time)
             Details.append((distances, times))
-            
-            if distance < incumbent:
-                incumbent = distance
-                best_individual: list = [individual, distance, t_time, (distances, times)]
-        
+
         return Population, Distances, Times, Details, incumbent, best_individual
 
 

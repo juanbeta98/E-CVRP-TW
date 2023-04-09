@@ -91,61 +91,57 @@ print(f'incumbent: {round(incumbent,2)}')
 print(f'best solution: {best_individual}')
 print('\n')
 
-
-
-env.detail_route(['D', 'C11', 'C92', 'C97', 'C95', 'C99', 'C100', 'C1', 'C2', 'S3', 'C21', 'C22', 'D'])
-print(env.T)
-# env.detail_route(['D', 'C98', 'S0', 'C24', 'C20', 'D'])
+)
 
 
 
-# Results: list = []
+Results: list = []
 
-# for instance in ['c102_21.txt']:
-#     '''
-#     Reseting experimentation
-#     '''
-#     env.load_data(instance)
-#     env.generate_parameters()
+for instance in ['c102_21.txt']:
+    '''
+    Reseting experimentation
+    '''
+    env.load_data(instance)
+    env.generate_parameters()
     
-#     for operator in [1]:
+    for operator in [1]:
         
-#         repair_op.reset(env)
+        repair_op.reset(env)
 
-#         '''
-#         Population generation
-#         '''
-#         Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive)
+        '''
+        Population generation
+        '''
+        Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive)
         
-#         Incumbents: list[float] = [incumbent]
-#         T_Times: list[float] = [round(time() - start,2)]
-#         initial_best: list = best_individual
+        Incumbents: list[float] = [incumbent]
+        T_Times: list[float] = [round(time() - start,2)]
+        initial_best: list = best_individual
         
 
-#         '''
-#         Evolution
-#         '''
-#         # Incumbents, T_Times, Results, incumbent, best_individual = \
-#         #     lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
+        '''
+        Evolution
+        '''
+        # Incumbents, T_Times, Results, incumbent, best_individual = \
+        #     lab.evolution(env, genetic, repair_op, Population, Distances, Incumbents, T_Times, Results, best_individual, start, max_time)
 
 
-#     # with open(path + f'Results/{instance}', 'a') as f:
-#     #     f.write(str(Results))
+    # with open(path + f'Results/{instance}', 'a') as f:
+    #     f.write(str(Results))
 
 
-#     # with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/R_res_{instance}', 'w') as f:
-#     #     f.write(str(best_initial) + '\n')
-#     #     f.write(str(incumbent) + '\n')
-#     #     f.write(str(best_individual))
+    # with open(f'/Users/juanbeta/My Drive/2022-2/Metaheurísticas/Tareas/Tarea 4/CG-VRP-TW/Source/Results/R_res_{instance}', 'w') as f:
+    #     f.write(str(best_initial) + '\n')
+    #     f.write(str(incumbent) + '\n')
+    #     f.write(str(best_individual))
 
 
-#     # lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')
+    # lab.save_performance(Results, instance, path + f'Results/{instance[:-4]}.png')
 
-# print('\n')
-# print('############## Testing done ################')
-# print(f'total time: {round(time() - start,2)}')
-# print(f'incumbent: {round(incumbent,2)}')
-# print(f'best solution: {initial_best[0]}')
-# print('\n')
+print('\n')
+print('############## Testing done ################')
+print(f'total time: {round(time() - start,2)}')
+print(f'incumbent: {round(incumbent,2)}')
+print(f'best solution: {initial_best[0]}')
+print('\n')
 
 

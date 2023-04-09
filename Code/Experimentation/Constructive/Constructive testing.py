@@ -33,7 +33,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Intra-Hybrid'
+RCL_criterion: str = 'Exo-Hybrid'
 
 '''
 EXPERIMENTATION
@@ -48,7 +48,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = env.instances
+test_bed = env.sizes['l']
 
 for instance in test_bed:
     # Saving performance 
@@ -75,7 +75,7 @@ for instance in test_bed:
     # Printing results
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'################ Instance {instance} / {RCL_criterion}################')
+        print(f'################ Instance {instance} / {RCL_criterion} ################')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
@@ -105,8 +105,8 @@ for instance in test_bed:
 
         # Building individual
         while len(constructive.pending_c) > 0:
-            if RCL_criterion == 'Exo-Hybrid': RCL_criterion = choice(['distance', 'TimeWindow'])
-            t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+            if RCL_criterion == 'Exo-Hybrid': RCL_criterion_prime = choice(['distance', 'TimeWindow'])
+            t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion_prime)
             individual.append(route)
             distance += d
             distances.append(d)
