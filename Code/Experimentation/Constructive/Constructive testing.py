@@ -19,6 +19,7 @@ rd_seed: int = 0
 seed(rd_seed)
 
 verbose = True
+save_performance = False
 
 '''
 Environment
@@ -33,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Exo-Hybrid'
+RCL_criterion: str = 'Intra-Hybrid'
 
 '''
 EXPERIMENTATION
@@ -49,6 +50,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 Instance testing
 '''
 test_bed = env.sizes['l']
+test_bed = ['rc207_21.txt', 'rc208_21.txt']
 
 for instance in test_bed:
     # Saving performance 
@@ -59,7 +61,7 @@ for instance in test_bed:
     # Setting runnign times depending on instance size
     if instance in env.sizes['s']:  max_time = 30
     elif instance in env.sizes['m']:  max_time = 60*2
-    else:   max_time = 60*6
+    else:   max_time = 60*8
    
     # Constructive
     start = time()
@@ -106,6 +108,7 @@ for instance in test_bed:
         # Building individual
         while len(constructive.pending_c) > 0:
             if RCL_criterion == 'Exo-Hybrid': RCL_criterion_prime = choice(['distance', 'TimeWindow'])
+            else:   RCL_criterion_prime = RCL_criterion_prime
             t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion_prime)
             individual.append(route)
             distance += d
@@ -149,9 +152,10 @@ for instance in test_bed:
     print('\n')
 
     ### Save performance
-    a_file = open(path + f'Experimentation/Constructive/RCL criterion/{RCL_criterion}/results_{instance}', "wb")
-    pickle.dump(Results, a_file)
-    a_file.close()
+    if save_performance:
+        a_file = open(path + f'Experimentation/Constructive/RCL criterion/{RCL_criterion}/results_{instance}', "wb")
+        pickle.dump(Results, a_file)
+        a_file.close()
 
 
 

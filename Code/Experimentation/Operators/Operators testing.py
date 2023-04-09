@@ -120,8 +120,8 @@ for instance in test_bed:
         print(f'- gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
         print(f'- time to find: {round(best_individual[4],2)}s')
         print('\n')
-        print(f'Genetic process started at {round(time() - g_start,2)}')
-        print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#Routes')
+        print(f'Genetic process started at {round(time() - g_start,2)}s')
+        print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
     
     # Genetic process
     generation = 0

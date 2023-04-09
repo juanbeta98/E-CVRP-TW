@@ -921,6 +921,7 @@ class Genetic():
 
         if verbose:
             print(f'\nPopulation generation started: {self.Population_size} individuals')
+            print(f' - Using a Constructive with adaptative-reactive alpha and Exo-Hybrid criterion')
 
         # Adaptative-Reactive Constructive
         RCL_alpha_list:list[float] = [0.15, 0.25, 0.35, 0.5]
@@ -932,7 +933,8 @@ class Genetic():
             tr_distance: float = 0
             RCL_alpha = choice(RCL_alpha_list)
             while len(constructive.pending_c) > 0:
-                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, 'Intra-Hybrid')
+                RCL_criterion = choice(['distance', 'TimeWindow'])
+                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
                 tr_distance += d
             alpha_performance[RCL_alpha] += 1/tr_distance
         
@@ -959,7 +961,8 @@ class Genetic():
 
             # Generating individual
             while len(constructive.pending_c) > 0:
-                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, 'Intra-Hybrid')
+                RCL_criterion = choice(['distance', 'TimeWindow'])
+                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
                 individual.append(route)
                 distance += d
                 distances.append(d)
