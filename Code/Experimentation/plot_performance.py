@@ -12,7 +12,7 @@ def retrieve_const_performance(instance, path):
 
 
 def plot_performance(data, instance, testing = 'Constructive'):
-    colors = ['red', 'green', 'purple', 'orange', 'blue' ,'black', 'pink', 'brown']
+    colors = ['red', 'orange', 'brown', 'green', 'purple' , 'blue' ,'black', 'pink', ]
     i = 0
     for key, value in data.items():
         plt.plot(value['inc times'], value['incumbents'], color = colors[i]);i+=1

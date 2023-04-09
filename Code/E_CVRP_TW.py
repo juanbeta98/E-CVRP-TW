@@ -9,7 +9,7 @@ jm.betancourt@uniandes.edu.co
 Daniel Giraldo
 ds.giraldoh@uniandes.edu.co
 '''
-
+#octoface
 from copy import copy, deepcopy
 from time import time
 import matplotlib.pyplot as plt
@@ -341,13 +341,14 @@ class Constructive():
     - DISTANCES
     - OPENING TIME WINDOW
     '''
-    def generate_candidate_from_RCL(self, env: E_CVRP_TW, RCL_alpha: float, node: str, t: float, q: float, k: int):
+    def generate_candidate_from_RCL(self, env: E_CVRP_TW, RCL_alpha: float, RCL_criterion: str, node: str, t: float, q: float, k: int):
         feasible_candidates: list = []
         feasible_energy_candidates: list = []
         max_crit: float = -1e9
         min_crit: float = 1e9
 
-        RCL_mode: str = choice(['distance', 'TimeWindow'])
+        RCL_mode = RCL_criterion
+        if RCL_criterion == 'Intra-Hybrid': RCL_mode = choice(['distance', 'TimeWindow'])
 
         energy_feasible: bool = False     # Indicates if there is at least one candidate feasible by time and load but not charge
         for target in self.pending_c:
@@ -408,7 +409,6 @@ class Constructive():
         else:
             return False, energy_feasible, feasible_energy_candidates
 
-    
 
     '''
     Find closest station to both the current costumer and the depot
@@ -566,7 +566,7 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env: E_CVRP_TW, RCL_alpha: float):
+    def RCL_based_constructive(self, env: E_CVRP_TW, RCL_alpha: float, RCL_criterion: str):
         t: float = 0
         d: float = 0
         q: float = env.Q
@@ -579,7 +579,7 @@ class Constructive():
 
         # Adding nodes to route
         while True:
-            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, RCL_alpha, node, t, q, k)
+            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, RCL_alpha, RCL_criterion, node, t, q, k)
 
             # Found a target
             if target != False:
