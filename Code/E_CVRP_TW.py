@@ -770,20 +770,20 @@ class Reparator(Constructive):
     def repair_chorizo(self, env: E_CVRP_TW, chorizo: list):
         if type(chorizo[0]) == list:
             chorizo = self.build_chorizo(env, chorizo)
-        parent = []
-        distance = 0
-        distances = []
-        ttime = 0
-        times = [] 
-        pending_c = []
+        parent:list = list()
+        distance:float = 0
+        distances:list[float] = list()
+        ttime:float = 0
+        times:list[float] = list() 
+        pending_c = list()
         self.reset(env)
-        
+
         ### Construct routes
         i = 0
-        while i < len(chorizo) - 1:
+        while i <= len(env.Costumers) - 1:
             # Append removed nodes
             chorizo += pending_c
-            pending_c = []    
+            pending_c:list = list()    
 
             # Initialize first route
             route = ['D']
@@ -792,17 +792,15 @@ class Reparator(Constructive):
             dep_q = [env.Q]
 
             node = chorizo[i]
-            if env.node_type[node] == 'c':
-                t, d, q, k, route = self.direct_routing(env, 'D', node, t, d, q, k, route)
-                dep_t.append(t); dep_q.append(q)
-            else:
-                # t += env.dist['D',node]/env.v
-                # q -= env.dist['D',node]/env.r
-                # t += (env.Q - q)*env.g
-                # q = env.Q
-                print('Primer nodo de la ruta no es un cliente, no debería pasar')
+            t, d, q, k, route = self.direct_routing(env, 'D', node, t, d, q, k, route)
+            dep_t.append(t); dep_q.append(q)
+
 
             route_done = False
+            if i == len(env.Costumers) - 1:
+                t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                i += 1
+                route_done = True
 
             while not route_done:
 
@@ -842,7 +840,6 @@ class Reparator(Constructive):
 
                     ## Update route 
                     node = s
-                    route.append(node)
 
 
                 else:
@@ -864,9 +861,9 @@ class Reparator(Constructive):
             ttime += t
             times.append(t)
 
-        self.pending_c = pending_c
+
         while len(self.pending_c) > 0:
-            t, d, q, k, route = self.RCL_based_constructive(env, 0.3, 'Intra-Hybrid')
+            t, d, q, k, route = self.RCL_based_constructive(env, 0.3, 'distance')
             parent.append(route)
             distance += d
             distances.append(d)

@@ -29,7 +29,7 @@ env: E_CVRP_TW = E_CVRP_TW(path)
 '''
 Constructive heuristic
 '''
-training_ind_prop = 1
+training_ind_prop = 0.5
 RCL_criterion:str = 'Exo-Hybrid'
 
 constructive_verbose = True
@@ -41,8 +41,8 @@ constructive:Constructive = Constructive()
 Genetic algorithm
 '''
 Population_size:int = 1000
-training_ind:int = int(round(Population_size * 0.5,0))
-Elite_size:int = int(Population_size * 0.05)
+training_ind:int = int(round(Population_size * training_ind_prop,0))
+Elite_size:int = int(Population_size * 0.5)
 
 crossover_rate:float = 0.5
 mutation_rate:float = 0.5
@@ -73,10 +73,11 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
 testing_times = {'s':0.5, 'm':3, 'l':7}
 
+
 '''
 Instance testing
 '''
-test_bed = env.sizes['l']
+test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
@@ -125,8 +126,8 @@ for instance in test_bed:
     
     # Genetic process
     generation = 0
-    while time() - g_start < max_time:
-
+    incumbent = 1e9
+    while generation < 100:
         ### Elitism
         Elite = genetic.elite_class(Distances)
 
@@ -155,10 +156,12 @@ for instance in test_bed:
         Population, Distances, Times = [],[],[]
         for i in range(genetic.Population_size):
             individual, distance, distances, t_time, times  = repair_op.repair_chorizo(env, New_c_Population[i])
+            # print(chech_all(env, individual))
 
             Population.append(individual);  Distances.append(distance); Times.append(t_time)
 
-            if distance < incumbent:
+
+            if distance <= incumbent:
                 incumbent = distance
                 best_individual = [individual, distance, t_time, (distances, times), time() - g_start]
 
@@ -169,6 +172,16 @@ for instance in test_bed:
         ploting_Times.append(time() - g_start)
         generation += 1
 
+
+    # Print progress
+    if verbose: 
+        print('\n')
+        print(f'Evolution finished finished')
+        print(f'- total running time: {round(time() - g_start,2)}s')
+        print(f'- incumbent: {round(incumbent,2)}')
+        print(f'- gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
+        print(f'- time to find: {round(best_individual[4],2)}s')
+        print('\n')
 
     # Storing overall performance
     Results['best individual'] = best_individual[0]
