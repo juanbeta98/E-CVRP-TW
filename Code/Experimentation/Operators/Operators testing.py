@@ -99,7 +99,7 @@ for instance in test_bed:
     # Printing progress
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'################ Instance {instance} / {Operator} ################')
+        print(f'                 Instance {instance} / {Operator} ################')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
@@ -148,8 +148,10 @@ for instance in test_bed:
             chosen_parent = choice([Parents[i][0], Parents[i][1]])
             chorizo = c_Population[chosen_parent]
 
-            # Crossover Operators
+            # Crossover
+            chorizo = genetic.crossover(env, chorizo, 'simple_insertion', repair_op)
 
+            # mutation
             New_c_Population.append(chorizo)
 
         ### Repair solutions
