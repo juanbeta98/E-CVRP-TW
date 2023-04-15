@@ -15,7 +15,7 @@ General parameters
 '''
 start: float = time()
 
-rd_seed: int = 1
+rd_seed: int = 0
 seed(rd_seed)
 
 verbose = True
@@ -40,7 +40,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 1000
+Population_size:int = 2000
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 
@@ -127,7 +127,7 @@ for instance in test_bed:
     # Genetic process
     generation = 0
     incumbent = 1e9
-    while generation < 10:
+    while generation < 50:
         print(f'Generation: {generation}')
         ### Elitism
         Elite = genetic.elite_class(Distances)
@@ -152,10 +152,8 @@ for instance in test_bed:
 
             ### Mutation
             #TODO analyse first routes
-            if random() > mutation_rate:
-                individual = Parents[i][randint(0,2)]
-                new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
-
+            individual = Parents[i][randint(0,2)]
+            new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
             New_Population.append(new_individual)
             New_Distances.append(new_distance)

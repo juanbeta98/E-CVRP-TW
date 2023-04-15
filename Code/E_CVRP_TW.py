@@ -1078,6 +1078,7 @@ class Genetic():
         # Generating individual
         while len(constructive.pending_c) > 0:
             RCL_criterion = choice(['distance', 'TimeWindow'])
+            RCL_criterion = 'distance'
             t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
             new_individual.append(route)
             new_distance += d
