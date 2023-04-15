@@ -911,13 +911,13 @@ class Genetic():
                             instance:str = '', verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
 
         # Initalizing data storage
-        Population: list = []
-        Distances: list[float] = []
-        Times: list[float] = []
-        Details: list[tuple] = []
+        Population: list = list()
+        Distances: list[float] = list()
+        Times: list[float] = list()
+        Details: list[tuple] = list()
 
         incumbent: float = 1e9
-        best_individual: list = []
+        best_individual: list = list()
 
         if verbose:
             print(f'\nPopulation generation started: {self.Population_size} individuals')
@@ -947,11 +947,11 @@ class Genetic():
         for ind in range(self.Population_size):
 
             # Storing individual
-            individual: list = []
+            individual: list = list()
             distance: float = 0
-            distances: list = []
+            distances: list = list()
             t_time: float = 0
-            times: list = []
+            times: list = list()
 
             # Intitalizing environemnt
             constructive.reset(env)
@@ -1024,17 +1024,83 @@ class Genetic():
     '''
 
 
-
     '''
-    MUTAITON/CROSSOVER: Same individual, different routes
+    CROSSOVER: Same individual, different routes
     '''
     # Remove costumers 
-    def evaluated_insertion(self, env: E_CVRP_TW, constructive: Constructive, individual:list):
+    def evaluated_insertion(self, env:E_CVRP_TW, constructive:Constructive, individual:list):
+        pass
+        # in_route = individual[randint(1,len(individual))]
+        # in_pos = randint(1,len(individual[in_route])-1)
 
-        in_route = individual[randint(1,len(individual))]
-        in_pos = randint(1,len(individual[in_route])-1)
+        #constructive.generate_candidate_from_RCL(env, RCL_alpha ,RCL_criterion, node, t, float, q, k)
 
-        constructive.generate_candidate_from_RCL(env, RCL_alpha ,RCL_criterion, node, t, float, q, k)
+
+    '''
+    MUTATION: Same individual, all routes
+    '''
+    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float):
+        eff_rates = list()
+        distances, times = Details
+        for idx, route in enumerate(individual):
+            eff_rates.append(distances[idx]/len(route))
+        
+        rank_index = self.rank_indexes(eff_rates)
+
+
+        new_individual = list()
+        new_distance = 0
+        new_distances = list()
+        new_time = 0
+        new_times = list()
+        
+        pending_c = deepcopy(env.Costumers)
+
+        i = 0
+        prop:float = 0.2
+        while i/len(individual) < prop:
+            ii = rank_index.index(i)
+            if len(individual[ii]) >= 0.7*max([len(route) for route in individual]):
+                new_individual.append(individual[ii])
+                new_distance += distances[ii]
+                new_distances.append(distances[ii])
+                new_time += times[ii]
+                new_times.append(times[ii])
+
+                for node in new_individual[-1]:
+                    if node != 'D' and env.node_type == 'c':
+                        pending_c.remove(node)
+
+            i += 1
+
+        constructive.pending_c = pending_c
+
+        # Generating individual
+        while len(constructive.pending_c) > 0:
+            RCL_criterion = choice(['distance', 'TimeWindow'])
+            t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+            new_individual.append(route)
+            new_distance += d
+            new_distances.append(d)
+            new_time += t
+            new_times.append(t)
+
+
+        return new_individual, new_distance, new_time, (new_distances, new_times)
+
+
+    def rank_indexes(self, indx:list):
+        sorted_lst = sorted(indx)
+        
+        lista = list()
+        for v in indx:
+            indexx = sorted_lst.index(v)
+            while indexx in lista:
+                indexx += 1
+            lista.append(indexx)
+
+        return lista
+
 
 
     '''

@@ -1,4 +1,4 @@
-from numpy.random import seed, choice
+from numpy.random import seed, choice, randint, random
 from time import time
 import sys
 import pickle
@@ -15,7 +15,7 @@ General parameters
 '''
 start: float = time()
 
-rd_seed: int = 0
+rd_seed: int = 1
 seed(rd_seed)
 
 verbose = True
@@ -81,9 +81,9 @@ test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
-    Results = {}
-    Incumbents = []
-    ploting_Times = []
+    Results = dict()
+    Incumbents = list()
+    ploting_Times = list()
 
     # Setting runnign times depending on instance size
     if instance in env.sizes['s']:  max_time = 60 * testing_times['s']
@@ -106,7 +106,7 @@ for instance in test_bed:
         print(f'- bkEV: {env.bkEV[instance]}')
 
     # Population generation
-    Population, Distances, Times, Details, incumbent, best_individual = genetic.generate_population(env, constructive, training_ind, 
+    Population, Distances, Times, Details, incumbent, best_individual, RCL_alpha = genetic.generate_population(env, constructive, training_ind, 
                                                                                                     g_start, instance, constructive_verbose)
     Results['Constructive'] = best_individual
     Incumbents.append(incumbent)
@@ -127,7 +127,8 @@ for instance in test_bed:
     # Genetic process
     generation = 0
     incumbent = 1e9
-    while generation < 100:
+    while generation < 10:
+        print(f'Generation: {generation}')
         ### Elitism
         Elite = genetic.elite_class(Distances)
 
@@ -136,17 +137,51 @@ for instance in test_bed:
         inter_population = genetic.intermediate_population(Distances)            
         inter_population = Elite + list(inter_population)
 
+
         ### Tournament: Select two individuals and leave the best to reproduce
         Parents = genetic.tournament(inter_population, Distances)
 
-        ### Crossover
-            
+
+        ### Evolution
+        New_Population:list = list()
+        New_Distances:list = list()
+        New_Times:list = list()
+        New_Details:list = list()
+
+        for i in range(genetic.Population_size):
+
+            ### Mutation
+            #TODO analyse first routes
+            if random() > mutation_rate:
+                individual = Parents[i][randint(0,2)]
+                new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
 
-        ### Store progress
-        Incumbents.append(incumbent)
-        ploting_Times.append(time() - g_start)
+            New_Population.append(new_individual)
+            New_Distances.append(new_distance)
+            New_Times.append(new_time)
+            New_Details.append(details)
+
+            # Updating incumbent
+            if new_distance < incumbent:
+                incumbent = new_distance
+                best_individual: list = [new_individual, new_distance, new_time, details, time() - start]
+
+                if verbose:
+                    genetic.print_evolution(env, instance, time() - g_start, generation, incumbent, len(new_individual))
+
+                ### Store progress
+                Incumbents.append(incumbent)
+                ploting_Times.append(time() - g_start)
+
+        
+        Population = New_Population
+        Distances = New_Distances
+        Times = New_Times
+        Details = New_Details
         generation += 1
+
+
 
 
     # Print progress
