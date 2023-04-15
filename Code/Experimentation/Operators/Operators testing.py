@@ -139,36 +139,10 @@ for instance in test_bed:
         ### Tournament: Select two individuals and leave the best to reproduce
         Parents = genetic.tournament(inter_population, Distances)
 
-        # For operators, a chorizo format is needed, this representation is generated
-        c_Population = repair_op.generate_chorizos_population(env, Population)
-
-        ### Recombination: Combine 2 parents to produce 1 offsprings 
-        New_c_Population = []
-        for i in range(len(Parents)):
-            chosen_parent = choice([Parents[i][0], Parents[i][1]])
-            chorizo = c_Population[chosen_parent]
-
-            # Crossover
-            chorizo = genetic.crossover(env, chorizo, 'simple_insertion', repair_op)
-
-            # mutation
-            New_c_Population.append(chorizo)
-
-        ### Repair solutions
-        Population, Distances, Times = [],[],[]
-        for i in range(genetic.Population_size):
-            individual, distance, distances, t_time, times  = repair_op.repair_chorizo(env, New_c_Population[i])
-            # print(chech_all(env, individual))
-
-            Population.append(individual);  Distances.append(distance); Times.append(t_time)
+        ### Crossover
+            
 
 
-            if distance <= incumbent:
-                incumbent = distance
-                best_individual = [individual, distance, t_time, (distances, times), time() - g_start]
-
-                if verbose: genetic.print_evolution(env, instance, time() - g_start, generation, incumbent, len(individual))
-        
         ### Store progress
         Incumbents.append(incumbent)
         ploting_Times.append(time() - g_start)

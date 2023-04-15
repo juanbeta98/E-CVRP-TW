@@ -320,6 +320,7 @@ class E_CVRP_TW():
 
 
 
+
 '''
 Algorithms Class: Compilation of heuristics to generate a feasible route
 - RCL based constructive
@@ -890,6 +891,8 @@ class Reparator(Constructive):
         return c_Population
 
 
+
+
 '''
 Genetic algorithm: 
 '''
@@ -979,7 +982,7 @@ class Genetic():
             Times.append(t_time)
             Details.append((distances, times))
 
-        return Population, Distances, Times, Details, incumbent, best_individual
+        return Population, Distances, Times, Details, incumbent, best_individual, max(alpha_performance, key = alpha_performance.get)
 
 
     ''' Elite class '''
@@ -1017,10 +1020,26 @@ class Genetic():
 
 
     '''
-    RECOMBINATION/COSS-OVER
+    SHAKE: Same individual, same route
     '''
 
 
+
+    '''
+    MUTAITON/CROSSOVER: Same individual, different routes
+    '''
+    # Remove costumers 
+    def evaluated_insertion(self, env: E_CVRP_TW, constructive: Constructive, individual:list):
+
+        in_route = individual[randint(1,len(individual))]
+        in_pos = randint(1,len(individual[in_route])-1)
+
+        constructive.generate_candidate_from_RCL(env, RCL_alpha ,RCL_criterion, node, t, float, q, k)
+
+
+    '''
+    RECOMBINAITON: different individual, different routes
+    '''
 
     
 
