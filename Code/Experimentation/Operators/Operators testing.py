@@ -49,7 +49,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'Testing'
+Operator:str = 'Dawinian_phi_rate'
 
 '''
 Repair operators
@@ -78,6 +78,7 @@ testing_times = {'s':0.5, 'm':3, 'l':7}
 Instance testing
 '''
 test_bed = [env.sizes['l'][0]]
+test_bed = env.instances
 
 for instance in test_bed:
     # Saving performance 
@@ -127,7 +128,7 @@ for instance in test_bed:
     # Genetic process
     generation = 0
     incumbent = 1e9
-    while generation < 50:
+    while time() - start < max_time:
         print(f'Generation: {generation}')
         ### Elitism
         Elite = genetic.elite_class(Distances)
@@ -154,6 +155,11 @@ for instance in test_bed:
             #TODO analyse first routes
             individual = Parents[i][randint(0,2)]
             new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
+
+            new_individual, new_distance, new_time, details = genetic.other_operation(env, constructive, Population[individual], Details[individual], RCL_alpha)
+
+
+
 
             New_Population.append(new_individual)
             New_Distances.append(new_distance)
