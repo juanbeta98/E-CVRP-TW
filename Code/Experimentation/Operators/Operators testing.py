@@ -50,7 +50,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'Dawinian phi rate'
+Operator:str = 'two opt'
 
 '''
 Repair operators
@@ -78,7 +78,7 @@ testing_times = {'s':0.5, 'm':1.5, 'l':3}
 '''
 Instance testing
 '''
-test_bed = env.sizes['m']
+test_bed = env.sizes['l']
 
 for instance in test_bed:
     # Saving performance 

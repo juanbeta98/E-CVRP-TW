@@ -698,7 +698,7 @@ class Feasibility():
             if not feasible:
                 break
 
-        return feasible, (distance, time, (distances, times))
+        return feasible, (distance, ttime, (distances, times))
 
                 
     def transition_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
@@ -1044,19 +1044,29 @@ class Genetic():
         new_times = deepcopy(times)
         
         route = new_individual[randint(0,len(individual))]
+        #print(route)
         new_individual.remove(route)
         
+        new_route = route
+
         for i in range(1, len(route) - 2):
             for j in range(i+1, len(route)):
                 if j-i == 1:
                     continue
-                new_route = route
                 new_route[i:j] = route[j-1:i-1:-1]
 
+        i = 0
+        while i + 2 < len(new_route):
+            if new_route[i] == new_route[i+1]:
+                del new_route[i]
+            else:
+                i += 1
+
         # Calcular la distance de new_distance y new_times
-        feasible, _ = feas_op.individual_check(env, [new_route])
+        new_individual.append(new_route)
+        #print(new_route)
+        feasible, _ = feas_op.individual_check(env, new_individual)
         if feasible:
-            new_individual.append(new_route)
             return new_individual, *_
         
         else: 
