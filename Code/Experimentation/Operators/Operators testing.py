@@ -19,7 +19,7 @@ rd_seed: int = 0
 seed(rd_seed)
 
 verbose = True
-saving = False
+saving = True
 
 '''
 Environment
@@ -72,13 +72,15 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':0.5, 'm':1.5, 'l':3}
+testing_times = {'s':0.5, 'm':3, 'l':7}
 
 
 '''
 Instance testing
 '''
 test_bed = env.sizes['l']
+test_bed = ['c202C10.txt', 'c103_21.txt']
+
 
 for instance in test_bed:
     # Saving performance 
