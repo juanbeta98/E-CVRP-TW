@@ -508,11 +508,11 @@ class Constructive():
             del dep_q[-1]
             q = dep_q[-1]
             
-            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)  
-            return t, d, q, k, route
+            t, d, q, k, route, dep_t, dep_q = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)  
+            return t, d, q, k, route, dep_t, dep_q
 
         else:
-            return t + extra_t, d + extra_d, q + extra_q, k, route + finish_route
+            return t + extra_t, d + extra_d, q + extra_q, k, route + finish_route, dep_t, dep_q
 
 
     '''
@@ -621,12 +621,12 @@ class Constructive():
                         # Total time unfeasible
                         else:
                             # Nothing to do , go to depot
-                            t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                            t, d, q, k, route, dep_t, dep_q = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                             break
 
                 # Nothing to do , go to depot
                 else:
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
+                    t, d, q, k, route, dep_t, dep_q = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
                     break
         
 
@@ -634,7 +634,7 @@ class Constructive():
         assert round(q) >= 0, f'The vehicle ran out of charge'
         assert k <= env.K, f'The vehicles capacity is exceeded \n-Max load: {env.K} \n- Current load: {k}'
             
-        return t, d, q, k, route
+        return t, d, q, k, route, (dep_t, dep_q)
 
 
     def print_constructive(self, env: E_CVRP_TW, instance: str, t: float, ind: int, Incumbent: float, routes: int):
@@ -670,22 +670,35 @@ class Feasibility():
     '''
     def individual_check(self, env: E_CVRP_TW, individual: list):
         feasible = True
+        distance = 0
+        distances = list()
+        ttime = 0
+        times = list()
+
         for route in range(len(individual)):
             route = individual[route]
             t = 0
+            d = 0
             q = env.Q
             k = 0
             for i in range(len(route)-1):
                 node = route[i]
                 target = route[i + 1]
                 feasible, t, q, k, self.transition_check(env, node, target, t, q, k)
+
+                d += env.dist[node,target]
                 if not feasible:
                     break
+            
+            distance += d
+            distances.append(d)
+            ttime += t
+            times.append(t)
 
             if not feasible:
                 break
 
-        return feasible
+        return feasible, (distance, time, (distances, times))
 
                 
     def transition_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
@@ -934,7 +947,7 @@ class Genetic():
             RCL_alpha = choice(RCL_alpha_list)
             while len(constructive.pending_c) > 0:
                 RCL_criterion = choice(['distance', 'TimeWindow'])
-                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+                t, d, q, k, route, _ = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
                 tr_distance += d
             alpha_performance[RCL_alpha] += 1/tr_distance
         
@@ -962,7 +975,7 @@ class Genetic():
             # Generating individual
             while len(constructive.pending_c) > 0:
                 RCL_criterion = choice(['distance', 'TimeWindow'])
-                t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+                t, d, q, k, route, dep_details = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
                 individual.append(route)
                 distance += d
                 distances.append(d)
@@ -1022,6 +1035,33 @@ class Genetic():
     '''
     SHAKE: Same individual, same route
     '''
+    def two_opt(self, env:E_CVRP_TW, constructive:Constructive, feas_op: Feasibility, individual:list, Details:tuple):
+        
+        distances, times = Details
+
+        new_individual = deepcopy(individual)
+        new_distances = deepcopy(distances)
+        new_times = deepcopy(times)
+        
+        route = new_individual[randint(0,len(individual))]
+        new_individual.remove(route)
+        
+        for i in range(1, len(route) - 2):
+            for j in range(i+1, len(route)):
+                if j-i == 1:
+                    continue
+                new_route = route
+                new_route[i:j] = route[j-1:i-1:-1]
+
+        # Calcular la distance de new_distance y new_times
+        feasible, _ = feas_op.individual_check(env, [new_route])
+        if feasible:
+            new_individual.append(new_route)
+            return new_individual, *_
+        
+        else: 
+            print('no factible')
+            return individual, sum(distances), sum(times), Details
 
 
     '''
@@ -1039,6 +1079,8 @@ class Genetic():
     '''
     MUTATION: Same individual, all routes
     '''
+    # Darwinian phi rate: A proportion of best routes of the individual, according to the phi rate (total distance/total costumers)
+    # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
     def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float):
         eff_rates = list()
         distances, times = Details
@@ -1088,7 +1130,7 @@ class Genetic():
 
 
         return new_individual, new_distance, new_time, (new_distances, new_times)
-
+    
 
     def rank_indexes(self, indx:list):
         sorted_lst = sorted(indx)

@@ -19,6 +19,7 @@ rd_seed: int = 0
 seed(rd_seed)
 
 verbose = True
+saving = False
 
 '''
 Environment
@@ -49,7 +50,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'Dawinian_phi_rate'
+Operator:str = 'Dawinian phi rate'
 
 '''
 Repair operators
@@ -71,14 +72,13 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':0.5, 'm':3, 'l':7}
+testing_times = {'s':0.5, 'm':1.5, 'l':3}
 
 
 '''
 Instance testing
 '''
-test_bed = [env.sizes['l'][0]]
-test_bed = env.instances
+test_bed = env.sizes['m']
 
 for instance in test_bed:
     # Saving performance 
@@ -128,8 +128,8 @@ for instance in test_bed:
     # Genetic process
     generation = 0
     incumbent = 1e9
-    while time() - start < max_time:
-        print(f'Generation: {generation}')
+    while time() - g_start < max_time:
+        #print(f'Generation: {generation}')
         ### Elitism
         Elite = genetic.elite_class(Distances)
 
@@ -150,15 +150,13 @@ for instance in test_bed:
         New_Details:list = list()
 
         for i in range(genetic.Population_size):
-
-            ### Mutation
-            #TODO analyse first routes
             individual = Parents[i][randint(0,2)]
-            new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
-            new_individual, new_distance, new_time, details = genetic.other_operation(env, constructive, Population[individual], Details[individual], RCL_alpha)
-
-
+            ### Shake
+            new_individual, new_distance, new_time, details = genetic.two_opt(env, constructive, feas_op, Population[individual], Details[individual])
+            
+            ### Mutation
+            # new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
 
             New_Population.append(new_individual)
@@ -198,20 +196,21 @@ for instance in test_bed:
         print(f'- time to find: {round(best_individual[4],2)}s')
         print('\n')
 
-    # Storing overall performance
-    Results['best individual'] = best_individual[0]
-    Results['best distance'] = best_individual[1]
-    Results['gap'] = round(lab.compute_gap(env, instance, incumbent)*100,2)
-    Results['total time'] = best_individual[2]
-    Results['others'] = best_individual[3]
-    Results['time to find'] = best_individual[4]
-    Results['incumbents'] = Incumbents
-    Results['inc times'] = ploting_Times
+    if saving:
+        # Storing overall performance
+        Results['best individual'] = best_individual[0]
+        Results['best distance'] = best_individual[1]
+        Results['gap'] = round(lab.compute_gap(env, instance, incumbent)*100,2)
+        Results['total time'] = best_individual[2]
+        Results['others'] = best_individual[3]
+        Results['time to find'] = best_individual[4]
+        Results['incumbents'] = Incumbents
+        Results['inc times'] = ploting_Times
 
-    ### Save performance
-    a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
-    pickle.dump(Results, a_file)
-    a_file.close()
+        ### Save performance
+        a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
+        pickle.dump(Results, a_file)
+        a_file.close()
 
 
 
