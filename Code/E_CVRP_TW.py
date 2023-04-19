@@ -675,8 +675,7 @@ class Feasibility():
         ttime = 0
         times = list()
 
-        for route in range(len(individual)):
-            route = individual[route]
+        for num, route in enumerate(individual):
             t = 0
             d = 0
             q = env.Q
@@ -720,10 +719,12 @@ class Feasibility():
             update = travel_time + env.C[target]['ServiceTime']
             if t + update > env.T:      feasible  = False
             else:                       t += update
+
         elif target in env.Stations:
             update = travel_time + (env.Q - q) * env.g
             if t + update > env.T:      feasible  = False
             else:                       t += update
+
         elif target == 'D':
             update = travel_time 
             if t + update > env.T:      feasible  = False
@@ -1040,8 +1041,6 @@ class Genetic():
         distances, times = Details
 
         new_individual = deepcopy(individual)
-        new_distances = deepcopy(distances)
-        new_times = deepcopy(times)
         
         route = new_individual[randint(0,len(individual))]
         #print(route)
@@ -1067,10 +1066,10 @@ class Genetic():
         #print(new_route)
         feasible, _ = feas_op.individual_check(env, new_individual)
         if feasible:
-            return new_individual, *_
+            return new_individual, _[0], _[1], _[2]
         
         else: 
-            print('no factible')
+            print('NON FEASIBLE')
             return individual, sum(distances), sum(times), Details
 
 
