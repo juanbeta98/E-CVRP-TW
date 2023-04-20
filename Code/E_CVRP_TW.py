@@ -704,6 +704,8 @@ class Feasibility():
         time_feasible, t = self.time_check(env, node, target, t, q)
         energy_feasible, q = self.energy_check(env, node, target, q)
         load_feasible, k = self.load_check(env, target, k)
+        if env.node_type[target] == 'c':
+            time_window_feasible = self.time_window_check(env, node, target, t)
 
         if time_feasible and energy_feasible and load_feasible:
             return True, t, q ,k
@@ -712,28 +714,35 @@ class Feasibility():
 
 
     def time_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float):
+        #TODO add ReadyTime check
         feasible = True
         travel_time = env.dist[node,target] / env.v
         # Total time check
         if target in env.Costumers:
             update = travel_time + env.C[target]['ServiceTime']
-            if t + update > env.T:      feasible  = False
-            else:                       t += update
+            if t + update > env.T:      
+                feasible  = False
+            else:                       
+                t += update
 
         elif target in env.Stations:
             update = travel_time + (env.Q - q) * env.g
-            if t + update > env.T:      feasible  = False
-            else:                       t += update
+            if t + update > env.T:      
+                feasible  = False
+            else:                       
+                t += update
 
         elif target == 'D':
             update = travel_time 
-            if t + update > env.T:      feasible  = False
-            else:                       t += update
+            if t + update > env.T:      
+                feasible  = False
+            else:                       
+                t += update
 
         return feasible, t
 
 
-    def energy_check(self, env: E_CVRP_TW, node: str, target: str, q: float):
+    def energy_check(self, env:E_CVRP_TW, node:str, target:str, q:float):
         if q - env.dist[node, target] / env.r >= 0:
             q -= env.dist[node, target] / env.r
             if target in env.Stations:
@@ -743,7 +752,7 @@ class Feasibility():
             return False, q
 
 
-    def load_check(self, env: E_CVRP_TW, target: str, k: int):
+    def load_check(self, env:E_CVRP_TW, target:str, k:int):
         if target in env.Costumers:
             if k + env.C[target]['d'] <= env.K:
                 k += env.C[target]['d']
@@ -752,6 +761,10 @@ class Feasibility():
                 return False, k
         else:
             return True, k
+    
+
+    def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
+        return t <= env.C[target]['DueDate']
 
 
 
