@@ -676,10 +676,14 @@ class Feasibility():
         times = list()
 
         for num, route in enumerate(individual):
-            t = 0
-            d = 0
-            q = env.Q
-            k = 0
+            t: float = 0
+            d: float = 0
+            q: float = env.Q
+            k: int = 0 
+
+            dep_t = [0] # Auxiliary list with departure times
+            dep_q = [env.Q]
+
             for i in range(len(route)-1):
                 node = route[i]
                 target = route[i + 1]
@@ -1000,7 +1004,7 @@ class Genetic():
             # Updating incumbent
             if distance < incumbent:
                 incumbent = distance
-                best_individual: list = [individual, distance, t_time, (distances, times), time() - start]
+                best_individual: list = [individual, distance, t_time, (distances, times, dep_details), time() - start]
 
                 if verbose:
                     constructive.print_constructive(env, instance, time() - start, ind, incumbent, len(individual))
@@ -1008,7 +1012,7 @@ class Genetic():
             Population.append(individual)
             Distances.append(distance)
             Times.append(t_time)
-            Details.append((distances, times))
+            Details.append((distances, times, dep_details))
 
         return Population, Distances, Times, Details, incumbent, best_individual, max(alpha_performance, key = alpha_performance.get)
 
@@ -1018,7 +1022,7 @@ class Genetic():
         return [x for _, x in sorted(zip(Distances,[i for i in range(self.Population_size)]))][:self.Elite_size] 
 
 
-    ''' Intermediate population'''
+    ''' Intermediate population '''
     def intermediate_population(self, Distances):
         # Fitness function
         tots = sum(Distances)
@@ -1028,9 +1032,7 @@ class Genetic():
         return choice([i for i in range(self.Population_size)], size = int(self.Population_size - self.Elite_size), replace = True, p = probs)
 
 
-    '''
-    Tournament
-    '''
+    ''' Tournament '''
     def tournament(self, inter_population: list, Distances: list):
         Parents = []
         for i in range(self.Population_size):
@@ -1047,9 +1049,7 @@ class Genetic():
         return Parents
 
 
-    '''
-    SHAKE: Same individual, same route
-    '''
+    ''' SHAKE: Same individual, same route '''
     def calculate_dist(self, env:E_CVRP_TW, route):
         distance = 0
         for i in range(len(route) - 1):
@@ -1098,16 +1098,14 @@ class Genetic():
         #print(new_route)
         feasible, _ = feas_op.individual_check(env, new_individual)
         if feasible:
-            return new_individual, _[0], _[1], _[2]
+            return new_individual, *_
         
         else: 
             #print('NON FEASIBLE')
             return individual, sum(distances), sum(times), Details
 
 
-    '''
-    CROSSOVER: Same individual, different routes
-    '''
+    ''' CROSSOVER: Same individual, different routes '''
     # Remove costumers 
     def evaluated_insertion(self, env:E_CVRP_TW, constructive:Constructive, individual:list):
         pass
@@ -1117,9 +1115,7 @@ class Genetic():
         #constructive.generate_candidate_from_RCL(env, RCL_alpha ,RCL_criterion, node, t, float, q, k)
 
 
-    '''
-    MUTATION: Same individual, all routes
-    '''
+    ''' MUTATION: Same individual, all routes '''
     # Darwinian phi rate: A proportion of best routes of the individual, according to the phi rate (total distance/total costumers)
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
     def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float):
@@ -1187,9 +1183,7 @@ class Genetic():
 
 
 
-    '''
-    RECOMBINAITON: different individual, different routes
-    '''
+    ''' RECOMBINAITON: different individual, different routes '''
 
     
 

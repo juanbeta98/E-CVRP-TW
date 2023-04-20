@@ -155,10 +155,10 @@ for instance in test_bed:
             individual = Parents[i][randint(0,2)]
 
             ### Shake
-            new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
+            #new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
             
             ### Mutation
-            # new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
+            new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
 
             New_Population.append(new_individual)
@@ -213,7 +213,3 @@ for instance in test_bed:
         a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
         pickle.dump(Results, a_file)
         a_file.close()
-
-
-
-
