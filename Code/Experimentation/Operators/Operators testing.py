@@ -79,7 +79,7 @@ testing_times = {'s':0.5, 'm':3, 'l':7}
 Instance testing
 '''
 test_bed = env.sizes['l']
-test_bed = ['c202C10.txt', 'c103_21.txt']
+#test_bed = ['c202C10.txt', 'c103_21.txt']
 
 
 for instance in test_bed:
@@ -155,7 +155,7 @@ for instance in test_bed:
             individual = Parents[i][randint(0,2)]
 
             ### Shake
-            new_individual, new_distance, new_time, details = genetic.two_opt(env, constructive, feas_op, Population[individual], Details[individual])
+            new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
             
             ### Mutation
             # new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)

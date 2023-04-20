@@ -683,7 +683,7 @@ class Feasibility():
             for i in range(len(route)-1):
                 node = route[i]
                 target = route[i + 1]
-                feasible, t, q, k, self.transition_check(env, node, target, t, q, k)
+                feasible, t, q, k = self.transition_check(env, node, target, t, q, k)
 
                 d += env.dist[node,target]
                 if not feasible:
@@ -701,29 +701,33 @@ class Feasibility():
 
                 
     def transition_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
+        if target != 'D' and env.node_type[target] == 'c':    time_window_feasible = self.time_window_check(env, node, target, t)
+        else:           time_window_feasible = True
         time_feasible, t = self.time_check(env, node, target, t, q)
         energy_feasible, q = self.energy_check(env, node, target, q)
         load_feasible, k = self.load_check(env, target, k)
-        if env.node_type[target] == 'c':
-            time_window_feasible = self.time_window_check(env, node, target, t)
 
-        if time_feasible and energy_feasible and load_feasible:
+        if time_feasible and energy_feasible and load_feasible and time_window_feasible:
             return True, t, q ,k
         else:
             return False, t, q, k
 
 
+    def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
+        return t <= env.C[target]['DueDate']
+    
+
     def time_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float):
-        #TODO add ReadyTime check
         feasible = True
         travel_time = env.dist[node,target] / env.v
         # Total time check
         if target in env.Costumers:
-            update = travel_time + env.C[target]['ServiceTime']
-            if t + update > env.T:      
+            arrival = max(t+travel_time, env.C[target]['ReadyTime'])
+            new_t = arrival + env.C[target]['ServiceTime']
+            if new_t > env.T:      
                 feasible  = False
             else:                       
-                t += update
+                t = new_t
 
         elif target in env.Stations:
             update = travel_time + (env.Q - q) * env.g
@@ -762,9 +766,6 @@ class Feasibility():
         else:
             return True, k
     
-
-    def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
-        return t <= env.C[target]['DueDate']
 
 
 
@@ -1049,7 +1050,14 @@ class Genetic():
     '''
     SHAKE: Same individual, same route
     '''
-    def two_opt(self, env:E_CVRP_TW, constructive:Constructive, feas_op: Feasibility, individual:list, Details:tuple):
+    def calculate_dist(self, env:E_CVRP_TW, route):
+        distance = 0
+        for i in range(len(route) - 1):
+            distance += env.dist[route[i],route[i+1]]
+        return distance
+
+
+    def two_opt(self, env:E_CVRP_TW, feas_op: Feasibility, individual:list, Details:tuple):
         
         distances, times = Details
 
@@ -1059,30 +1067,41 @@ class Genetic():
         #print(route)
         new_individual.remove(route)
         
-        new_route = route
+        
+        best_route = deepcopy(route)
+        improved = True
+        while improved == True:
+            improved = False       
+            for i in range(1, len(route) - 2):
+                for j in range(i+1, len(route)):
+                    if j-i == 1:
+                        continue
+                    new_route = route[:]
+                    new_route[i:j] = route[j-1:i-1:-1]
+                    new_distance = self.calculate_dist(env, new_route)
+                    if new_distance < self.calculate_dist(env, best_route):
+                        best_route = new_route
+                        improved = True
+                        route = best_route
+                        
 
-        for i in range(1, len(route) - 2):
-            for j in range(i+1, len(route)):
-                if j-i == 1:
-                    continue
-                new_route[i:j] = route[j-1:i-1:-1]
 
         i = 0
-        while i + 2 < len(new_route):
-            if new_route[i] == new_route[i+1]:
-                del new_route[i]
+        while i + 2 < len(best_route):
+            if best_route[i] == best_route[i+1]:
+                del best_route[i]
             else:
                 i += 1
 
         # Calcular la distance de new_distance y new_times
-        new_individual.append(new_route)
+        new_individual.append(best_route)
         #print(new_route)
         feasible, _ = feas_op.individual_check(env, new_individual)
         if feasible:
             return new_individual, _[0], _[1], _[2]
         
         else: 
-            print('NON FEASIBLE')
+            #print('NON FEASIBLE')
             return individual, sum(distances), sum(times), Details
 
 
