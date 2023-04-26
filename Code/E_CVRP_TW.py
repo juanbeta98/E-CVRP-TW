@@ -674,6 +674,8 @@ class Feasibility():
         distances = list()
         ttime = 0
         times = list()
+        dep_t_details = list()
+        dep_q_details = list()
 
         for num, route in enumerate(individual):
             t: float = 0
@@ -687,9 +689,16 @@ class Feasibility():
             for i in range(len(route)-1):
                 node = route[i]
                 target = route[i + 1]
-                feasible, t, q, k = self.transition_check(env, node, target, t, q, k)
+                station_depot_route = False
+                if target != 'D' and env.node_type[target]=='s' and route[i+2] == 'D':
+                    station_depot_route = True
+                feasible, t, q, k = self.transition_check(env, node, target, station_depot_route, t, q, k)
 
                 d += env.dist[node,target]
+
+                if i < len(route)-2:
+                    dep_t.append(t)
+                    dep_q.append(q)
                 if not feasible:
                     break
             
@@ -697,21 +706,22 @@ class Feasibility():
             distances.append(d)
             ttime += t
             times.append(t)
+            dep_t_details.append(dep_t)
+            dep_q_details.append(dep_q)
 
             if not feasible:
                 break
 
-        return feasible, (distance, ttime, (distances, times))
+        return feasible, (distance, ttime, (distances, times, (dep_t_details, dep_q_details)))
 
                 
-    def transition_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float, k: int):
+    def transition_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float, k: int):
         if target != 'D' and env.node_type[target] == 'c':    time_window_feasible = self.time_window_check(env, node, target, t)
         else:           time_window_feasible = True
-        time_feasible, t = self.time_check(env, node, target, t, q)
-        energy_feasible, q = self.energy_check(env, node, target, q)
+        time_energy_feasible, t, q = self.time_energy_check(env, node, target, station_depot_route, t, q)
         load_feasible, k = self.load_check(env, target, k)
 
-        if time_feasible and energy_feasible and load_feasible and time_window_feasible:
+        if time_energy_feasible and load_feasible and time_window_feasible:
             return True, t, q ,k
         else:
             return False, t, q, k
@@ -720,45 +730,42 @@ class Feasibility():
     def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
         return t <= env.C[target]['DueDate']
     
-
-    def time_check(self, env: E_CVRP_TW, node: str, target: str, t: float, q: float):
-        feasible = True
+    def time_energy_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float):
         travel_time = env.dist[node,target] / env.v
+
+        q -= env.dist[node, target] / env.r
+
+        if q < 0: return False, t, q
+
         # Total time check
         if target in env.Costumers:
             arrival = max(t+travel_time, env.C[target]['ReadyTime'])
             new_t = arrival + env.C[target]['ServiceTime']
             if new_t > env.T:      
-                feasible  = False
+                return False, t, q
             else:                       
-                t = new_t
+                return True, new_t, q
 
         elif target in env.Stations:
-            update = travel_time + (env.Q - q) * env.g
+            if not station_depot_route:
+                recharge = (env.Q - q)
+            else:
+                recharge = max(0, env.dist[target,'D']/env.r - q)
+            
+            update = travel_time + recharge * env.g
+
             if t + update > env.T:      
-                feasible  = False
-            else:                       
-                t += update
+                return False, t, q
+            else:
+                return True, t+update, q + recharge
 
         elif target == 'D':
             update = travel_time 
             if t + update > env.T:      
-                feasible  = False
+                return False, t, q
             else:                       
-                t += update
-
-        return feasible, t
-
-
-    def energy_check(self, env:E_CVRP_TW, node:str, target:str, q:float):
-        if q - env.dist[node, target] / env.r >= 0:
-            q -= env.dist[node, target] / env.r
-            if target in env.Stations:
-                q = env.Q
-            return True, q
-        else:  
-            return False, q
-
+                return True, t+update, q
+            
 
     def load_check(self, env:E_CVRP_TW, target:str, k:int):
         if target in env.Costumers:
@@ -984,6 +991,8 @@ class Genetic():
             distances: list = list()
             t_time: float = 0
             times: list = list()
+            dep_t_details = list()
+            dep_q_details = list()
 
             # Intitalizing environemnt
             constructive.reset(env)
@@ -1000,6 +1009,8 @@ class Genetic():
                 distances.append(d)
                 t_time += t
                 times.append(t)
+                dep_t_details.append(dep_details[0])
+                dep_q_details.append(dep_details[1])
             
             # Updating incumbent
             if distance < incumbent:
@@ -1012,7 +1023,7 @@ class Genetic():
             Population.append(individual)
             Distances.append(distance)
             Times.append(t_time)
-            Details.append((distances, times, dep_details))
+            Details.append((distances, times, (dep_t_details,dep_q_details)))
 
         return Population, Distances, Times, Details, incumbent, best_individual, max(alpha_performance, key = alpha_performance.get)
 

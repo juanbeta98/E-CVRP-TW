@@ -102,7 +102,7 @@ for instance in test_bed:
     # Printing progress
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'                 Instance {instance} / {Operator} ################')
+        print(f'                 Instance {instance} / {Operator} ')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
