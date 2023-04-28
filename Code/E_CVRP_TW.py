@@ -734,7 +734,6 @@ class Feasibility():
         travel_time = env.dist[node,target] / env.v
 
         q -= env.dist[node, target] / env.r
-
         if q < 0: return False, t, q
 
         # Total time check
