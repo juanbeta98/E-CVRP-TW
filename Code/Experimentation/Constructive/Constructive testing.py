@@ -19,7 +19,7 @@ rd_seed: int = 0
 seed(rd_seed)
 
 verbose = True
-save_performance = False
+save_performance = True
 
 '''
 Environment
@@ -49,14 +49,18 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = env.sizes['l']
-test_bed = ['rc207_21.txt', 'rc208_21.txt']
+test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
-    Results = {}
-    Incumbents = []
-    Times = []
+    Results = dict()
+    min_EV_Results = dict()
+
+    Incumbents = list()
+    Times = list()
+
+    min_EV_Incumbents = list()
+    min_EV_Times = list()
 
     # Setting runnign times depending on instance size
     if instance in env.sizes['s']:  max_time = 30
@@ -69,6 +73,7 @@ for instance in test_bed:
     env.generate_parameters()
     constructive.reset(env)
     incumbent = 1e9
+    min_EV_incumbent = 1e9
     ind = -1
 
     # Adaptative format
@@ -77,7 +82,7 @@ for instance in test_bed:
     # Printing results
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'################ Instance {instance} / {RCL_criterion} ################')
+        print(f'              Instance {instance} / {RCL_criterion} ')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
@@ -120,6 +125,12 @@ for instance in test_bed:
         if distance < incumbent:
             incumbent = distance
             best_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
+            #constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
+        
+        # Updating best found solution with least number of vehicles
+        if distance < min_EV_incumbent:
+            min_EV_incumbent = distance
+            best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
             constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
 
         # Updating alpha
@@ -127,7 +138,7 @@ for instance in test_bed:
 
         # Storing iteration performance
         Incumbents.append(incumbent)
-        Times.append(time() - start)
+        Times.append(process_time() - start)
 
 
     # Storing overall performance
@@ -139,6 +150,15 @@ for instance in test_bed:
     Results['time to find'] = best_individual[4]
     Results['incumbents'] = Incumbents
     Results['inc times'] = Times
+
+    min_EV_Results['best individual'] = best_min_EV_individual[0]
+    min_EV_Results['best distance'] = best_min_EV_individual[1]
+    min_EV_Results['gap'] = round(lab.compute_gap(env, instance, min_EV_incumbent)*100,2)
+    min_EV_Results['total time'] = best_min_EV_individual[2]
+    min_EV_Results['others'] = best_min_EV_individual[3]
+    min_EV_Results['time to find'] = best_min_EV_individual[4]
+    min_EV_Results['incumbents'] = min_EV_Incumbents
+    min_EV_Results['inc times'] = min_EV_Times
 
 
     ### Print performance
@@ -154,7 +174,7 @@ for instance in test_bed:
     ### Save performance
     if save_performance:
         a_file = open(path + f'Experimentation/Constructive/RCL criterion/{RCL_criterion}/results_{instance}', "wb")
-        pickle.dump(Results, a_file)
+        pickle.dump([Results, min_EV_Results], a_file)
         a_file.close()
 
 

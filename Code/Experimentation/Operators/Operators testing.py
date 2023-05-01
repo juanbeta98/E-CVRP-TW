@@ -13,7 +13,7 @@ from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Reparator, 
 '''
 General parameters
 '''
-start: float = time()
+start: float = process_time()
 
 rd_seed: int = 0
 seed(rd_seed)
@@ -113,7 +113,7 @@ for instance in test_bed:
                                                                                                     g_start, instance, constructive_verbose)
     Results['Constructive'] = best_individual
     Incumbents.append(incumbent)
-    ploting_Times.append(time() - g_start)
+    ploting_Times.append(process_time() - g_start)
 
     # Print progress
     if verbose: 
