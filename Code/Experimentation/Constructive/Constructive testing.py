@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'distance'
+RCL_criterion: str = 'TimeWindow'
 
 '''
 EXPERIMENTATION
@@ -50,6 +50,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 Instance testing
 '''
 test_bed = env.sizes['s']+env.sizes['m']
+# test_bed = env.sizes['l']
 
 for instance in test_bed:
     # Saving performance 
@@ -128,10 +129,15 @@ for instance in test_bed:
             #constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
         
         # Updating best found solution with least number of vehicles
-        if distance < min_EV_incumbent and ('best_min_EV_individual' not in globals() or len(individual) <= len(best_min_EV_individual[0])):
+        if ind == 0 or \
+            len(individual) < len(best_min_EV_individual[0]) or \
+            distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
+
             min_EV_incumbent = distance
             best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
-            constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
+            constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
+    
+    
 
         # Updating alpha
         alpha_performance[RCL_alpha] += 1/distance
@@ -176,8 +182,7 @@ for instance in test_bed:
         a_file = open(path + f'Experimentation/Constructive/RCL criterion/{RCL_criterion}/results_{instance}', "wb")
         pickle.dump([Results, min_EV_Results], a_file)
         a_file.close()
-    
-    del best_min_EV_individual
+
 
 
 
