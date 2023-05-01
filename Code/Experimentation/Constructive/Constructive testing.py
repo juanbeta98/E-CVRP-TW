@@ -50,6 +50,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 Instance testing
 '''
 test_bed = [env.sizes['l'][0]]
+test_bed = ['rc201C10.txt']
 
 for instance in test_bed:
     # Saving performance 
@@ -113,8 +114,8 @@ for instance in test_bed:
         # Building individual
         while len(constructive.pending_c) > 0:
             if RCL_criterion == 'Exo-Hybrid': RCL_criterion_prime = choice(['distance', 'TimeWindow'])
-            else:   RCL_criterion_prime = RCL_criterion_prime
-            t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion_prime)
+            else:   RCL_criterion_prime = RCL_criterion
+            t, d, q, k, route, dep_details = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion_prime)
             individual.append(route)
             distance += d
             distances.append(d)
@@ -128,7 +129,7 @@ for instance in test_bed:
             #constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
         
         # Updating best found solution with least number of vehicles
-        if distance < min_EV_incumbent:
+        if distance < min_EV_incumbent and ('best_min_EV_individual' not in locals() or len(individual) <= len(best_min_EV_individual[0])):
             min_EV_incumbent = distance
             best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
             constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
