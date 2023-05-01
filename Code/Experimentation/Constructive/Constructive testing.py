@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Intra-Hybrid'
+RCL_criterion: str = 'TimeWindow'
 
 '''
 EXPERIMENTATION
@@ -49,11 +49,14 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = env.instances
+test_bed = env.sizes['s']+env.sizes['m']
 # test_bed = env.sizes['l']
 
+test_bed = env.sizes['l'][:int(len(env.sizes['l']/2))]
+test_bed = env.sizes['l'][int(len(env.sizes['l']/2)):]
+
 for instance in test_bed:
-    # Saving performance 
+    # Saving performance
     Results = dict()
     min_EV_Results = dict()
 
@@ -133,8 +136,15 @@ for instance in test_bed:
             len(individual) < len(best_min_EV_individual[0]) or \
             distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
 
+        if ind == 0 or \
+            len(individual) < len(best_min_EV_individual[0]) or \
+            distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
+
             min_EV_incumbent = distance
             best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
+            constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
+    
+    
             constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
     
     
