@@ -1,5 +1,5 @@
 from numpy.random import seed, choice
-from time import time
+from time import process_time
 import sys
 import pickle
 import matplotlib.pyplot as plt
@@ -13,7 +13,7 @@ from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
 '''
 General parameters
 '''
-start: float = time()
+start: float = process_time()
 
 rd_seed: int = 0
 seed(rd_seed)
@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Intra-Hybrid'
+RCL_criterion: str = 'distance'
 
 '''
 EXPERIMENTATION
@@ -64,7 +64,7 @@ for instance in test_bed:
     else:   max_time = 60*8
    
     # Constructive
-    start = time()
+    start = process_time()
     env.load_data(instance)
     env.generate_parameters()
     constructive.reset(env)
@@ -86,7 +86,7 @@ for instance in test_bed:
         print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#Routes')
 
     
-    while time() - start < max_time:
+    while process_time() - start < max_time:
 
         # Storing individual
         ind += 1
@@ -97,7 +97,7 @@ for instance in test_bed:
         times: list = []
 
         # Choosing alpha
-        if time() - start < max_time * training_prop:
+        if process_time() - start < max_time * training_prop:
             RCL_alpha = choice(RCL_alpha_list)
         else:
             RCL_alpha = choice(RCL_alpha_list, p = [alpha_performance[alpha]/sum(alpha_performance.values()) for alpha in RCL_alpha_list])
@@ -119,8 +119,8 @@ for instance in test_bed:
         # Updating incumbent
         if distance < incumbent:
             incumbent = distance
-            best_individual: list = [individual, distance, t_time, (distances, times), time() - start]
-            constructive.print_constructive(env, instance, time() - start, ind, incumbent, len(individual))
+            best_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
+            constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
 
         # Updating alpha
         alpha_performance[RCL_alpha] += 1/distance
@@ -144,7 +144,7 @@ for instance in test_bed:
     ### Print performance
     print('\n')
     print(f'########## Performance ##########')
-    print(f'total running time: {round(time() - start,2)}')
+    print(f'total running time: {round(process_time() - start,2)}')
     print(f'incumbent: {round(incumbent,2)}')
     print(f'gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
     print(f'time to find: {round(Results["time to find"],2)}')

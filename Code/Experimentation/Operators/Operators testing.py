@@ -1,5 +1,5 @@
 from numpy.random import seed, choice, randint, random
-from time import time
+from time import process_time
 import sys
 import pickle
 import matplotlib.pyplot as plt
@@ -94,7 +94,7 @@ for instance in test_bed:
     else:   max_time = 60 * testing_times['l']
    
     # Constructive
-    g_start = time()
+    g_start = process_time()
     env.load_data(instance)
     env.generate_parameters()
     constructive.reset(env)
@@ -130,7 +130,7 @@ for instance in test_bed:
     # Genetic process
     generation = 0
     incumbent = 1e9
-    while time() - g_start < max_time:
+    while process_time() - g_start < max_time:
         #print(f'Generation: {generation}')
         ### Elitism
         Elite = genetic.elite_class(Distances)
@@ -169,14 +169,14 @@ for instance in test_bed:
             # Updating incumbent
             if new_distance < incumbent:
                 incumbent = new_distance
-                best_individual: list = [new_individual, new_distance, new_time, details, time() - start]
+                best_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
 
                 if verbose:
-                    genetic.print_evolution(env, instance, time() - g_start, generation, incumbent, len(new_individual))
+                    genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
 
                 ### Store progress
                 Incumbents.append(incumbent)
-                ploting_Times.append(time() - g_start)
+                ploting_Times.append(process_time() - g_start)
 
         
         Population = New_Population
@@ -192,7 +192,7 @@ for instance in test_bed:
     if verbose: 
         print('\n')
         print(f'Evolution finished finished')
-        print(f'- total running time: {round(time() - g_start,2)}s')
+        print(f'- total running time: {round(process_time() - g_start,2)}s')
         print(f'- incumbent: {round(incumbent,2)}')
         print(f'- gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
         print(f'- time to find: {round(best_individual[4],2)}s')
