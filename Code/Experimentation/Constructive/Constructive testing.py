@@ -4,8 +4,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+#path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'TimeWindow'
+RCL_criterion: str = 'distance'
 
 '''
 EXPERIMENTATION
@@ -49,13 +49,15 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = env.sizes['s']+env.sizes['m']
+# test_bed = env.sizes['s']+env.sizes['m']
 # test_bed = env.sizes['l']
 
-test_bed = env.sizes['l'][:int(len(env.sizes['l']/2))]
-test_bed = env.sizes['l'][int(len(env.sizes['l']/2)):]
+# test_bed = env.sizes['l'][:int(len(env.sizes['l']/2))]
+# test_bed = env.sizes['l'][int(len(env.sizes['l']/2)):]
+test_bed_1 = env.sizes['l'][env.sizes['l'].index('r104_21.txt'):env.sizes['l'].index('r104_21.txt')+16]
+test_bed_2 = env.sizes['l'][env.sizes['l'].index('r104_21.txt')+16:]
 
-for instance in test_bed:
+for instance in test_bed_2:
     # Saving performance
     Results = dict()
     min_EV_Results = dict()
@@ -136,17 +138,9 @@ for instance in test_bed:
             len(individual) < len(best_min_EV_individual[0]) or \
             distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
 
-        if ind == 0 or \
-            len(individual) < len(best_min_EV_individual[0]) or \
-            distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
-
             min_EV_incumbent = distance
             best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
-            constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
-    
-    
-            constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
-    
+            constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))    
     
 
         # Updating alpha
