@@ -49,8 +49,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = [env.sizes['l'][0]]
-test_bed = ['rc201C10.txt']
+test_bed = env.sizes['s']+env.sizes['m']
 
 for instance in test_bed:
     # Saving performance 
@@ -129,7 +128,7 @@ for instance in test_bed:
             #constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
         
         # Updating best found solution with least number of vehicles
-        if distance < min_EV_incumbent and ('best_min_EV_individual' not in locals() or len(individual) <= len(best_min_EV_individual[0])):
+        if distance < min_EV_incumbent and ('best_min_EV_individual' not in globals() or len(individual) <= len(best_min_EV_individual[0])):
             min_EV_incumbent = distance
             best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
             constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
@@ -177,6 +176,8 @@ for instance in test_bed:
         a_file = open(path + f'Experimentation/Constructive/RCL criterion/{RCL_criterion}/results_{instance}', "wb")
         pickle.dump([Results, min_EV_Results], a_file)
         a_file.close()
+    
+    del best_min_EV_individual
 
 
 
