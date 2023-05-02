@@ -119,12 +119,12 @@ for instance in test_bed:
     if verbose: 
         print('\n')
         print(f'Population generation finished')
-        print(f'- total running time: {round(time() - g_start,2)}s')
+        print(f'- total running time: {round(process_time() - g_start,2)}s')
         print(f'- incumbent: {round(incumbent,2)}')
         print(f'- gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
         print(f'- time to find: {round(best_individual[4],2)}s')
         print('\n')
-        print(f'Genetic process started at {round(time() - g_start,2)}s')
+        print(f'Genetic process started at {round(process_time() - g_start,2)}s')
         print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
     
     # Genetic process
@@ -157,6 +157,10 @@ for instance in test_bed:
             ### Shake
             #new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
             
+
+            ### Crossover
+            new_individual, new_distance, new_time, details = genetic.evaluated_insertion(env, feas_op, Population[individual], Details[individual])
+
             ### Mutation
             new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
@@ -184,9 +188,6 @@ for instance in test_bed:
         Times = New_Times
         Details = New_Details
         generation += 1
-
-
-
 
     # Print progress
     if verbose: 

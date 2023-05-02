@@ -1114,15 +1114,27 @@ class Genetic():
             #print('NON FEASIBLE')
             return individual, sum(distances), sum(times), Details
 
+    
+    def route_extension(sefl, constructive:Constructive, individual:list): 
+        pass
+
 
     ''' CROSSOVER: Same individual, different routes '''
-    # Remove costumers 
-    def evaluated_insertion(self, env:E_CVRP_TW, constructive:Constructive, individual:list):
-        pass
-        # in_route = individual[randint(1,len(individual))]
-        # in_pos = randint(1,len(individual[in_route])-1)
+    # evaluated insertion: A given costumer is iteratively placed on an existing route. 
+    def evaluated_insertion(self, env:E_CVRP_TW, feas_op: Feasibility, individual:list, Details: list):
+        # Select route that visits less costumers
+        visited_c = list()
+        eff_rates = list()
+        distances, times, dep_details = Details
 
-        #constructive.generate_candidate_from_RCL(env, RCL_alpha ,RCL_criterion, node, t, float, q, k)
+        for idx, route in enumerate(individual):
+            eff_rates.append(distances[idx]/len(route))
+            visited_c.append(sum([1 for i in route if i[0]=='C']))
+
+        rank_index = self.rank_indexes(eff_rates)
+        worst_route_index = visited_c.index(min(visited_c))
+
+
 
 
     ''' MUTATION: Same individual, all routes '''
@@ -1178,12 +1190,13 @@ class Genetic():
 
         return new_individual, new_distance, new_time, (new_distances, new_times)
     
-
-    def rank_indexes(self, indx:list):
-        sorted_lst = sorted(indx)
+    # Auxiliary method. Returns list that indicates for each route (possition), the rank
+    # occupied by the route
+    def rank_indexes(self, indicators:list):
+        sorted_lst = sorted(indicators)
         
         lista = list()
-        for v in indx:
+        for v in indicators:
             indexx = sorted_lst.index(v)
             while indexx in lista:
                 indexx += 1
