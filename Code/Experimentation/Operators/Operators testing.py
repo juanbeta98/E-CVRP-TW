@@ -50,7 +50,11 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'two opt'
+x = input('Operator to be tested') 
+if x != '':
+    Operator:str = x
+else:
+    Operator:str = 'Darwinian phi rate'
 
 '''
 Repair operators
@@ -88,6 +92,11 @@ for instance in test_bed:
     Incumbents = list()
     ploting_Times = list()
 
+    min_EV_Results = dict()
+    min_EV_Incumbents = list()
+    min_EV_ploting_Times = list()
+    
+
     # Setting runnign times depending on instance size
     if instance in env.sizes['s']:  max_time = 60 * testing_times['s']
     elif instance in env.sizes['m']:  max_time = 60 * testing_times['m']
@@ -109,11 +118,16 @@ for instance in test_bed:
         print(f'- bkEV: {env.bkEV[instance]}')
 
     # Population generation
-    Population, Distances, Times, Details, incumbent, best_individual, RCL_alpha = genetic.generate_population(env, constructive, training_ind, 
-                                                                                                    g_start, instance, constructive_verbose)
+    Population, Distances, Times, Details, incumbent, best_individual, min_EV_incumbent, best_min_EV_individual, RCL_alpha = \
+                            genetic.generate_population(env, constructive, training_ind, g_start, instance, constructive_verbose)
+    
     Results['Constructive'] = best_individual
     Incumbents.append(incumbent)
-    ploting_Times.append(process_time() - g_start)
+    ploting_Times.append(best_individual[3])
+
+    min_EV_Results['Constructive'] = best_individual
+    min_EV_Incumbents.append(incumbent)
+    min_EV_ploting_Times.append(best_individual[3])
 
     # Print progress
     if verbose: 
@@ -146,11 +160,7 @@ for instance in test_bed:
 
 
         ### Evolution
-        New_Population:list = list()
-        New_Distances:list = list()
-        New_Times:list = list()
-        New_Details:list = list()
-
+        New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
         for i in range(genetic.Population_size):
             individual = Parents[i][randint(0,2)]
 
@@ -159,30 +169,46 @@ for instance in test_bed:
             
 
             ### Crossover
-            new_individual, new_distance, new_time, details = genetic.evaluated_insertion(env, feas_op, Population[individual], Details[individual])
+            # new_individual, new_distance, new_time, details = \
+            #                     genetic.evaluated_insertion(env, feas_op, Population[individual], Details[individual])
 
             ### Mutation
-            new_individual, new_distance, new_time, details = genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
+            new_individual, new_distance, new_time, details = \
+                                genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
 
+            
 
-            New_Population.append(new_individual)
-            New_Distances.append(new_distance)
-            New_Times.append(new_time)
-            New_Details.append(details)
+            # Store new individual
+            New_Population.append(new_individual); New_Distances.append(new_distance); New_Times.append(new_time); New_Details.append(details)
 
             # Updating incumbent
             if new_distance < incumbent:
                 incumbent = new_distance
                 best_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
 
-                if verbose:
-                    genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
+                # if verbose:
+                #     genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
 
                 ### Store progress
                 Incumbents.append(incumbent)
                 ploting_Times.append(process_time() - g_start)
 
-        
+            # Updating best found solution with least number of vehicles
+            if i == 0 or \
+                len(new_individual) < len(best_min_EV_individual[0]) or \
+                new_distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
+
+                min_EV_incumbent = new_distance
+                best_min_EV_individual: list = [new_individual, new_distance, new_time, details, process_time() - g_start]
+
+                if verbose:
+                    genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
+
+                ### Store progress
+                min_EV_Incumbents.append(incumbent)
+                min_EV_ploting_Times.append(process_time() - g_start)
+
+        # Update
         Population = New_Population
         Distances = New_Distances
         Times = New_Times
@@ -210,7 +236,17 @@ for instance in test_bed:
         Results['incumbents'] = Incumbents
         Results['inc times'] = ploting_Times
 
+        # Storing overall performance for min EV
+        min_EV_Results['best individual'] = best_min_EV_individual[0]
+        min_EV_Results['best distance'] = best_min_EV_individual[1]
+        min_EV_Results['gap'] = round(lab.compute_gap(env, instance, incumbent)*100,2)
+        min_EV_Results['total time'] = best_min_EV_individual[2]
+        min_EV_Results['others'] = best_min_EV_individual[3]
+        min_EV_Results['time to find'] = best_min_EV_individual[4]
+        min_EV_Results['incumbents'] = min_EV_Incumbents
+        min_EV_Results['inc times'] = min_EV_ploting_Times
+
         ### Save performance
         a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
-        pickle.dump(Results, a_file)
+        pickle.dump([Results, min_EV_Results], a_file)
         a_file.close()
