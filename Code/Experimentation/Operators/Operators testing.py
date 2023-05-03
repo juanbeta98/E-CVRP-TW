@@ -86,7 +86,11 @@ Instance testing
 # test_bed = env.sizes['l']
 
 # test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
-test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
+# test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
+
+test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
+test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
+test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
 
 
 for instance in test_bed:
@@ -101,9 +105,10 @@ for instance in test_bed:
     
 
     # Setting runnign times depending on instance size
-    if instance in env.sizes['s']:  max_time = 60 * testing_times['s']
-    elif instance in env.sizes['m']:  max_time = 60 * testing_times['m']
-    else:   max_time = 60 * testing_times['l']
+    max_time:int = 60
+    if instance in env.sizes['s']:  max_time *= testing_times['s']
+    elif instance in env.sizes['m']:  max_time *= testing_times['m']
+    else:   max_time *= testing_times['l']
    
     # Constructive
     g_start = process_time()
@@ -146,7 +151,6 @@ for instance in test_bed:
     
     # Genetic process
     generation = 0
-    incumbent = 1e9
     while process_time() - g_start < max_time:
         #print(f'Generation: {generation}')
         ### Elitism
@@ -222,9 +226,10 @@ for instance in test_bed:
         print('\n')
         print(f'Evolution finished finished')
         print(f'- total running time: {round(process_time() - g_start,2)}s')
-        print(f'- incumbent: {round(incumbent,2)}')
-        print(f'- gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
-        print(f'- time to find: {round(best_individual[4],2)}s')
+        print('\n')
+        print('\tincumbent \tgap \tEV \ttime to find')
+        print(f'dist\t{round(incumbent,2)} \t{round(lab.compute_gap(env, instance, incumbent)*100,2)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
+        print(f'min_EV \t{round(min_EV_incumbent,2)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,2)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
         print('\n')
 
     if saving:
