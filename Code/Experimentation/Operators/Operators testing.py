@@ -41,7 +41,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 2000
+Population_size:int = 500
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 
@@ -50,11 +50,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-x = input('Operator to be tested: ') 
-if x != '':
-    Operator:str = x
-else:
-    Operator:str = 'Darwinian phi rate'
+Operator:str = 'evaluated insertion'
 
 '''
 Repair operators
@@ -88,10 +84,11 @@ Instance testing
 # test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
 
-test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
+# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
 # test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
 
+test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
@@ -175,12 +172,12 @@ for instance in test_bed:
             
 
             ### Crossover
-            # new_individual, new_distance, new_time, details = \
-            #                     genetic.evaluated_insertion(env, feas_op, Population[individual], Details[individual])
+            new_individual, new_distance, new_time, details = \
+                                genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
 
             ### Mutation
-            new_individual, new_distance, new_time, details = \
-                                genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
+            # new_individual, new_distance, new_time, details = \
+            #                     genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
 
             
 
