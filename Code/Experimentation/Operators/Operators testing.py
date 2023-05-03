@@ -142,8 +142,8 @@ for instance in test_bed:
         print('\n')
         print(f'Population generation finished at {round(process_time() - g_start,2)}s')
         print('\tFO \tgap \tEV \ttime to find')
-        print(f'dist\t{round(incumbent,1)} \t{round(lab.compute_gap(env, instance, incumbent)*100,2)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
-        print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,2)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
+        print(f'dist\t{round(incumbent,1)} \t{round(lab.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
+        print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
         print('\n')
         print('Genetic process started')
         print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
@@ -225,8 +225,8 @@ for instance in test_bed:
         print('\n')
         print(f'Evolution finished finished at {round(process_time() - g_start,2)}s')
         print('\tFO \tgap \tEV \ttime to find')
-        print(f'dist\t{round(incumbent,1)} \t{round(lab.compute_gap(env, instance, incumbent)*100,2)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
-        print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,2)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
+        print(f'dist\t{round(incumbent,1)} \t{round(lab.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
+        print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
         print('\n')
 
     if saving:
