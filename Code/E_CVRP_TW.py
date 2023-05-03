@@ -10,8 +10,8 @@ Daniel Giraldo
 ds.giraldoh@uniandes.edu.co
 '''
 #octoface
-from copy import copy, deepcopy
-from time import time
+from copy import deepcopy
+from time import process_time
 import matplotlib.pyplot as plt
 from numpy.random import random, choice, seed, randint, binomial
 import networkx as nx
@@ -949,13 +949,16 @@ class Genetic():
                             instance:str = '', verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
 
         # Initalizing data storage
-        Population: list = list()
-        Distances: list[float] = list()
-        Times: list[float] = list()
-        Details: list[tuple] = list()
+        Population:list = list()
+        Distances:list[float] = list()
+        Times:list[float] = list()
+        Details:list[tuple] = list()
 
-        incumbent: float = 1e9
-        best_individual: list = list()
+        incumbent:float = 1e9
+        best_individual:list = list()
+
+        min_EV_incumbent:float = 1e9
+        best_min_EV_individual:list = list()
 
         if verbose:
             print(f'\nPopulation generation started: {self.Population_size} individuals')
@@ -977,13 +980,12 @@ class Genetic():
             alpha_performance[RCL_alpha] += 1/tr_distance
         
         if verbose:
-            print(f'\n- Generated {training_ind} training ind in {round(time() - start,2)}s')
+            print(f'\n- Generated {training_ind} training ind in {round(process_time() - start,2)}s')
             print(f'\n- Starting real population generation')
             print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#EV')
 
         # Generating initial population
         for ind in range(self.Population_size):
-
             # Storing individual
             individual: list = list()
             distance: float = 0
@@ -1014,17 +1016,27 @@ class Genetic():
             # Updating incumbent
             if distance < incumbent:
                 incumbent = distance
-                best_individual: list = [individual, distance, t_time, (distances, times, dep_details), time() - start]
+                best_individual: list = [individual, distance, t_time, (distances, times, dep_details), process_time() - start]
 
-                if verbose:
-                    constructive.print_constructive(env, instance, time() - start, ind, incumbent, len(individual))
+                # if verbose:
+                #     constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
+            
+            # Updating best found solution with least number of vehicles
+            if ind == 0 or \
+                len(individual) < len(best_min_EV_individual[0]) or \
+                distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
+
+                min_EV_incumbent = distance
+                best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
+                constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
                 
             Population.append(individual)
             Distances.append(distance)
             Times.append(t_time)
             Details.append((distances, times, (dep_t_details,dep_q_details)))
 
-        return Population, Distances, Times, Details, incumbent, best_individual, max(alpha_performance, key = alpha_performance.get)
+        return Population, Distances, Times, Details, incumbent, best_individual, \
+                min_EV_incumbent, best_min_EV_individual, max(alpha_performance, key = alpha_performance.get)
 
 
     ''' Elite class '''
