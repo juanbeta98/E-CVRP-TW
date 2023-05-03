@@ -112,9 +112,9 @@ class E_CVRP_TW():
         self.D = {'ID':att[0], 'type': att[1], 'x': float(att[2]), 'y':float(att[3])}      # Depot
         fila += 1
         
-        self.S, self.Stations  = {}, []             # Charging stations
-        self.C, self.Costumers = {}, []             # Costumers
-        self.node_type = {}
+        self.S, self.Stations  = dict(), list()             # Charging stations
+        self.C, self.Costumers = dict(), list()             # Costumers
+        self.node_type = {'D':'D'}
 
         while True:
             
@@ -161,7 +161,7 @@ class E_CVRP_TW():
     - Costumers to stations
     '''
     def compute_distances(self):
-        self.dist = {}
+        self.dist = dict()
         for c1 in self.Costumers:
             # Depot-Costumers
             self.dist['D',c1] = self.euclidean_distance(self.C[c1], self.D)
@@ -227,9 +227,9 @@ class E_CVRP_TW():
         nodes_to_draw.remove('S0')   
 
         # Edges
-        edges = []
-        edge_colors = []
-        orders = {}
+        edges = list()
+        edge_colors = list()
+        orders = dict()
         for i in range(len(routes)):
             route = routes[i]
             for node in range(len(route) - 1):
@@ -343,10 +343,10 @@ class Constructive():
     - OPENING TIME WINDOW
     '''
     def generate_candidate_from_RCL(self, env: E_CVRP_TW, RCL_alpha: float, RCL_criterion: str, node: str, t: float, q: float, k: int):
-        feasible_candidates: list = []
-        feasible_energy_candidates: list = []
-        max_crit: float = -1e9
-        min_crit: float = 1e9
+        feasible_candidates:list = list()
+        feasible_energy_candidates:list = list()
+        max_crit:float = -1e9
+        min_crit:float = 1e9
 
         RCL_mode = RCL_criterion
         if RCL_criterion == 'Intra-Hybrid': RCL_mode = choice(['distance', 'TimeWindow'])
@@ -431,10 +431,10 @@ class Constructive():
     -   route in list (excluding current node)
     '''
     def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, k: int, route: list, dep_t: list[float], dep_q: list[float]):
-        finish_route = []
-        extra_t = 0
-        extra_d = 0
-        extra_q = 0
+        finish_route:list = list()
+        extra_t:float = 0
+        extra_d:float = 0
+        extra_q:float = 0
         
 
         # The vehicle can go directly to depot
@@ -526,7 +526,7 @@ class Constructive():
         d += env.dist[node, target]
 
         # Charge update
-        q -= (env.dist[node, target] / env.r)
+        q -= env.dist[node, target] / env.r
 
         # Target is costumer
         if env.node_type[target] == 'c':
@@ -912,23 +912,6 @@ class Reparator(Constructive):
         return parent, distance, distances, ttime, times
 
 
-    def build_chorizo(self, env: E_CVRP_TW, individual: list):
-        chorizo = []
-        for route in individual:
-            for j in route[1:-1]:
-                if j in env.Costumers:
-                    chorizo.append(j)
-        return chorizo
-
-
-    def generate_chorizos_population(self, env, Population):
-        c_Population = []
-        for i in range(len(Population)):
-            c_Population.append(self.build_chorizo(env, Population[i]))
-        
-        return c_Population
-
-
 
 
 '''
@@ -987,13 +970,11 @@ class Genetic():
         # Generating initial population
         for ind in range(self.Population_size):
             # Storing individual
-            individual: list = list()
-            distance: float = 0
-            distances: list = list()
-            t_time: float = 0
-            times: list = list()
-            dep_t_details = list()
-            dep_q_details = list()
+            individual:list = list()
+            distance:float = 0;    distances:list = list()
+            t_time:float = 0;      times:list = list()
+            loads:list = list()
+            dep_t_details:list = list(); dep_q_details:list = list()
 
             # Intitalizing environemnt
             constructive.reset(env)
@@ -1006,10 +987,9 @@ class Genetic():
                 RCL_criterion = choice(['distance', 'TimeWindow'])
                 t, d, q, k, route, dep_details = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
                 individual.append(route)
-                distance += d
-                distances.append(d)
-                t_time += t
-                times.append(t)
+                distance += d;      distances.append(d)
+                t_time += t;        times.append(t)
+                loads.append(k)
                 dep_t_details.append(dep_details[0])
                 dep_q_details.append(dep_details[1])
             
@@ -1033,7 +1013,7 @@ class Genetic():
             Population.append(individual)
             Distances.append(distance)
             Times.append(t_time)
-            Details.append((distances, times, (dep_t_details,dep_q_details)))
+            Details.append((distances, times, loads, (dep_t_details,dep_q_details)))
 
         return Population, Distances, Times, Details, incumbent, best_individual, \
                 min_EV_incumbent, best_min_EV_individual, max(alpha_performance, key = alpha_performance.get)
@@ -1133,19 +1113,82 @@ class Genetic():
 
     ''' CROSSOVER: Same individual, different routes '''
     # evaluated insertion: A given costumer is iteratively placed on an existing route. 
-    def evaluated_insertion(self, env:E_CVRP_TW, feas_op: Feasibility, individual:list, Details: list):
-        # Select route that visits less costumers
-        visited_c = list()
-        eff_rates = list()
-        distances, times, dep_details = Details
+    def evaluated_insertion(self, env:E_CVRP_TW, feas_op:Feasibility, individual:list, Details:list, stop_crit:str = 'best'):
+        # Select route that visits less costumers and disolve it
+        visited_c:list = list()
+        n_visited_c:list = list()
+        eff_rates:list = list()
+
+        distances, times, loads, (dep_t, dep_d) = Details
 
         for idx, route in enumerate(individual):
             eff_rates.append(distances[idx]/len(route))
-            visited_c.append(sum([1 for i in route if i[0]=='C']))
+            visited_c.append(sum([i for i in route if i[0]=='C']))
+            n_visited_c.append(sum([1 for i in route if i[0]=='C']))
 
-        rank_index = self.rank_indexes(eff_rates)
-        worst_route_index = visited_c.index(min(visited_c))
+        rank_index:list = self.rank_indexes(eff_rates)
+        worst_route_index = visited_c.index(max(n_visited_c))
+        
+        pending_c = visited_c[worst_route_index]
+        
+        # Relocate costumers from first route
+        for candidate in pending_c:
+            found = False
+            for i in range(len(individual)):   
+                if worst_route_index != i:
 
+                    # Load feasibility check
+                    if env.C[candidate]['d'] + loads[i] > env.Q:    continue
+
+                    route = individual[rank_index(i)]
+                    for pos in range(1,len(route[1:-1])):
+                        node = route[pos]
+
+                        # Preliminary feasibility check
+                        if env.C[candidate]['ReadyTime'] <= dep_t[rank_index(i)][pos]:     continue                                # Waiting to service not allowed
+                        if env.C[candidate]['DueDate'] < dep_t[rank_index(i)][pos] + env.dist[node,candidate]/env.v:   continue    # TimeWindow nonfeasible
+
+                        # Feasibility
+                        feasible, dep_q, dep_t = self.check_insertion_feasibility(env,pos,candidate,dep_t[rank_index(i)],dep_q[rank_index(i)])
+                        
+
+
+                    if found:   continue
+                        
+
+            if not found: break
+
+
+
+    # Check if an instertion is feasible 
+    def check_insertion_feasibility(self, env:E_CVRP_TW, route:list, pos:int, candidate:str, dep_t:list[float], dep_q:list[float]):
+        new_dep_t = deepcopy(dep_t[:pos+1])
+        new_dep_q = deepcopy(dep_q[:pos+1])
+
+        current_t:float = new_dep_t[-1]
+        current_q:float = new_dep_q[-1]
+        
+        # Arch from position to candidate
+        current_t, _, current_q, _, _ = Constructive.direct_routing(env, route[pos], candidate, current_t, 0, current_q, 0, [])
+        if current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check
+        new_dep_t.append(current_t)
+        new_dep_q.append(current_q)
+
+
+        # Arch from candidate to pos+1
+        # TODO check what happens when route[pos+1] == 'D'
+        current_t, _, current_q, _, _ = Constructive.direct_routing(env, candidate, route[pos+1], current_t, 0, current_q, 0, []) 
+        if current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check
+        new_dep_t.append(current_t)
+        new_dep_q.append(current_q)
+
+        for i in range(pos+1,len(route)-1):
+            current_t, _, current_q, _, _ = Constructive.direct_routing(env, route[i], route[i+1], current_t, 0, current_q, 0, [])
+            if current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check      
+            new_dep_t.append(current_t)
+            new_dep_q.append(current_q)      
+
+        return True, new_dep_t, new_dep_q
 
 
 
@@ -1154,21 +1197,18 @@ class Genetic():
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
     def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float):
         eff_rates = list()
-        distances, times, (dep_t_details, dep_q_details) = Details
+        distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
             eff_rates.append(distances[idx]/len(route))
         
         rank_index = self.rank_indexes(eff_rates)
 
 
-        new_individual = list()
-        new_distance = 0
-        new_distances = list()
-        new_time = 0
-        new_times = list()
-
-        new_dep_t_details = list()
-        new_dep_q_details = list()
+        new_individual:list = list()
+        new_distance = 0;       new_distances:list = list()
+        new_time = 0;           new_times:list = list()
+        new_loads:list = list()
+        new_dep_t_details:list = list(); new_dep_q_details:list = list()
         
         pending_c = deepcopy(env.Costumers)
 
@@ -1178,13 +1218,10 @@ class Genetic():
             ii = rank_index.index(i)
             if len(individual[ii]) >= 0.7*max([len(route) for route in individual]):
                 new_individual.append(individual[ii])
-                new_distance += distances[ii]
-                new_distances.append(distances[ii])
-                new_time += times[ii]
-                new_times.append(times[ii])
-
-                new_dep_t_details.append(dep_t_details[ii])
-                new_dep_q_details.append(dep_q_details[ii])
+                new_distance += distances[ii];      new_distances.append(distances[ii])
+                new_time += times[ii];              new_times.append(times[ii])
+                new_loads.append(loads[ii])
+                new_dep_t_details.append(dep_t_details[ii]);    new_dep_q_details.append(dep_q_details[ii])
 
                 for node in new_individual[-1]:
                     if node != 'D' and env.node_type == 'c':
@@ -1200,17 +1237,15 @@ class Genetic():
             RCL_criterion = 'distance'
             t, d, q, k, route, (dep_t, dep_q) = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
             new_individual.append(route)
-            new_distance += d
-            new_distances.append(d)
-            new_time += t
-            new_times.append(t)
-
-            new_dep_t_details.append(dep_t)
-            new_dep_q_details.append(dep_q)
+            new_distance += d;      new_distances.append(d)
+            new_time += t;          new_times.append(t)
+            new_loads.append(k)
+            new_dep_t_details.append(dep_t);    new_dep_q_details.append(dep_q)
 
 
-        return new_individual, new_distance, new_time, (new_distances, new_times, (new_dep_t_details,new_dep_q_details))
+        return new_individual, new_distance, new_time, (new_distances, new_times, new_loads, (new_dep_t_details,new_dep_q_details))
     
+
     # Auxiliary method. Returns list that indicates for each route (possition), the rank
     # occupied by the route
     def rank_indexes(self, indicators:list):
@@ -1219,6 +1254,7 @@ class Genetic():
         lista = list()
         for v in indicators:
             indexx = sorted_lst.index(v)
+            # Deal with two routes with same distance
             while indexx in lista:
                 indexx += 1
             lista.append(indexx)

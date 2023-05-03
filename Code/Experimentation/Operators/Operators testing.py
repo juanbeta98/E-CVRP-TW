@@ -82,8 +82,11 @@ testing_times = {'s':0.5, 'm':3, 'l':7}
 '''
 Instance testing
 '''
-test_bed = env.sizes['l']
-#test_bed = ['c202C10.txt', 'c103_21.txt']
+# test_bed = env.sizes['s']+env.sizes['m']
+# test_bed = env.sizes['l']
+
+# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
+test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
 
 
 for instance in test_bed:
