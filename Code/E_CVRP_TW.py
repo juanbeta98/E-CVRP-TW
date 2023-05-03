@@ -1154,7 +1154,7 @@ class Genetic():
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
     def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float):
         eff_rates = list()
-        distances, times = Details
+        distances, times, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
             eff_rates.append(distances[idx]/len(route))
         
@@ -1166,6 +1166,9 @@ class Genetic():
         new_distances = list()
         new_time = 0
         new_times = list()
+
+        new_dep_t_details = list()
+        new_dep_q_details = list()
         
         pending_c = deepcopy(env.Costumers)
 
@@ -1180,6 +1183,9 @@ class Genetic():
                 new_time += times[ii]
                 new_times.append(times[ii])
 
+                new_dep_t_details.append(dep_t_details[ii])
+                new_dep_q_details.append(dep_q_details[ii])
+
                 for node in new_individual[-1]:
                     if node != 'D' and env.node_type == 'c':
                         pending_c.remove(node)
@@ -1192,15 +1198,18 @@ class Genetic():
         while len(constructive.pending_c) > 0:
             RCL_criterion = choice(['distance', 'TimeWindow'])
             RCL_criterion = 'distance'
-            t, d, q, k, route = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+            t, d, q, k, route, (dep_t, dep_q) = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
             new_individual.append(route)
             new_distance += d
             new_distances.append(d)
             new_time += t
             new_times.append(t)
 
+            new_dep_t_details.append(dep_t)
+            new_dep_q_details.append(dep_q)
 
-        return new_individual, new_distance, new_time, (new_distances, new_times)
+
+        return new_individual, new_distance, new_time, (new_distances, new_times, (new_dep_t_details,new_dep_q_details))
     
     # Auxiliary method. Returns list that indicates for each route (possition), the rank
     # occupied by the route

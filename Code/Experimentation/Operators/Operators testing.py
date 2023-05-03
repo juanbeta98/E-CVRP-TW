@@ -50,7 +50,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-x = input('Operator to be tested') 
+x = input('Operator to be tested: ') 
 if x != '':
     Operator:str = x
 else:
@@ -162,7 +162,7 @@ for instance in test_bed:
         ### Evolution
         New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
         for i in range(genetic.Population_size):
-            individual = Parents[i][randint(0,2)]
+            individual_i = Parents[i][randint(0,2)]
 
             ### Shake
             #new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
@@ -174,7 +174,7 @@ for instance in test_bed:
 
             ### Mutation
             new_individual, new_distance, new_time, details = \
-                                genetic.Darwinian_phi_rate(env, constructive, Population[individual], Details[individual], RCL_alpha)
+                                genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
 
             
 
@@ -194,9 +194,8 @@ for instance in test_bed:
                 ploting_Times.append(process_time() - g_start)
 
             # Updating best found solution with least number of vehicles
-            if i == 0 or \
-                len(new_individual) < len(best_min_EV_individual[0]) or \
-                new_distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
+            if len(new_individual) < len(best_min_EV_individual[0]) or \
+                new_distance < min_EV_incumbent and len(new_individual) <= len(best_min_EV_individual[0]):
 
                 min_EV_incumbent = new_distance
                 best_min_EV_individual: list = [new_individual, new_distance, new_time, details, process_time() - g_start]
