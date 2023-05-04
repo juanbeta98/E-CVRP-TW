@@ -518,7 +518,7 @@ class Constructive():
     '''
     Routes between costumers to costumers or stations
     '''
-    def direct_routing(self, env: E_CVRP_TW, node: str, target: str, t: float, d: float, q: float, k: int, route: list):
+    def direct_routing(self, env:E_CVRP_TW, node:str, target:str, t:float, d:float, q:float, k:int, route:list):
         # Time update
         tv = env.dist[node, target] / env.v
 
@@ -567,7 +567,7 @@ class Constructive():
     -   k: Final capacity of vehicle
     -   route: list with sequence of nodes of route
     '''
-    def RCL_based_constructive(self, env: E_CVRP_TW, RCL_alpha: float, RCL_criterion: str):
+    def RCL_based_constructive(self, env:E_CVRP_TW, RCL_alpha:float, RCL_criterion:str):
         t: float = 0
         d: float = 0
         q: float = env.Q
@@ -636,6 +636,41 @@ class Constructive():
             
         return t, d, q, k, route, (dep_t, dep_q)
 
+
+    # Auxiliary direct routing method for external usage
+    def evaluate_direct_routing(env:E_CVRP_TW, node:str, target:str, t:float, d:float, q:float, k:int):
+        # Time update
+        tv = env.dist[node, target] / env.v
+        if env.node_type[target] == 'c' and t + tv > env.C[target]['DueDate']: return False, False, False, False
+
+        # Distance update
+        d += env.dist[node, target]
+
+        # Charge update
+        q -= env.dist[node, target] / env.r
+        if q < 0:   return False, False, False, False
+
+        # Target is costumer
+        if env.node_type[target] == 'c':
+            tgt = env.C[target]
+
+            # Time update
+            start_service = max(t + tv, tgt['ReadyTime'])
+            t = start_service + tgt['ServiceTime']
+
+            # Load update
+            k += tgt['d']
+
+        # Target is station
+        else:
+            # Time update
+            t += tv + (env.Q - q) * env.g
+
+            ## Charge update
+            q = env.Q
+
+        return t, d, q, k
+    
 
     def print_constructive(self, env: E_CVRP_TW, instance: str, t: float, ind: int, Incumbent: float, routes: int):
         gap = round((Incumbent - env.bkFO[instance])/env.bkFO[instance],4)
@@ -1113,50 +1148,66 @@ class Genetic():
 
     ''' CROSSOVER: Same individual, different routes '''
     # evaluated insertion: A given costumer is iteratively placed on an existing route. 
-    def evaluated_insertion(self, env:E_CVRP_TW, feas_op:Feasibility, individual:list, Details:list, stop_crit:str = 'best'):
+    def evaluated_insertion(self, env:E_CVRP_TW, individual:list, Details:list):
         # Select route that visits less costumers and disolve it
         visited_c:list = list()
         n_visited_c:list = list()
         eff_rates:list = list()
 
-        distances, times, loads, (dep_t, dep_d) = Details
+        distances, times, loads, (dep_t_details, dep_q_details) = Details
 
         for idx, route in enumerate(individual):
             eff_rates.append(distances[idx]/len(route))
-            visited_c.append(sum([i for i in route if i[0]=='C']))
+            visited_c.append([i for i in route if i[0]=='C'])
             n_visited_c.append(sum([1 for i in route if i[0]=='C']))
 
         rank_index:list = self.rank_indexes(eff_rates)
-        worst_route_index = visited_c.index(max(n_visited_c))
+
+        worst_route_index = n_visited_c.index(min(n_visited_c))
+        # worst_route_index = rank_index.index(max(rank_index))
         
         pending_c = visited_c[worst_route_index]
         
         # Relocate costumers from first route
         for candidate in pending_c:
-            found = False
+            placed = False
             for i in range(len(individual)):   
                 if worst_route_index != i:
 
                     # Load feasibility check
-                    if env.C[candidate]['d'] + loads[i] > env.Q:    continue
+                    if env.C[candidate]['d'] + loads[i] > env.K:    continue
 
-                    route = individual[rank_index(i)]
+                    real_index = rank_index.index(i)
+                    route = individual[real_index]
                     for pos in range(1,len(route[1:-1])):
                         node = route[pos]
 
                         # Preliminary feasibility check
-                        if env.C[candidate]['ReadyTime'] <= dep_t[rank_index(i)][pos]:     continue                                # Waiting to service not allowed
-                        if env.C[candidate]['DueDate'] < dep_t[rank_index(i)][pos] + env.dist[node,candidate]/env.v:   continue    # TimeWindow nonfeasible
+                        # if env.C[candidate]['ReadyTime'] <= dep_t_details[rank_index.index(i)][pos]:     continue                                # Waiting to service not allowed
+                        if env.C[candidate]['DueDate'] < dep_t_details[real_index][pos] + env.dist[node,candidate]/env.v:   continue    # TimeWindow nonfeasible
 
                         # Feasibility
-                        feasible, dep_q, dep_t = self.check_insertion_feasibility(env,pos,candidate,dep_t[rank_index(i)],dep_q[rank_index(i)])
+                        feasible, dep_q, dep_t = self.check_insertion_feasibility(env, individual[real_index], pos, candidate, dep_t_details[real_index], dep_q_details[real_index])
+                        
+                        if feasible:
+                            route.insert(pos+1,candidate)
+
+                            d = sum(env.dist[route[i],route[i+1]] for i in range(len(route)-1))
+                            
+                            distances[i] = d
+                            times[i] = dep_t[-1]
+                            loads[i] += env.C[candidate]['d']
+                            dep_t_details[i] = dep_t
+                            dep_q_details[i] = dep_q
+                            placed = True
+                            continue
+
+                    if placed:   continue
                         
 
-
-                    if found:   continue
-                        
-
-            if not found: break
+            if not placed: return False
+        
+        return individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
 
 
 
@@ -1169,25 +1220,26 @@ class Genetic():
         current_q:float = new_dep_q[-1]
         
         # Arch from position to candidate
-        current_t, _, current_q, _, _ = Constructive.direct_routing(env, route[pos], candidate, current_t, 0, current_q, 0, [])
-        if current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check
+        current_t, _, current_q, _ = Constructive.evaluate_direct_routing(env, route[pos], candidate, current_t, 0, current_q, 0)
+        if current_t == False or current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check
         new_dep_t.append(current_t)
         new_dep_q.append(current_q)
 
 
         # Arch from candidate to pos+1
         # TODO check what happens when route[pos+1] == 'D'
-        current_t, _, current_q, _, _ = Constructive.direct_routing(env, candidate, route[pos+1], current_t, 0, current_q, 0, []) 
-        if current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check
+        current_t, _, current_q, _ = Constructive.evaluate_direct_routing(env, candidate, route[pos+1], current_t, 0, current_q, 0) 
+        if current_t == False or current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check
         new_dep_t.append(current_t)
         new_dep_q.append(current_q)
 
         for i in range(pos+1,len(route)-1):
-            current_t, _, current_q, _, _ = Constructive.direct_routing(env, route[i], route[i+1], current_t, 0, current_q, 0, [])
-            if current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check      
+            current_t, _, current_q, _ = Constructive.evaluate_direct_routing(env, route[i], route[i+1], current_t, 0, current_q, 0)
+            if current_t == False or current_q < 0 or current_t > env.T:      return False, None, None    # Feasibility check      
             new_dep_t.append(current_t)
             new_dep_q.append(current_q)      
-
+        
+        # TODO check for last segment to depot (updates on new_dep_details)
         return True, new_dep_t, new_dep_q
 
 
