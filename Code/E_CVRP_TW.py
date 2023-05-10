@@ -1184,55 +1184,61 @@ class Genetic():
         
         pending_c = visited_c[worst_route_index]
 
-        # new_individual = deepcopy(individual);  del new_individual[worst_route_index]
-        # new_distances = deepcopy(distances);    del new_distances[worst_route_index]
-        # new_times = deepcopy(times);    del new_times[worst_route_index]
-        # new_loads = deepcopy(loads);    del new_loads[worst_route_index]
-        # new_dep_t_details = deepcopy(dep_t_details);    del new_dep_t_details[worst_route_index]
-        # new_dep_q_details = deepcopy(dep_q_details);    del new_dep_q_details[worst_route_index]
+        new_individual = deepcopy(individual);  #del new_individual[worst_route_index]
+        new_distances = deepcopy(distances);    #del new_distances[worst_route_index]
+        new_times = deepcopy(times);    #del new_times[worst_route_index]
+        new_loads = deepcopy(loads);    #del new_loads[worst_route_index]
+        new_dep_t_details = deepcopy(dep_t_details);    #del new_dep_t_details[worst_route_index]
+        new_dep_q_details = deepcopy(dep_q_details);    #del new_dep_q_details[worst_route_index]
 
 
         # Relocate costumers from first route
         for candidate in pending_c:
             placed = False
-            for i in range(len(individual)):   
+            for i in range(len(new_individual)):   
                 real_index = rank_index.index(i)
 
                 if real_index != worst_route_index:
                     # Load feasibility check
                     if env.C[candidate]['d'] + loads[i] > env.K:    continue
 
-                    route = individual[real_index]
+                    route = new_individual[real_index]
                     for pos in range(1,len(route[1:])):
                         node = route[pos]
 
                         # Preliminary feasibility check
                         # if env.C[candidate]['ReadyTime'] <= dep_t_details[rank_index.index(i)][pos]:     continue                                # Waiting to service not allowed
-                        if env.C[candidate]['DueDate'] < dep_t_details[real_index][pos] + env.dist[node,candidate]/env.v:   continue    # TimeWindow nonfeasible
+                        if env.C[candidate]['DueDate'] < new_dep_t_details[real_index][pos] + env.dist[node,candidate]/env.v:   continue    # TimeWindow nonfeasible
 
                         # Feasibility
-                        feasible, dep_q, dep_t = self.check_insertion_feasibility(env, individual[real_index], pos, candidate, dep_t_details[real_index], dep_q_details[real_index])
+                        feasible, dep_q, dep_t = self.check_insertion_feasibility(env, new_individual[real_index], pos, candidate, new_dep_t_details[real_index], new_dep_q_details[real_index])
                         
                         if feasible:
                             route.insert(pos+1,candidate)
 
-                            d = sum(env.dist[route[i],route[i+1]] for i in range(len(route)-1))
+                            d = sum(env.dist[route[ii],route[ii+1]] for ii in range(len(route)-1))
                             
-                            distances[i] = d
-                            times[i] = dep_t[-1]
-                            loads[i] += env.C[candidate]['d']
-                            dep_t_details[i] = dep_t
-                            dep_q_details[i] = dep_q
+                            new_distances[real_index] = d
+                            new_times[real_index] = dep_t[-1]
+                            new_loads[real_index] += env.C[candidate]['d']
+                            new_dep_t_details[real_index] = dep_t
+                            new_dep_q_details[real_index] = dep_q
                             placed = True
                             break
 
                     if placed:   break
                         
-
             if not placed: return individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
         
         print('Successfully inserted a complete route')
-        return individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
+        del new_individual[worst_route_index]
+        del new_distances[worst_route_index]
+        del new_times[worst_route_index]
+        del new_loads[worst_route_index]
+        del new_dep_t_details[worst_route_index]
+        del new_dep_q_details[worst_route_index]
+
+        return new_individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
 
 
 

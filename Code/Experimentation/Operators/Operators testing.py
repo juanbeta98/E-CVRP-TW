@@ -4,8 +4,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+# path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Reparator, Feasibility
@@ -86,7 +86,7 @@ Instance testing
 
 # test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
-test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
+# test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
 
 test_bed = [env.sizes['m'][0]]
 
