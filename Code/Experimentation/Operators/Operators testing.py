@@ -41,7 +41,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 500
+Population_size:int = 2000
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 
@@ -88,7 +88,7 @@ Instance testing
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
 test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
 
-test_bed = [env.sizes['l'][0]]
+test_bed = [env.sizes['m'][0]]
 
 for instance in test_bed:
     # Saving performance 

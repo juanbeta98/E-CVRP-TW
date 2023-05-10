@@ -1167,19 +1167,27 @@ class Genetic():
         # worst_route_index = rank_index.index(max(rank_index))
         
         pending_c = visited_c[worst_route_index]
-        
+
+        # new_individual = deepcopy(individual);  del new_individual[worst_route_index]
+        # new_distances = deepcopy(distances);    del new_distances[worst_route_index]
+        # new_times = deepcopy(times);    del new_times[worst_route_index]
+        # new_loads = deepcopy(loads);    del new_loads[worst_route_index]
+        # new_dep_t_details = deepcopy(dep_t_details);    del new_dep_t_details[worst_route_index]
+        # new_dep_q_details = deepcopy(dep_q_details);    del new_dep_q_details[worst_route_index]
+
+
         # Relocate costumers from first route
         for candidate in pending_c:
             placed = False
             for i in range(len(individual)):   
-                if worst_route_index != i:
+                real_index = rank_index.index(i)
 
+                if real_index != worst_route_index:
                     # Load feasibility check
                     if env.C[candidate]['d'] + loads[i] > env.K:    continue
 
-                    real_index = rank_index.index(i)
                     route = individual[real_index]
-                    for pos in range(1,len(route[1:-1])):
+                    for pos in range(1,len(route[1:])):
                         node = route[pos]
 
                         # Preliminary feasibility check
@@ -1200,13 +1208,14 @@ class Genetic():
                             dep_t_details[i] = dep_t
                             dep_q_details[i] = dep_q
                             placed = True
-                            continue
+                            break
 
-                    if placed:   continue
+                    if placed:   break
                         
 
-            if not placed: return False
+            if not placed: return individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
         
+        print('Successfully inserted a complete route')
         return individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
 
 
