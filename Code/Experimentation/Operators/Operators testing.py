@@ -41,7 +41,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 1000
+Population_size:int = 2000
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 
@@ -72,7 +72,7 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':0.5, 'm':3, 'l':7}
+testing_times = {'s':1, 'm':4, 'l':8}
 
 
 '''
@@ -81,17 +81,15 @@ Instance testing
 # test_bed = env.sizes['s']+env.sizes['m']
 # test_bed = env.sizes['l']
 
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
+test_bed = env.generate_test_bed('l', 3)
 
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
-# test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
 
 test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
+    constructive_Results = dict()
+
     Results = dict()
     Incumbents = list()
     ploting_Times = list()
@@ -126,13 +124,14 @@ for instance in test_bed:
     Population, Distances, Times, Details, incumbent, best_individual, min_EV_incumbent, best_min_EV_individual, RCL_alpha = \
                             genetic.generate_population(env, constructive, training_ind, g_start, instance, constructive_verbose)
     
-    Results['Constructive'] = best_individual
-    Incumbents.append(incumbent)
-    ploting_Times.append(best_individual[3])
+    constructive_Results['best individual (min dist)'] = best_individual
+    constructive_Results['best individual (min EV)'] = best_min_EV_individual
 
-    min_EV_Results['Constructive'] = best_individual
-    min_EV_Incumbents.append(incumbent)
-    min_EV_ploting_Times.append(best_individual[3])
+    Incumbents.append(incumbent)
+    ploting_Times.append(best_individual[4])
+
+    min_EV_Incumbents.append(min_EV_incumbent)
+    min_EV_ploting_Times.append(best_min_EV_individual[4])
 
     # Print progress
     if verbose: 
@@ -146,8 +145,6 @@ for instance in test_bed:
         print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
     
     # Genetic process
-    incumbent = 1e9
-    min_EV_incumbent = 1e9
     generation = 0
     while process_time() - g_start < max_time:
         # print(f'Generation: {generation}')
@@ -253,5 +250,5 @@ for instance in test_bed:
 
         ### Save performance
         a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
-        pickle.dump([Results, min_EV_Results], a_file)
+        pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
         a_file.close()

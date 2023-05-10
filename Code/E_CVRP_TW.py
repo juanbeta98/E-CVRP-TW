@@ -100,9 +100,7 @@ class E_CVRP_TW():
                     }
 
 
-    '''
-    Load data from txt file
-    '''
+    ''' Load data from txt file '''
     def load_data(self, instance: str):
         file = open(self.path + 'Instances/' + instance, mode = 'r');     file = file.readlines()
         
@@ -145,12 +143,41 @@ class E_CVRP_TW():
         self.v = float([i for i in str(file[fila]).split(' ') if i != ''][3][1:-2])                 # Vehicles speed
 
         
-    '''
-    Compute several parameters from intial file
-    '''
+    ''' Compute several parameters from intial file '''
     def generate_parameters(self):
         self.compute_distances()
         self.closest_stations()
+
+
+    ''' Generate test bed of instances 
+    - Sets of size 'size' of a given inst_size
+    - Sets of size 'size' of a given list of instances
+    '''
+    def generate_test_bed(self, inst_set:str or list, size:int):
+        test_bed = list()
+        if type(inst_set) == str:
+            inst_set = self.sizes[inst_set]
+
+        for i in range(size):
+            if i != size-1:
+                test_bed.append(inst_set[i * int(len(inst_set)/size): (i+1) * int(len(inst_set)/size)])
+            else:
+                test_bed.append(inst_set[i * int(len(inst_set)/size):])
+
+        return test_bed
+
+
+    ''' Generate list with pending instances to test '''
+    def generate_missing_instances(self, path):
+        inst_set = deepcopy(self.instances)
+        completed_instances = os.listdir(self.path + 'Experimentation/' + path)
+        if '.DS_Store' in completed_instances:
+            completed_instances.remove('.DS_Store')
+        completed_instances.sort()
+        for inst in completed_instances:
+            inst_set.remove(inst[8:])
+
+        return inst_set
 
 
     '''
@@ -738,7 +765,7 @@ class Feasibility():
                 station_depot_route = False
                 if target != 'D' and env.node_type[target]=='s' and route[i+2] == 'D':
                     station_depot_route = True
-                feasible, t, q, k = self.transition_check(env, node, target, station_depot_route, t, q, k)
+                feasible, t, q, k, _ = self.transition_check(env, node, target, station_depot_route, t, q, k)
 
                 d += env.dist[node,target]
 
@@ -746,6 +773,9 @@ class Feasibility():
                     dep_t.append(t)
                     dep_q.append(q)
                 if not feasible:
+                    print()
+                    print()
+                    print()
                     break
             
             distance += d
@@ -768,9 +798,9 @@ class Feasibility():
         load_feasible, k = self.load_check(env, target, k)
 
         if time_energy_feasible and load_feasible and time_window_feasible:
-            return True, t, q ,k
+            return True, t, q ,k, ''
         else:
-            return False, t, q, k
+            return False, t, q, k, (time_energy_feasible,load_feasible,time_window_feasible)
 
 
     def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
@@ -1038,16 +1068,11 @@ class Genetic():
                 loads.append(k)
                 dep_t_details.append(dep_details[0])
                 dep_q_details.append(dep_details[1])
-
-                # VERIFY
-                if len(dep_details[0]) != len(route) or len(dep_details[0]) != len(route): 
-                    print(ind)
-                    print('ERROR')
             
             # Updating incumbent
             if distance < incumbent:
                 incumbent = distance
-                best_individual: list = [individual, distance, t_time, (distances, times, dep_details), process_time() - start]
+                best_individual: list = [individual, distance, t_time, (distances, times, loads, dep_details), process_time() - start]
 
                 # if verbose:
                 #     constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
@@ -1058,8 +1083,8 @@ class Genetic():
                 distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
 
                 min_EV_incumbent = distance
-                best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
-                constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
+                best_min_EV_individual: list = [individual, distance, t_time, (distances, times, loads, dep_details), process_time() - start]
+                if verbose:     constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
                 
             Population.append(individual)
             Distances.append(distance)

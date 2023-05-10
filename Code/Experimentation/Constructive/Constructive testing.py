@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'TimeWindow'
+RCL_criterion: str = 'Exo-Hybrid'
 
 '''
 EXPERIMENTATION
@@ -58,6 +58,10 @@ Instance testing
 # test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
 test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
+
+
+# # test_bed = test_bed[:int(len(test_bed)/2)]
+# test_bed = test_bed[int(len(test_bed)/2):]
 
 for instance in test_bed:
     # Saving performance
