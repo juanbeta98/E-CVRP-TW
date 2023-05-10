@@ -741,6 +741,7 @@ class Feasibility():
     '''
     Checks the feasibility of an individual (all the routes)
     '''
+    #TODO (implement loads)
     def individual_check(self, env: E_CVRP_TW, individual: list):
         feasible = True
         distance = 0
