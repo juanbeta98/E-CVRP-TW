@@ -41,7 +41,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 2000
+Population_size:int = 100
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 

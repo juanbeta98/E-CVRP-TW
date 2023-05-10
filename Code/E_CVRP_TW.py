@@ -436,6 +436,8 @@ class Constructive():
         extra_d:float = 0
         extra_q:float = 0
         
+        extra_dep_t = list()
+        extra_dep_q = list()
 
         # The vehicle can go directly to depot
         if env.dist[node,'D'] / env.v < q:
@@ -464,6 +466,8 @@ class Constructive():
                 extra_t += recarga * env.g
                 extra_q += recarga
 
+                extra_dep_t.append(t+extra_t)
+                extra_dep_q.append(q+extra_q)
 
                 # Update to depot
                 finish_route.append('D')
@@ -484,6 +488,9 @@ class Constructive():
                 recarga = env.dist[s,'D'] / env.r - extra_q - q
                 extra_t += recarga * env.g
                 extra_q += recarga
+
+                extra_dep_t.append(t+extra_t)
+                extra_dep_q.append(q+extra_q)
 
                 # Update to depot
                 finish_route.append('D')
@@ -512,7 +519,10 @@ class Constructive():
             return t, d, q, k, route, dep_t, dep_q
 
         else:
-            return t + extra_t, d + extra_d, q + extra_q, k, route + finish_route, dep_t, dep_q
+            t += extra_t; d += extra_d; q += extra_q
+            dep_t.extend(extra_dep_t); dep_t.append(t)
+            dep_q.extend(extra_dep_q); dep_q.append(q)
+            return t, d , q, k, route + finish_route, dep_t, dep_q
 
 
     '''
@@ -598,6 +608,7 @@ class Constructive():
                     if node == 'D' and len(self.pending_c) == 1:
                         target = self.optimal_station(env, node, self.pending_c[0])
                         t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
+                        dep_t.append(t); dep_q.append(q)
                         node = target
 
                     else:
@@ -1027,6 +1038,11 @@ class Genetic():
                 loads.append(k)
                 dep_t_details.append(dep_details[0])
                 dep_q_details.append(dep_details[1])
+
+                # VERIFY
+                if len(dep_details[0]) != len(route) or len(dep_details[0]) != len(route): 
+                    print(ind)
+                    print('ERROR')
             
             # Updating incumbent
             if distance < incumbent:
