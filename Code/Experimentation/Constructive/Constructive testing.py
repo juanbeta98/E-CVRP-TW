@@ -4,8 +4,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-#path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+# path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Intra-Hybrid'
+RCL_criterion: str = 'TimeWindow'
 
 '''
 EXPERIMENTATION
@@ -55,9 +55,9 @@ Instance testing
 # test_bed = env.sizes['l'][:int(len(env.sizes['l']/2))]
 # test_bed = env.sizes['l'][int(len(env.sizes['l']/2)):]
 
+test_bed = ['c103C5.txt']
 
-
-for instance in env.instances[::-1]:
+for instance in test_bed:
     # Saving performance
     Results = dict()
     min_EV_Results = dict()
@@ -149,6 +149,8 @@ for instance in env.instances[::-1]:
         # Storing iteration performance
         Incumbents.append(incumbent)
         Times.append(process_time() - start)
+        min_EV_Incumbents.append(min_EV_incumbent)
+        min_EV_Times.append(process_time() - start)
 
 
     # Storing overall performance
@@ -173,12 +175,10 @@ for instance in env.instances[::-1]:
 
     ### Print performance
     print('\n')
-    print(f'########## Performance ##########')
-    print(f'total running time: {round(process_time() - start,2)}')
-    print(f'incumbent: {round(incumbent,2)}')
-    print(f'gap: {round(lab.compute_gap(env, instance, incumbent)*100,2)}%')
-    print(f'time to find: {round(Results["time to find"],2)}')
-    #print(f'best solution: {best_individual}')
+    print(f'Evolution finished finished at {round(process_time() - start,2)}s')
+    print('\tFO \tgap \tEV \ttime to find')
+    print(f'dist\t{round(incumbent,1)} \t{round(lab.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
+    print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
     print('\n')
 
     ### Save performance

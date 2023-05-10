@@ -10,24 +10,43 @@ def retrieve_const_performance(instance, path):
     return data
 
 
-def plot_const_performance(data, instance, testing = 'Constructive'):
+def plot_const_performance(data, instance, testing = 'Constructive', objective = 'min_EV'):
     colors = ['red', 'orange', 'brown', 'green', 'purple' , 'blue' ,'black', 'pink', ]
-    i = 0
-    legend_elements = []
-    for key, value in data.items():
-        plt.plot(value['inc times'], value['incumbents'], color = colors[i])
-        legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=str(key), lw=0,
-                          markerfacecolor=colors[i], markersize=8))
-        i+=1
 
-    plt.title(f"{testing}'s performance {instance}")
-    plt.xlabel('Time (s)')
-    plt.ylabel('Incumbent')
+    if objective == False:
+        i = 0
+        legend_elements = []
+        for key, value in data.items():
+            plt.plot(value['inc times'], value['incumbents'], color = colors[i])
+            legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=str(key), lw=0,
+                            markerfacecolor=colors[i], markersize=8))
+            i+=1
 
-    ax = plt.gca()
-    ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
-    
-    plt.show()
+        plt.title(f"{testing}'s performance {instance}")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Incumbent')
+
+        ax = plt.gca()
+        ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
+        
+        plt.show()
+    else:
+        i = 0
+        legend_elements = []
+        for key, value in data.items():
+            plt.plot(value[objective]['inc times'], value[objective]['incumbents'], color = colors[i])
+            legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=str(key), lw=0,
+                            markerfacecolor=colors[i], markersize=8))
+            i+=1
+
+        plt.title(f"{testing}'s performance {instance}")
+        plt.xlabel('Time (s)')
+        plt.ylabel('Incumbent')
+
+        ax = plt.gca()
+        ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
+        
+        plt.show()
 
 
 def retrieve_op_performance(instance, path):

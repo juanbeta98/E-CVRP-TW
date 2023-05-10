@@ -41,7 +41,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 100
+Population_size:int = 1000
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 
@@ -88,7 +88,7 @@ Instance testing
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
 # test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
 
-test_bed = [env.sizes['m'][0]]
+test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
@@ -146,9 +146,11 @@ for instance in test_bed:
         print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
     
     # Genetic process
+    incumbent = 1e9
+    min_EV_incumbent = 1e9
     generation = 0
     while process_time() - g_start < max_time:
-        #print(f'Generation: {generation}')
+        # print(f'Generation: {generation}')
         ### Elitism
         Elite = genetic.elite_class(Distances)
 
@@ -165,6 +167,8 @@ for instance in test_bed:
         ### Evolution
         New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
         for i in range(genetic.Population_size):
+            if generation == 1 and i == 12: 
+                pass
             individual_i = Parents[i][randint(0,2)]
 
             ### Shake

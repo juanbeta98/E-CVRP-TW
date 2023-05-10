@@ -1230,7 +1230,7 @@ class Genetic():
                         
             if not placed: return individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
         
-        print('Successfully inserted a complete route')
+        # print('Successfully inserted a complete route')
         del new_individual[worst_route_index]
         del new_distances[worst_route_index]
         del new_times[worst_route_index]
@@ -1238,7 +1238,7 @@ class Genetic():
         del new_dep_t_details[worst_route_index]
         del new_dep_q_details[worst_route_index]
 
-        return new_individual, sum(distances), sum(times), (distances, times, loads, (dep_t_details, dep_q_details))
+        return new_individual, sum(new_distances), sum(new_times), (new_distances, new_times, new_loads, (new_dep_t_details, new_dep_q_details))
 
 
 
