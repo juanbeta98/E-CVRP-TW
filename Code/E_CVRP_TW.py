@@ -811,7 +811,7 @@ class Feasibility():
             if not feasible:
                 break
         
-        if count != len(env.Costumers):
+        if complete and feasible and count != len(env.Costumers):
             feasible = False
             print(f'Individual only visited {count} costumers')
 
@@ -838,7 +838,7 @@ class Feasibility():
         travel_time = env.dist[node,target] / env.v
 
         q -= env.dist[node, target] / env.r
-        if q < 0: return False, t, q
+        if q < -0.001: return False, t, q
 
         # Total time check
         if target in env.Costumers:

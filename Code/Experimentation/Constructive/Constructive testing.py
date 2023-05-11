@@ -8,7 +8,7 @@ path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHA
 # path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
-from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
+from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
 
 '''
 General parameters
@@ -18,8 +18,9 @@ start: float = process_time()
 rd_seed: int = 0
 seed(rd_seed)
 
-verbose = True
-save_performance = True
+verbose:bool = True
+save_performance:bool = False
+evaluate_feasibility:bool = True
 
 '''
 Environment
@@ -36,6 +37,13 @@ constructive: Constructive = Constructive()
 
 RCL_criterion: str = 'distance'
 
+
+'''
+Feasibility operators
+'''
+feas_op: Feasibility = Feasibility()
+
+
 '''
 EXPERIMENTATION
 Variable convention:
@@ -50,6 +58,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 Instance testing
 '''
 test_bed = env.generate_missing_instances(f'Constructive/RCL criterion/{RCL_criterion}/')
+test_bed = env.instances
 
 for instance in test_bed:
     # Saving performance
@@ -121,6 +130,13 @@ for instance in test_bed:
             t_time += t
             times.append(t)
         
+
+            # Individual feasibility check
+            if evaluate_feasibility:
+                feasible, _ = feas_op.individual_check(env, [route], complete = False)
+                assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (ind {ind})'
+
+
         # Updating incumbent
         if distance < incumbent:
             incumbent = distance

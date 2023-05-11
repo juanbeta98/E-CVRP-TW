@@ -11,13 +11,13 @@ sys.path.insert(0,path+'Experimentation/')
 import plot_performance as plot
 
 
-instance = 'c101_21.txt'
+instance = 'r101_21.txt'
 env.load_data(instance)
 env.generate_parameters()
 
 feas_op = Feasibility()
 
-route = ['D','C12','C75','C14','C16','C19','C18','C17','C15','C7','C9','C5','C13','C91','S7','D']
+route = ['D', 'C70', 'C34', 'S4', 'D']
 
 visited = list(); count = 0
 
@@ -27,25 +27,3 @@ for pos in route:
         visited.append(pos)
         count += 1
 print(f'The individual covers {count} costumers')
-
-
-
-
-
-# operators = ['Darwinian phi rate', 'two opt']
-# data_op = dict()
-
-# test_bed = ['c202C10.txt']#, 'c103_21.txt']
-# instance = test_bed[0]
-
-# for instance in test_bed:
-#     data_op[instance] = dict()
-#     for operator in operators[1:]:
-#         data_op[instance][operator] = plot.retrieve_const_performance(instance, path+f'Experimentation/Operators/{operator}/')
-
-# env.load_data(instance)
-# env.generate_parameters()
-
-# feas_op = Feasibility()
-# feasible, _ = feas_op.individual_check(env, data_op[test_bed[0]]['two opt']['best individual'])
-# print(feasible)

@@ -8,7 +8,7 @@ path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHA
 # path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
-from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Reparator, Feasibility
+from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Feasibility
 
 '''
 General parameters
@@ -20,7 +20,7 @@ seed(rd_seed)
 
 verbose:bool = True
 saving:bool = True
-feasibility_check: bool = True
+evaluate_feasibility: bool = True
 
 '''
 Environment
@@ -52,12 +52,6 @@ mutation_rate:float = 0.5
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
 Operator:str = 'Darwinian phi rate'
-
-'''
-Repair operators
-'''
-repair_op: Reparator = Reparator()
-
 
 '''
 Feasibility operators
@@ -182,10 +176,10 @@ for instance in test_bed:
 
             
             # Individual feasibility check
-            if feasibility_check:
+            if evaluate_feasibility:
                 print(new_individual)
                 feasible, _ = feas_op.individual_check(env, new_individual, complete = True)
-                assert feasible, 'Non feasible individual generated'
+                assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (gen {generation}, ind {i})'
 
             # Store new individual
             New_Population.append(new_individual); New_Distances.append(new_distance); New_Times.append(new_time); New_Details.append(details)
