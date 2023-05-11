@@ -742,15 +742,21 @@ class Feasibility():
     Checks the feasibility of an individual (all the routes)
     '''
     #TODO (implement loads)
-    def individual_check(self, env: E_CVRP_TW, individual: list):
+    def individual_check(self, env: E_CVRP_TW, individual: list, complete = False):
         feasible = True
         distance = 0
         distances = list()
         ttime = 0
         times = list()
+        loads = list()
         dep_t_details = list()
         dep_q_details = list()
 
+        if complete:
+            count = 0
+            visited = list()
+
+            
         for num, route in enumerate(individual):
             t: float = 0
             d: float = 0
@@ -773,23 +779,38 @@ class Feasibility():
                 if i < len(route)-2:
                     dep_t.append(t)
                     dep_q.append(q)
+
+                if complete and env.node_type[target] == 'c':
+                    if target in visited:
+                        feasible = False
+                        print(f'Costumer visited more than once')
+                        break
+                    else:
+                        visited.append(target)
+                        count += 0
+
                 if not feasible:
-                    print()
-                    print()
-                    print()
+                    if not _[0]: print(f'Not time or energy feasiblefeasible')
+                    if not _[1]: print(f'Not total load feasible feasible')
+                    if not _[2]: print(f'Not time window feasible')
                     break
             
             distance += d
             distances.append(d)
             ttime += t
             times.append(t)
+            loads.append(k)
             dep_t_details.append(dep_t)
             dep_q_details.append(dep_q)
 
             if not feasible:
                 break
+        
+        if count != len(env.Costumers):
+            feasible = False
+            print(f'Individual only visited {count} costumers')
 
-        return feasible, (distance, ttime, (distances, times, (dep_t_details, dep_q_details)))
+        return feasible, (distance, ttime, (distances, times, loads, (dep_t_details, dep_q_details)))
 
                 
     def transition_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float, k: int):
@@ -807,6 +828,7 @@ class Feasibility():
     def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
         return t <= env.C[target]['DueDate']
     
+
     def time_energy_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float):
         travel_time = env.dist[node,target] / env.v
 
@@ -852,14 +874,11 @@ class Feasibility():
                 return False, k
         else:
             return True, k
-    
 
 
 
 
-'''
-Reparation class
-'''
+''' Reparation class '''
 class Reparator(Constructive):
     
     
@@ -991,9 +1010,7 @@ class Reparator(Constructive):
 
 
 
-'''
-Genetic algorithm: 
-'''
+''' Genetic algorithm:  '''
 class Genetic():
 
     def __init__(self, Population_size: int, Elite_size: int, crossover_rate: float, mutation_rate: float) -> None:
@@ -1002,9 +1019,7 @@ class Genetic():
         self.crossover_rate: float = crossover_rate
         self.mutation_rate: float = mutation_rate
 
-    '''
-    Initial population generator
-    '''
+    ''' Initial population generator '''
     def generate_population(self, env: E_CVRP_TW, constructive: Constructive, training_ind:int = 500, start:float = 0,
                             instance:str = '', verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
 

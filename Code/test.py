@@ -32,20 +32,20 @@ print(f'The individual covers {count} costumers')
 
 
 
-operators = ['Darwinian phi rate', 'two opt']
-data_op = dict()
+# operators = ['Darwinian phi rate', 'two opt']
+# data_op = dict()
 
-test_bed = ['c202C10.txt']#, 'c103_21.txt']
-instance = test_bed[0]
+# test_bed = ['c202C10.txt']#, 'c103_21.txt']
+# instance = test_bed[0]
 
-for instance in test_bed:
-    data_op[instance] = dict()
-    for operator in operators[1:]:
-        data_op[instance][operator] = plot.retrieve_const_performance(instance, path+f'Experimentation/Operators/{operator}/')
+# for instance in test_bed:
+#     data_op[instance] = dict()
+#     for operator in operators[1:]:
+#         data_op[instance][operator] = plot.retrieve_const_performance(instance, path+f'Experimentation/Operators/{operator}/')
 
-env.load_data(instance)
-env.generate_parameters()
+# env.load_data(instance)
+# env.generate_parameters()
 
-feas_op = Feasibility()
-feasible, _ = feas_op.individual_check(env, data_op[test_bed[0]]['two opt']['best individual'])
-print(feasible)
+# feas_op = Feasibility()
+# feasible, _ = feas_op.individual_check(env, data_op[test_bed[0]]['two opt']['best individual'])
+# print(feasible)
