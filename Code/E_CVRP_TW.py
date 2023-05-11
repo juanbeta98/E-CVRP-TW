@@ -157,7 +157,15 @@ class E_CVRP_TW():
         test_bed = list()
         if type(inst_set) == str:
             inst_set = self.sizes[inst_set]
+        else: 
+            inst_sett = list()
+            for sz in inst_set:
+                inst_sett.extend(self.sizes[sz])
+            inst_set = inst_sett
 
+        if size == 1:
+            return inst_set 
+        
         for i in range(size):
             if i != size-1:
                 test_bed.append(inst_set[i * int(len(inst_set)/size): (i+1) * int(len(inst_set)/size)])
@@ -784,7 +792,7 @@ class Feasibility():
                         break
                     else:
                         visited.append(target)
-                        count += 0
+                        count += 1
 
                 if not feasible:
                     if not _[0]: print(f'Not time or energy feasiblefeasible')

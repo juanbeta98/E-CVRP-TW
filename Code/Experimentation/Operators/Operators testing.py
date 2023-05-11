@@ -51,7 +51,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'evaluated insertion'
+Operator:str = 'Darwinian phi rate'
 
 '''
 Repair operators
@@ -82,10 +82,10 @@ Instance testing
 # test_bed = env.sizes['s']+env.sizes['m']
 # test_bed = env.sizes['l']
 
-test_bed = env.generate_test_bed('l', 3)
+test_bed = env.generate_test_bed(['s','m'], 1)
+print(test_bed)
 
-
-test_bed = [env.sizes['l'][0]]
+# test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
@@ -170,20 +170,20 @@ for instance in test_bed:
             individual_i = Parents[i][randint(0,2)]
 
             ### Shake
-            #new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
             
 
             ### Crossover
-            new_individual, new_distance, new_time, details = \
-                                genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
+            # new_individual, new_distance, new_time, details = \
+            #                     genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
 
             ### Mutation
-            # new_individual, new_distance, new_time, details = \
-            #                     genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
+            new_individual, new_distance, new_time, details = \
+                                genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
 
             
             # Individual feasibility check
             if feasibility_check:
+                print(new_individual)
                 feasible, _ = feas_op.individual_check(env, new_individual, complete = True)
                 assert feasible, 'Non feasible individual generated'
 

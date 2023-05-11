@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Exo-Hybrid'
+RCL_criterion: str = 'distance'
 
 '''
 EXPERIMENTATION
@@ -49,19 +49,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-# test_bed = env.sizes['s']+env.sizes['m']
-# test_bed = env.sizes['l']
-
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
-
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
-test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
-
-
-# # test_bed = test_bed[:int(len(test_bed)/2)]
-# test_bed = test_bed[int(len(test_bed)/2):]
+test_bed = env.generate_missing_instances(f'Constructive/RCL criterion/{RCL_criterion}/')
 
 for instance in test_bed:
     # Saving performance
