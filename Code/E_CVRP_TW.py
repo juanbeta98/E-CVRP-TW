@@ -469,8 +469,6 @@ class Constructive():
         # The vehicle can go directly to depot
         if env.dist[node,'D'] / env.v < q:
 
-            # TODO Vehicle is on a station and going to depot, it can charge partially to save time
-
             finish_route += ['D']
             extra_t += env.dist[node,'D'] / env.v
             extra_d += env.dist[node,'D']
@@ -741,7 +739,6 @@ class Feasibility():
     '''
     Checks the feasibility of an individual (all the routes)
     '''
-    #TODO (implement loads)
     def individual_check(self, env: E_CVRP_TW, individual: list, complete = False):
         feasible = True
         distance = 0
@@ -880,132 +877,7 @@ class Feasibility():
 
 ''' Reparation class '''
 class Reparator(Constructive):
-    
-    
-    '''
-    Repair protocol for a
-    '''
-    # def repair_route_termination(self, env: E_CVRP_TW, t: float, d: float, q: float, k: int, route: list):
-    #     if route[-1] in env.Costumers:
-    #         # Remove updates from route indicators
-    #         # Load
-    #         k -= env.C[route[-1]]['d']
-
-    #         # Distance
-    #         d -= env.dist[route[-2], route[-1]]
-
-    #         # Time
-    #         t -= env.C[route[-1]]['ServiceTime']
-    #         start_time = max(t, env.)
-    #         t -= env.dist[route[-2], route[-1]] / env.v
-            
-
-
-
-    def repair_chorizo(self, env: E_CVRP_TW, chorizo: list):
-        if type(chorizo[0]) == list:
-            chorizo = self.build_chorizo(env, chorizo)
-        parent:list = list()
-        distance:float = 0
-        distances:list[float] = list()
-        ttime:float = 0
-        times:list[float] = list() 
-        pending_c = list()
-        self.reset(env)
-
-        ### Construct routes
-        i = 0
-        while i <= len(env.Costumers) - 1:
-            # Append removed nodes
-            chorizo += pending_c
-            pending_c:list = list()    
-
-            # Initialize first route
-            route = ['D']
-            t, d, q, k = 0, 0, env.Q, 0
-            dep_t = [0] # Auxiliary list with departure times
-            dep_q = [env.Q]
-
-            node = chorizo[i]
-            t, d, q, k, route = self.direct_routing(env, 'D', node, t, d, q, k, route)
-            dep_t.append(t); dep_q.append(q)
-
-
-            route_done = False
-            if i == len(env.Costumers) - 1:
-                t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                i += 1
-                route_done = True
-
-            while not route_done:
-
-                target = chorizo[i+1]
-   
-                # Load unfeasible: Finish route and route to depot
-                if k + env.C[target]['d'] >= env.K:           
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                    i += 1
-                    route_done = True
-                
-                # Total time unfeasible: Finish route and go to depot
-                elif t + env.dist[node,target]/env.v + env.C[target]['ServiceTime'] + env.dist[target,'D']/env.v  > env.T:
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                    i += 1
-                    route_done = True
-                
-                # Time window unfeasible: Send costumer to end of line
-                #TODO Evaluate if a max number of bubbles helps performance
-                elif t + env.dist[node, target] / env.v > env.C[target]['DueDate']:
-                    missed = chorizo.pop(i+1)
-                    pending_c.append(missed)
-                    if i + 1 >= len(chorizo):
-                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                        i += 1
-                        route_done = True
-
-
-                # Charge unfeasible
-                elif q - env.dist[node,target] / env.r - env.dist[target,env.closest[target]] / env.r < 0 and node not in env.Stations:
-                    s = self.optimal_station(env, node, target)
-                    if env.dist[node,s] / env.r > q:
-                        s = env.closest[node]
-                    
-                    t, d, q, k, route = self.direct_routing(env, node, s, t, d, q, k, route)
-                    dep_t.append(t); dep_q.append(q)
-
-                    ## Update route 
-                    node = s
-
-
-                else:
-                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                    dep_t.append(t); dep_q.append(q)
-                    node = target
-                    i += 1
-                    if i + 1 >= len(chorizo):
-                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                        i += 1
-                        route_done = True
-
-            if route[-2] == 'S0':
-                del route[-2]
-            
-            parent.append(route)
-            distance += d
-            distances.append(d)
-            ttime += t
-            times.append(t)
-
-
-        while len(self.pending_c) > 0:
-            t, d, q, k, route = self.RCL_based_constructive(env, 0.3, 'distance')
-            parent.append(route)
-            distance += d
-            distances.append(d)
-            ttime += t
-            times.append(t)
-        
-        return parent, distance, distances, ttime, times
+    pass
 
 
 

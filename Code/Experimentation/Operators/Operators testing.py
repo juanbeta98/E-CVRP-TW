@@ -18,8 +18,9 @@ start: float = process_time()
 rd_seed: int = 0
 seed(rd_seed)
 
-verbose = True
-saving = True
+verbose:bool = True
+saving:bool = True
+feasibility_check: bool = True
 
 '''
 Environment
