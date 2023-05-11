@@ -182,6 +182,10 @@ for instance in test_bed:
             #                     genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
 
             
+            # Individual feasibility check
+            if feasibility_check:
+                feasible, _ = feas_op.individual_check(env, new_individual, complete = True)
+                assert feasible, 'Non feasible individual generated'
 
             # Store new individual
             New_Population.append(new_individual); New_Distances.append(new_distance); New_Times.append(new_time); New_Details.append(details)
