@@ -67,7 +67,7 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':1, 'm':3, 'l':5}
+testing_times = {'s':2, 'm':5, 'l':8}
 
 
 '''
