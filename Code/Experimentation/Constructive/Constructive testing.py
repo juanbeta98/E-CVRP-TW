@@ -2,13 +2,13 @@ from numpy.random import seed, choice
 from time import process_time
 import sys
 import pickle
-import os
+import matplotlib.pyplot as plt
 
-# path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+# path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
-from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment
+from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
 
 '''
 General parameters
@@ -18,8 +18,9 @@ start: float = process_time()
 rd_seed: int = 0
 seed(rd_seed)
 
-verbose = True
-save_performance = True
+verbose:bool = True
+save_performance:bool = False
+evaluate_feasibility:bool = True
 
 '''
 Environment
@@ -34,7 +35,14 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Intra-Hybrid'
+RCL_criterion: str = 'distance'
+
+
+'''
+Feasibility operators
+'''
+feas_op: Feasibility = Feasibility()
+
 
 '''
 EXPERIMENTATION
@@ -49,28 +57,10 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-# small-medium and large testbed
-# test_bed = env.sizes['s']+env.sizes['m']
-# test_bed = env.sizes['l']
-
-# two large instances batches
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
-test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
-
-# three large instances batches
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]S
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
-# test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
-
-# missing instances batches
-# completed_instances = os.listdir(path + 'Experimentation/Constructive/RCL criterion/distance/')
-# for i,file in enumerate(completed_instances):   completed_instances[i] = completed_instances[i][8:]
-# completed_instances.sort()
-# test_bed = env.instances[::-1]
-
+test_bed = env.generate_missing_instances(f'Constructive/RCL criterion/{RCL_criterion}/')
+test_bed = env.instances
 
 for instance in test_bed:
-    # if instance in completed_instances: continue
     # Saving performance
     Results = dict()
     min_EV_Results = dict()
@@ -140,6 +130,13 @@ for instance in test_bed:
             t_time += t
             times.append(t)
         
+
+            # Individual feasibility check
+            if evaluate_feasibility:
+                feasible, _ = feas_op.individual_check(env, [route], complete = False)
+                assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (ind {ind})'
+
+
         # Updating incumbent
         if distance < incumbent:
             incumbent = distance

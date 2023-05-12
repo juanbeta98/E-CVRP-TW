@@ -100,9 +100,7 @@ class E_CVRP_TW():
                     }
 
 
-    '''
-    Load data from txt file
-    '''
+    ''' Load data from txt file '''
     def load_data(self, instance: str):
         file = open(self.path + 'Instances/' + instance, mode = 'r');     file = file.readlines()
         
@@ -145,12 +143,49 @@ class E_CVRP_TW():
         self.v = float([i for i in str(file[fila]).split(' ') if i != ''][3][1:-2])                 # Vehicles speed
 
         
-    '''
-    Compute several parameters from intial file
-    '''
+    ''' Compute several parameters from intial file '''
     def generate_parameters(self):
         self.compute_distances()
         self.closest_stations()
+
+
+    ''' Generate test bed of instances 
+    - Sets of size 'size' of a given inst_size
+    - Sets of size 'size' of a given list of instances
+    '''
+    def generate_test_bed(self, inst_set:str or list, size:int):
+        test_bed = list()
+        if type(inst_set) == str:
+            inst_set = self.sizes[inst_set]
+        else: 
+            inst_sett = list()
+            for sz in inst_set:
+                inst_sett.extend(self.sizes[sz])
+            inst_set = inst_sett
+
+        if size == 1:
+            return inst_set 
+        
+        for i in range(size):
+            if i != size-1:
+                test_bed.append(inst_set[i * int(len(inst_set)/size): (i+1) * int(len(inst_set)/size)])
+            else:
+                test_bed.append(inst_set[i * int(len(inst_set)/size):])
+
+        return test_bed
+
+
+    ''' Generate list with pending instances to test '''
+    def generate_missing_instances(self, path):
+        inst_set = deepcopy(self.instances)
+        completed_instances = os.listdir(self.path + 'Experimentation/' + path)
+        if '.DS_Store' in completed_instances:
+            completed_instances.remove('.DS_Store')
+        completed_instances.sort()
+        for inst in completed_instances:
+            inst_set.remove(inst[8:])
+
+        return inst_set
 
 
     '''
@@ -442,8 +477,6 @@ class Constructive():
         # The vehicle can go directly to depot
         if env.dist[node,'D'] / env.v < q:
 
-            # TODO Vehicle is on a station and going to depot, it can charge partially to save time
-
             finish_route += ['D']
             extra_t += env.dist[node,'D'] / env.v
             extra_d += env.dist[node,'D']
@@ -714,15 +747,21 @@ class Feasibility():
     '''
     Checks the feasibility of an individual (all the routes)
     '''
-    def individual_check(self, env: E_CVRP_TW, individual: list):
+    def individual_check(self, env: E_CVRP_TW, individual: list, complete = False):
         feasible = True
         distance = 0
         distances = list()
         ttime = 0
         times = list()
+        loads = list()
         dep_t_details = list()
         dep_q_details = list()
 
+        if complete:
+            count = 0
+            visited = list()
+
+            
         for num, route in enumerate(individual):
             t: float = 0
             d: float = 0
@@ -738,27 +777,45 @@ class Feasibility():
                 station_depot_route = False
                 if target != 'D' and env.node_type[target]=='s' and route[i+2] == 'D':
                     station_depot_route = True
-                feasible, t, q, k = self.transition_check(env, node, target, station_depot_route, t, q, k)
+                feasible, t, q, k, _ = self.transition_check(env, node, target, station_depot_route, t, q, k)
 
                 d += env.dist[node,target]
 
                 if i < len(route)-2:
                     dep_t.append(t)
                     dep_q.append(q)
+
+                if complete and env.node_type[target] == 'c':
+                    if target in visited:
+                        feasible = False
+                        print(f'Costumer visited more than once')
+                        break
+                    else:
+                        visited.append(target)
+                        count += 1
+
                 if not feasible:
+                    if not _[0]: print(f'Not time or energy feasiblefeasible')
+                    if not _[1]: print(f'Not total load feasible feasible')
+                    if not _[2]: print(f'Not time window feasible')
                     break
             
             distance += d
             distances.append(d)
             ttime += t
             times.append(t)
+            loads.append(k)
             dep_t_details.append(dep_t)
             dep_q_details.append(dep_q)
 
             if not feasible:
                 break
+        
+        if complete and feasible and count != len(env.Costumers):
+            feasible = False
+            print(f'Individual only visited {count} costumers')
 
-        return feasible, (distance, ttime, (distances, times, (dep_t_details, dep_q_details)))
+        return feasible, (distance, ttime, (distances, times, loads, (dep_t_details, dep_q_details)))
 
                 
     def transition_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float, k: int):
@@ -768,19 +825,20 @@ class Feasibility():
         load_feasible, k = self.load_check(env, target, k)
 
         if time_energy_feasible and load_feasible and time_window_feasible:
-            return True, t, q ,k
+            return True, t, q ,k, ''
         else:
-            return False, t, q, k
+            return False, t, q, k, (time_energy_feasible,load_feasible,time_window_feasible)
 
 
     def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
         return t <= env.C[target]['DueDate']
     
+
     def time_energy_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float):
         travel_time = env.dist[node,target] / env.v
 
         q -= env.dist[node, target] / env.r
-        if q < 0: return False, t, q
+        if q < -0.001: return False, t, q
 
         # Total time check
         if target in env.Costumers:
@@ -821,148 +879,18 @@ class Feasibility():
                 return False, k
         else:
             return True, k
-    
 
 
 
 
-'''
-Reparation class
-'''
+''' Reparation class '''
 class Reparator(Constructive):
-    
-    
-    '''
-    Repair protocol for a
-    '''
-    # def repair_route_termination(self, env: E_CVRP_TW, t: float, d: float, q: float, k: int, route: list):
-    #     if route[-1] in env.Costumers:
-    #         # Remove updates from route indicators
-    #         # Load
-    #         k -= env.C[route[-1]]['d']
-
-    #         # Distance
-    #         d -= env.dist[route[-2], route[-1]]
-
-    #         # Time
-    #         t -= env.C[route[-1]]['ServiceTime']
-    #         start_time = max(t, env.)
-    #         t -= env.dist[route[-2], route[-1]] / env.v
-            
-
-
-
-    def repair_chorizo(self, env: E_CVRP_TW, chorizo: list):
-        if type(chorizo[0]) == list:
-            chorizo = self.build_chorizo(env, chorizo)
-        parent:list = list()
-        distance:float = 0
-        distances:list[float] = list()
-        ttime:float = 0
-        times:list[float] = list() 
-        pending_c = list()
-        self.reset(env)
-
-        ### Construct routes
-        i = 0
-        while i <= len(env.Costumers) - 1:
-            # Append removed nodes
-            chorizo += pending_c
-            pending_c:list = list()    
-
-            # Initialize first route
-            route = ['D']
-            t, d, q, k = 0, 0, env.Q, 0
-            dep_t = [0] # Auxiliary list with departure times
-            dep_q = [env.Q]
-
-            node = chorizo[i]
-            t, d, q, k, route = self.direct_routing(env, 'D', node, t, d, q, k, route)
-            dep_t.append(t); dep_q.append(q)
-
-
-            route_done = False
-            if i == len(env.Costumers) - 1:
-                t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                i += 1
-                route_done = True
-
-            while not route_done:
-
-                target = chorizo[i+1]
-   
-                # Load unfeasible: Finish route and route to depot
-                if k + env.C[target]['d'] >= env.K:           
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                    i += 1
-                    route_done = True
-                
-                # Total time unfeasible: Finish route and go to depot
-                elif t + env.dist[node,target]/env.v + env.C[target]['ServiceTime'] + env.dist[target,'D']/env.v  > env.T:
-                    t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                    i += 1
-                    route_done = True
-                
-                # Time window unfeasible: Send costumer to end of line
-                #TODO Evaluate if a max number of bubbles helps performance
-                elif t + env.dist[node, target] / env.v > env.C[target]['DueDate']:
-                    missed = chorizo.pop(i+1)
-                    pending_c.append(missed)
-                    if i + 1 >= len(chorizo):
-                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                        i += 1
-                        route_done = True
-
-
-                # Charge unfeasible
-                elif q - env.dist[node,target] / env.r - env.dist[target,env.closest[target]] / env.r < 0 and node not in env.Stations:
-                    s = self.optimal_station(env, node, target)
-                    if env.dist[node,s] / env.r > q:
-                        s = env.closest[node]
-                    
-                    t, d, q, k, route = self.direct_routing(env, node, s, t, d, q, k, route)
-                    dep_t.append(t); dep_q.append(q)
-
-                    ## Update route 
-                    node = s
-
-
-                else:
-                    t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
-                    dep_t.append(t); dep_q.append(q)
-                    node = target
-                    i += 1
-                    if i + 1 >= len(chorizo):
-                        t, d, q, k, route = self.route_to_depot(env, node, t, d, q, k, route, dep_t, dep_q)
-                        i += 1
-                        route_done = True
-
-            if route[-2] == 'S0':
-                del route[-2]
-            
-            parent.append(route)
-            distance += d
-            distances.append(d)
-            ttime += t
-            times.append(t)
-
-
-        while len(self.pending_c) > 0:
-            t, d, q, k, route = self.RCL_based_constructive(env, 0.3, 'distance')
-            parent.append(route)
-            distance += d
-            distances.append(d)
-            ttime += t
-            times.append(t)
-        
-        return parent, distance, distances, ttime, times
+    pass
 
 
 
 
-'''
-Genetic algorithm: 
-'''
+''' Genetic algorithm:  '''
 class Genetic():
 
     def __init__(self, Population_size: int, Elite_size: int, crossover_rate: float, mutation_rate: float) -> None:
@@ -971,9 +899,7 @@ class Genetic():
         self.crossover_rate: float = crossover_rate
         self.mutation_rate: float = mutation_rate
 
-    '''
-    Initial population generator
-    '''
+    ''' Initial population generator '''
     def generate_population(self, env: E_CVRP_TW, constructive: Constructive, training_ind:int = 500, start:float = 0,
                             instance:str = '', verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
 
@@ -1038,16 +964,11 @@ class Genetic():
                 loads.append(k)
                 dep_t_details.append(dep_details[0])
                 dep_q_details.append(dep_details[1])
-
-                # VERIFY
-                if len(dep_details[0]) != len(route) or len(dep_details[0]) != len(route): 
-                    print(ind)
-                    print('ERROR')
             
             # Updating incumbent
             if distance < incumbent:
                 incumbent = distance
-                best_individual: list = [individual, distance, t_time, (distances, times, dep_details), process_time() - start]
+                best_individual: list = [individual, distance, t_time, (distances, times, loads, dep_details), process_time() - start]
 
                 # if verbose:
                 #     constructive.print_constructive(env, instance, process_time() - start, ind, incumbent, len(individual))
@@ -1058,8 +979,8 @@ class Genetic():
                 distance < min_EV_incumbent and len(individual) <= len(best_min_EV_individual[0]):
 
                 min_EV_incumbent = distance
-                best_min_EV_individual: list = [individual, distance, t_time, (distances, times), process_time() - start]
-                constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
+                best_min_EV_individual: list = [individual, distance, t_time, (distances, times, loads, dep_details), process_time() - start]
+                if verbose:     constructive.print_constructive(env, instance, process_time() - start, ind, min_EV_incumbent, len(individual))
                 
             Population.append(individual)
             Distances.append(distance)

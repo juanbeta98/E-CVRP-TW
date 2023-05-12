@@ -8,7 +8,7 @@ path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHA
 # path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
-from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Reparator, Feasibility
+from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Feasibility
 
 '''
 General parameters
@@ -18,8 +18,9 @@ start: float = process_time()
 rd_seed: int = 0
 seed(rd_seed)
 
-verbose = True
-saving = True
+verbose:bool = True
+saving:bool = True
+evaluate_feasibility: bool = True
 
 '''
 Environment
@@ -41,7 +42,7 @@ constructive:Constructive = Constructive()
 '''
 Genetic algorithm
 '''
-Population_size:int = 1000
+Population_size:int = 2000
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
 
@@ -50,13 +51,7 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'evaluated insertion'
-
-'''
-Repair operators
-'''
-repair_op: Reparator = Reparator()
-
+Operator:str = 'Darwinian phi rate'
 
 '''
 Feasibility operators
@@ -72,7 +67,7 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':0.5, 'm':3, 'l':7}
+testing_times = {'s':1, 'm':4, 'l':8}
 
 
 '''
@@ -81,17 +76,15 @@ Instance testing
 # test_bed = env.sizes['s']+env.sizes['m']
 # test_bed = env.sizes['l']
 
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
+test_bed = env.generate_test_bed(['s','m'], 1)
+print(test_bed)
 
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
-# test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
-
-test_bed = [env.sizes['l'][0]]
+# test_bed = [env.sizes['l'][0]]
 
 for instance in test_bed:
     # Saving performance 
+    constructive_Results = dict()
+
     Results = dict()
     Incumbents = list()
     ploting_Times = list()
@@ -126,13 +119,14 @@ for instance in test_bed:
     Population, Distances, Times, Details, incumbent, best_individual, min_EV_incumbent, best_min_EV_individual, RCL_alpha = \
                             genetic.generate_population(env, constructive, training_ind, g_start, instance, constructive_verbose)
     
-    Results['Constructive'] = best_individual
-    Incumbents.append(incumbent)
-    ploting_Times.append(best_individual[3])
+    constructive_Results['best individual (min dist)'] = best_individual
+    constructive_Results['best individual (min EV)'] = best_min_EV_individual
 
-    min_EV_Results['Constructive'] = best_individual
-    min_EV_Incumbents.append(incumbent)
-    min_EV_ploting_Times.append(best_individual[3])
+    Incumbents.append(incumbent)
+    ploting_Times.append(best_individual[4])
+
+    min_EV_Incumbents.append(min_EV_incumbent)
+    min_EV_ploting_Times.append(best_min_EV_individual[4])
 
     # Print progress
     if verbose: 
@@ -146,8 +140,6 @@ for instance in test_bed:
         print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
     
     # Genetic process
-    incumbent = 1e9
-    min_EV_incumbent = 1e9
     generation = 0
     while process_time() - g_start < max_time:
         # print(f'Generation: {generation}')
@@ -172,18 +164,22 @@ for instance in test_bed:
             individual_i = Parents[i][randint(0,2)]
 
             ### Shake
-            #new_individual, new_distance, new_time, details = genetic.two_opt(env, feas_op, Population[individual], Details[individual])
             
 
             ### Crossover
-            new_individual, new_distance, new_time, details = \
-                                genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
+            # new_individual, new_distance, new_time, details = \
+            #                     genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
 
             ### Mutation
-            # new_individual, new_distance, new_time, details = \
-            #                     genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
+            new_individual, new_distance, new_time, details = \
+                                genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
 
             
+            # Individual feasibility check
+            if evaluate_feasibility:
+                print(new_individual)
+                feasible, _ = feas_op.individual_check(env, new_individual, complete = True)
+                assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (gen {generation}, ind {i})'
 
             # Store new individual
             New_Population.append(new_individual); New_Distances.append(new_distance); New_Times.append(new_time); New_Details.append(details)
@@ -253,5 +249,5 @@ for instance in test_bed:
 
         ### Save performance
         a_file = open(path + f'Experimentation/Operators/{Operator}/results_{instance}', "wb")
-        pickle.dump([Results, min_EV_Results], a_file)
+        pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
         a_file.close()
