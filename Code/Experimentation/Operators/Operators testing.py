@@ -67,16 +67,6 @@ test_bed = test_bed[3]
 
 
 for num, instance in enumerate(test_bed):
-
-    lab.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind, Operators, 
-            start, verbose, num, test_bed)
-
-
-
-
-
-
-
     # Saving performance 
     constructive_Results = dict()
 
