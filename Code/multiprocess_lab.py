@@ -7,13 +7,12 @@ path = f'{os.getcwd()}/'
 
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
-    lab:Experiment = Experiment(path, False, True, False)
+    lab:Experiment = Experiment(path, False, False, True)
 
-    test_bed = [env.sizes['s'][0]]#,env.sizes['m'][0],env.sizes['l'][0]]
+    test_bed = 
 
-    p = pool.Pool(processes = 4)
-    results = p.map(lab.experimentation, test_bed)
-    # print(results.get(timeout = 1))
+    p = pool.Pool(processes = 8)
+    p.map(lab.experimentation, test_bed)
     p.terminate()
 
 

@@ -657,8 +657,9 @@ class Constructive():
                             target = self.optimal_station(env, node, min(new_dict, key = new_dict.get)[1])
 
                             
-                        # Check for total time, station is reachable 
-                        if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T:
+                        # Check for total time and energy, station is reachable 
+                        if t + (env.dist[node,target]/env.v) + ((env.Q - (q - (env.dist[node,target] / env.r))) * env.g) < env.T and \
+                            q - env.dist[node,target]/env.v >= 0:
                             t, d, q, k, route = self.direct_routing(env, node, target, t, d, q, k, route)
                             dep_t.append(t); dep_q.append(q)
                             node = target
@@ -1239,7 +1240,6 @@ class Genetic():
         # Generating individual
         while len(constructive.pending_c) > 0:
             RCL_criterion = choice(['distance', 'TimeWindow'])
-            RCL_criterion = 'distance'
             t, d, q, k, route, (dep_t, dep_q) = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
             new_individual.append(route)
             new_distance += d;      new_distances.append(d)
@@ -1481,6 +1481,7 @@ class Experiment():
             Times = New_Times
             Details = New_Details
             generation += 1
+            
 
         # Print progress
         if self.verbose: 
@@ -1492,7 +1493,7 @@ class Experiment():
             print('\n')
 
         
-            # Storing overall performance
+        # Storing overall performance for min distance
         Results['best individual'] = best_individual[0]
         Results['best distance'] = best_individual[1]
         Results['gap'] = round(self.compute_gap(env, instance, incumbent)*100,2)

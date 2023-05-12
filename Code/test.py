@@ -8,24 +8,23 @@ from E_CVRP_TW import  E_CVRP_TW, Feasibility
 env = E_CVRP_TW(path)
 
 sys.path.insert(0,path+'Experimentation/')
-import plot_performance as plot
 
 
-instance = 'c101_21.txt'
+instance = 'r202C15.txt'
 env.load_data(instance)
 env.generate_parameters()
 
 feas_op = Feasibility()
 
-print(len(env.sizes['l']))
+individual = [['D', 'C79', 'C25', 'S19', 'S15', 'C11', 'S5', 'D']]
 
 visited = list(); count = 0
 
-feasible, _ = feas_op.individual_check(env, individual, complete=True)
+feasible, _ = feas_op.individual_check(env, individual, complete=False)
 print(feasible)
-for route in individual:
-    for pos in route:
-        if env.node_type[pos] == 'c' and pos not in visited:
-            visited.append(pos)
-            count += 1
+# for route in individual:
+for pos in individual[0]:
+    if env.node_type[pos] == 'c' and pos not in visited:
+        visited.append(pos)
+        count += 1
 print(f'The individual covers {count} costumers')

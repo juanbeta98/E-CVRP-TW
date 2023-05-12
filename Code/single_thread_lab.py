@@ -2,7 +2,7 @@ from E_CVRP_TW import E_CVRP_TW, Experiment
 from multiprocess import pool
 import os
 
-path = f'{os.getcwd()}/'
+path = f'{os.getcwd()}/'#Code/'
 verbose = True
 save_results = False
 
