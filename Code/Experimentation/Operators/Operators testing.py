@@ -10,9 +10,8 @@ path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHA
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Genetic, Feasibility
 
-'''
-General parameters
-'''
+
+''' General parameters '''
 start: float = process_time()
 
 rd_seed: int = 0
@@ -22,26 +21,20 @@ verbose:bool = True
 saving:bool = True
 evaluate_feasibility: bool = True
 
-'''
-Environment
-'''
+
+''' Environment '''
 env: E_CVRP_TW = E_CVRP_TW(path)
 
 
-'''
-Constructive heuristic
-'''
+''' Constructive heuristic '''
 training_ind_prop = 0.5
 RCL_criterion:str = 'Exo-Hybrid'
-
 constructive_verbose = True
 
 constructive:Constructive = Constructive()
 
 
-'''
-Genetic algorithm
-'''
+''' Genetic algorithm '''
 Population_size:int = 2000
 training_ind:int = int(round(Population_size * training_ind_prop,0))
 Elite_size:int = int(Population_size * 0.5)
@@ -51,11 +44,10 @@ mutation_rate:float = 0.5
 
 genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-Operator:str = 'Darwinian phi rate'
+Operators:list[str] = ['Darwinian phi rate']
 
-'''
-Feasibility operators
-'''
+
+''' Feasibility operators '''
 feas_op: Feasibility = Feasibility()
 
 '''
@@ -65,19 +57,26 @@ Variable convention:
 - best_individual: list with (individual, distance, time, details)
 '''
 lab: Experiment = Experiment()
-colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
 testing_times = {'s':2, 'm':5, 'l':8}
 
 
-'''
-Instance testing
-'''
-test_bed = [env.sizes['s'][0], env.sizes['m'][0], env.sizes['l'][0]]
-# test_bed = env.generate_test_bed(['s','m'], 1)
-# test_bed = [env.sizes['l'][0]]
+''' Instance testing '''
+test_bed = env.generate_test_bed(['l'], 4)
+test_bed = test_bed[3]
+
 
 for num, instance in enumerate(test_bed):
+
+    lab.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind, Operators, 
+            start, verbose, num, test_bed)
+
+
+
+
+
+
+
     # Saving performance 
     constructive_Results = dict()
 
@@ -105,7 +104,7 @@ for num, instance in enumerate(test_bed):
     # Printing progress
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'             Instance {instance} / {Operator} / {round(num/len(test_bed),2)*100}%')
+        print(f'             Instance {instance} / {Operator} / {round(num/len(test_bed),4)*100}%')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
