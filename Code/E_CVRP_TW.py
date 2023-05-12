@@ -1228,7 +1228,7 @@ class Genetic():
                 new_dep_t_details.append(dep_t_details[ii]);    new_dep_q_details.append(dep_q_details[ii])
 
                 for node in new_individual[-1]:
-                    if node != 'D' and env.node_type == 'c':
+                    if node != 'D' and env.node_type[node] == 'c':
                         pending_c.remove(node)
 
             i += 1

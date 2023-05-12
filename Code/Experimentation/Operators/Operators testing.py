@@ -67,21 +67,17 @@ Variable convention:
 lab: Experiment = Experiment()
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
-testing_times = {'s':1, 'm':4, 'l':8}
+testing_times = {'s':1, 'm':3, 'l':5}
 
 
 '''
 Instance testing
 '''
-# test_bed = env.sizes['s']+env.sizes['m']
-# test_bed = env.sizes['l']
-
-test_bed = env.generate_test_bed(['s','m'], 1)
-print(test_bed)
-
+test_bed = [env.sizes['s'][0], env.sizes['m'][0], env.sizes['l'][0]]
+# test_bed = env.generate_test_bed(['s','m'], 1)
 # test_bed = [env.sizes['l'][0]]
 
-for instance in test_bed:
+for num, instance in enumerate(test_bed):
     # Saving performance 
     constructive_Results = dict()
 
@@ -109,7 +105,7 @@ for instance in test_bed:
     # Printing progress
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'                 Instance {instance} / {Operator} ')
+        print(f'             Instance {instance} / {Operator} / {round(num/len(test_bed),2)*100}%')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
@@ -159,8 +155,6 @@ for instance in test_bed:
         ### Evolution
         New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
         for i in range(genetic.Population_size):
-            if generation == 1 and i == 12: 
-                pass
             individual_i = Parents[i][randint(0,2)]
 
             ### Shake
@@ -177,9 +171,8 @@ for instance in test_bed:
             
             # Individual feasibility check
             if evaluate_feasibility:
-                print(new_individual)
                 feasible, _ = feas_op.individual_check(env, new_individual, complete = True)
-                assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (gen {generation}, ind {i})'
+                assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (gen {generation}, ind {i}) / {new_individual}'
 
             # Store new individual
             New_Population.append(new_individual); New_Distances.append(new_distance); New_Times.append(new_time); New_Details.append(details)
