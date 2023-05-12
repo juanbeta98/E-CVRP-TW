@@ -2,7 +2,7 @@ from numpy.random import seed, choice
 from time import process_time
 import sys
 import pickle
-import matplotlib.pyplot as plt
+import os
 
 # path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
@@ -34,7 +34,7 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'distance'
+RCL_criterion: str = 'Intra-Hybrid'
 
 '''
 EXPERIMENTATION
@@ -49,17 +49,28 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
+# small-medium and large testbed
 # test_bed = env.sizes['s']+env.sizes['m']
 # test_bed = env.sizes['l']
 
+# two large instances batches
 # test_bed = env.sizes['l'][:int(len(env.sizes['l'])/2)]
-# test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
+test_bed = env.sizes['l'][int(len(env.sizes['l'])/2):]
 
-# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]
+# three large instances batches
+# test_bed = env.sizes['l'][:int(len(env.sizes['l'])/3)]S
 # test_bed = env.sizes['l'][int(len(env.sizes['l'])/3):2*int(len(env.sizes['l'])/3)]
-test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
+# test_bed = env.sizes['l'][2*int(len(env.sizes['l'])/3):]
+
+# missing instances batches
+# completed_instances = os.listdir(path + 'Experimentation/Constructive/RCL criterion/distance/')
+# for i,file in enumerate(completed_instances):   completed_instances[i] = completed_instances[i][8:]
+# completed_instances.sort()
+# test_bed = env.instances[::-1]
+
 
 for instance in test_bed:
+    # if instance in completed_instances: continue
     # Saving performance
     Results = dict()
     min_EV_Results = dict()
