@@ -58,7 +58,10 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 Instance testing
 '''
 test_bed = env.generate_missing_instances(f'Constructive/RCL criterion/{RCL_criterion}/')
-test_bed = env.instances
+
+# test_bed = test_bed[:int(len(test_bed)/3)]
+# test_bed = test_bed[int(len(test_bed)/3):2*int(len(test_bed)/3)]
+test_bed = test_bed[2*int(len(test_bed)/3):]
 
 for instance in test_bed:
     # Saving performance
@@ -101,14 +104,13 @@ for instance in test_bed:
 
     
     while process_time() - start < max_time:
-
         # Storing individual
         ind += 1
-        individual: list = []
+        individual: list = list()
         distance: float = 0
-        distances: list = []
+        distances: list = list()
         t_time: float = 0
-        times: list = []
+        times: list = list()
 
         # Choosing alpha
         if process_time() - start < max_time * training_prop:
