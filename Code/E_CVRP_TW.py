@@ -154,7 +154,19 @@ class E_CVRP_TW():
     - Sets of size 'size' of a given inst_size
     - Sets of size 'size' of a given list of instances
     '''
-    def generate_test_bed(self, inst_set:str or list, size:int):
+    def generate_test_batch(self, computer = 'mac'):
+        if computer == 'mac':
+            return self.instances[:3.5*int(len(self.instances)/10)]
+        else: 
+            return self.instances[3.5*int(len(self.instances)/10):]
+    
+    
+
+    ''' Generate test bed of instances 
+    - Sets of size 'size' of a given inst_size
+    - Sets of size 'size' of a given list of instances
+    '''
+    def generate_test_bed_per_size(self, inst_set:str or list, size:int):
         test_bed = list()
         if type(inst_set) == str:
             inst_set = self.sizes[inst_set]
@@ -1126,7 +1138,7 @@ class Genetic():
                     if env.C[candidate]['d'] + loads[i] > env.K:    continue
 
                     route = new_individual[real_index]
-                    for pos in range(1,len(route[1:])):
+                    for pos in range(0,len(route[1:])):
                         node = route[pos]
 
                         # Preliminary feasibility check
@@ -1134,10 +1146,11 @@ class Genetic():
                         if env.C[candidate]['DueDate'] < new_dep_t_details[real_index][pos] + env.dist[node,candidate]/env.v:   continue    # TimeWindow nonfeasible
 
                         # Feasibility
-                        feasible, dep_q, dep_t = self.check_insertion_feasibility(env, new_individual[real_index], pos, candidate, new_dep_t_details[real_index], new_dep_q_details[real_index])
+                        feasible, dep_t, dep_q = self.check_insertion_feasibility(env, new_individual[real_index], pos, candidate, new_dep_t_details[real_index], new_dep_q_details[real_index])
                         
                         if feasible:
                             route.insert(pos+1,candidate)
+                            new_individual[real_index] = route
 
                             d = sum(env.dist[route[ii],route[ii+1]] for ii in range(len(route)-1))
                             
@@ -1160,7 +1173,7 @@ class Genetic():
         del new_loads[worst_route_index]
         del new_dep_t_details[worst_route_index]
         del new_dep_q_details[worst_route_index]
-
+        # print('New individual generated')
         return new_individual, sum(new_distances), sum(new_times), (new_distances, new_times, new_loads, (new_dep_t_details, new_dep_q_details))
 
 
@@ -1319,7 +1332,7 @@ class Experiment():
         mutation_rate:float = 0.5
 
         genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
-        Operators:list[str] = ['Darwinian phi rate']
+        Operators:list[str] = ['evaluated insertion']
 
 
         ''' Feasibility operators '''
@@ -1453,8 +1466,8 @@ class Experiment():
                     incumbent = new_distance
                     best_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
 
-                    # if verbose:
-                    #     genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
+                    if self.verbose:
+                        genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
 
                     ### Store progress
                     Incumbents.append(incumbent)
@@ -1514,7 +1527,7 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Operators/{oper}/exponential/results_{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Operators/{oper}/results_{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         

@@ -10,18 +10,19 @@ env = E_CVRP_TW(path)
 sys.path.insert(0,path+'Experimentation/')
 
 
-instance = 'r202C15.txt'
+instance = 'c101C10.txt'
 env.load_data(instance)
 env.generate_parameters()
 
 feas_op = Feasibility()
 
-individual = [['D', 'C79', 'C25', 'S19', 'S15', 'C11', 'S5', 'D']]
+individual = [['D', 'C98', 'C95', 'S3', 'C78', 'S20', 'D']]
 
 visited = list(); count = 0
 
 feasible, _ = feas_op.individual_check(env, individual, complete=False)
 print(feasible)
+print(_[2][3][0])
 # for route in individual:
 for pos in individual[0]:
     if env.node_type[pos] == 'c' and pos not in visited:
