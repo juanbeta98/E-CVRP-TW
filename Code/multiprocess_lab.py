@@ -18,5 +18,3 @@ if __name__ == '__main__':
 
     p.map(lab.experimentation, test_bed)
     p.terminate()
-
-
