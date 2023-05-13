@@ -9,9 +9,9 @@ if __name__ == '__main__':
     env = E_CVRP_TW(path)
     lab:Experiment = Experiment(path, False, False, True)
 
-    test_bed = 
+    test_bed = env.instances[:int(len(env.instances)/2)]
 
-    p = pool.Pool(processes = 8)
+    p = pool.Pool(processes = 6)
     p.map(lab.experimentation, test_bed)
     p.terminate()
 
