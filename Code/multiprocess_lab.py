@@ -10,7 +10,8 @@ if __name__ == '__main__':
     env = E_CVRP_TW(path)
     lab:Experiment = Experiment(path, False, True)
 
-    test_bed = env.generate_test_batch(computer)
+    # test_bed = env.generate_test_batch(computer)
+    test_bed = env.instnces
 
     if computer == 'mac':   p = pool.Pool(processes = 8)
     else: p = pool.Pool()

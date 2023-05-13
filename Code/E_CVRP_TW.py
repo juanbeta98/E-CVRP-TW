@@ -1527,7 +1527,7 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Operators/{oper}/results_{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Operators/{oper}/visited costumers/results_{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         
