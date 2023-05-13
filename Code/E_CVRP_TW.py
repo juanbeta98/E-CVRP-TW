@@ -1469,9 +1469,6 @@ class Experiment():
                     if self.verbose:
                         genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
 
-                    ### Store progress
-                    Incumbents.append(incumbent)
-                    ploting_Times.append(process_time() - g_start)
 
                 # Updating best found solution with least number of vehicles
                 if len(new_individual) < len(best_min_EV_individual[0]) or \
@@ -1483,9 +1480,12 @@ class Experiment():
                     if self.verbose:
                         genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
 
-                    ### Store progress
-                    min_EV_Incumbents.append(incumbent)
-                    min_EV_ploting_Times.append(process_time() - g_start)
+                ### Store progress
+                Incumbents.append(incumbent)
+                ploting_Times.append(process_time() - g_start)
+
+                min_EV_Incumbents.append(min_EV_incumbent)
+                min_EV_ploting_Times.append(process_time() - g_start)
 
             # Update
             Population = New_Population

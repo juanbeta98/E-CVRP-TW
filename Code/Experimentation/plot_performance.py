@@ -54,3 +54,26 @@ def retrieve_op_performance(instance, path):
     data = pickle.load(file)
     file.close()
     return data
+
+def plot_op_performance(data, instance, testing = 'Operators', objective = 'min_EV'):
+    colors = ['red', 'orange', 'brown', 'green', 'purple' , 'blue' ,'black', 'pink', ]
+    if objective == 'min_EV':   list_idx = 2
+    else:   list_idx = 1
+
+    i = 0
+    legend_elements = []
+    for key, value in data.items():
+        for key1, value1 in value.items():
+            plt.plot(value1[list_idx]['inc times'], value1[list_idx]['incumbents'], color = colors[i])
+            legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=f'{key}-{key1}', lw=0,
+                            markerfacecolor=colors[i], markersize=8))
+            i+=1
+
+    plt.title(f"{testing}'s performance {instance}")
+    plt.xlabel('Time (s)')
+    plt.ylabel('Incumbent')
+
+    ax = plt.gca()
+    ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
+    
+    plt.show()
