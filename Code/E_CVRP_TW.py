@@ -1285,10 +1285,9 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, verbose:bool = True, return_results:bool = False, save_results:bool = True):
+    def __init__(self, path:str, verbose:bool = True, save_results:bool = True):
         self.path = path
         self.verbose = verbose
-        self.return_results = return_results
         self.save_results = save_results
     
 
@@ -1515,12 +1514,12 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Operators/{oper}/results_{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Operators/{oper}/exponential/results_{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         
-        if self.return_results:
-            return instance, [constructive_Results, Results, min_EV_Results]
+        if not self.verbose:
+            print(f'✅ Instance {instance}')
     
 
     def compute_gap(self, env: E_CVRP_TW, instance: str, incumbent: float) -> float:

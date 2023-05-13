@@ -8,7 +8,7 @@ save_results = False
 
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
-    lab:Experiment = Experiment(path, verbose, False, save_results)
+    lab:Experiment = Experiment(path, verbose, save_results)
 
     # test_bed = [env.sizes['s'][0],env.sizes['m'][0],env.sizes['l'][0]]
     test_bed = ['r202C15.txt']
