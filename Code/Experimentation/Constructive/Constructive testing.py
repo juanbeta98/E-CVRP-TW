@@ -19,7 +19,7 @@ rd_seed: int = 0
 seed(rd_seed)
 
 verbose:bool = True
-save_performance:bool = False
+save_performance:bool = True
 evaluate_feasibility:bool = True
 
 '''
@@ -35,9 +35,8 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'Exo-Hybrid'
-# RCL_criterions:list = ['distance','TimeWindow','Intra-Hybrid','Exo-Hybrid']
-
+RCL_criterions:list = ['distance','TimeWindow','Intra-Hybrid','Exo-Hybrid']
+RCL_criterion: str = RCL_criterions[0]
 
 '''
 Feasibility operators

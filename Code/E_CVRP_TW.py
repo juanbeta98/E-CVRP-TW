@@ -1214,7 +1214,7 @@ class Genetic():
     ''' MUTATION: Same individual, all routes '''
     # Darwinian phi rate: A proportion of best routes of the individual, according to the phi rate (total distance/total costumers)
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
-    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float):
+    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float, ):
         eff_rates = list()
         distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
