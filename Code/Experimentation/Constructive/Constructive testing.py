@@ -12,7 +12,7 @@ from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
 
 '''
 General parameters
-'''s
+'''
 start: float = process_time()
 
 rd_seed: int = 0
