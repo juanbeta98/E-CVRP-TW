@@ -12,7 +12,7 @@ from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
 
 '''
 General parameters
-'''
+'''s
 start: float = process_time()
 
 rd_seed: int = 0
@@ -36,6 +36,7 @@ training_prop = 0.5
 constructive: Constructive = Constructive()
 
 RCL_criterion: str = 'distance'
+RCL_criterions:list = ['distance','TimeWindow','Intra-Hybrid','Exo-Hybrid']
 
 
 '''
@@ -57,13 +58,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
-test_bed = env.generate_missing_instances(f'Constructive/RCL criterion/{RCL_criterion}/')
-
-# test_bed = test_bed[:int(len(test_bed)/3)]
-# test_bed = test_bed[int(len(test_bed)/3):2*int(len(test_bed)/3)]
-test_bed = test_bed[2*int(len(test_bed)/3):]
-
-for instance in test_bed:
+for instance in env.instances:
     # Saving performance
     Results = dict()
     min_EV_Results = dict()
