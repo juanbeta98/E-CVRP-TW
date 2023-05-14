@@ -4,8 +4,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-# path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+# path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
@@ -56,7 +56,12 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 Instance testing
 '''
 start: float = process_time()
-for instance in env.instances:
+
+test_batch = env.generate_missing_instances(f'Constructive/RCL criterion/{RCL_criterion}/')
+
+for num, instance in enumerate(test_batch):
+    progress_percentage = round(round((num+1)/len(test_batch),4)*100,2)
+
     # Saving performance
     Results = dict()
     min_EV_Results = dict()
@@ -87,7 +92,7 @@ for instance in env.instances:
     # Printing results
     if verbose: 
         print(f'\n\n########################################################################')
-        print(f'              Instance {instance} / {RCL_criterion} ')
+        print(f'        Instance {instance} / {RCL_criterion} / {progress_percentage}%')
         print(f'########################################################################')
         print(f'- size: {len(list(env.C.keys()))}')
         print(f'- bkFO: {env.bkFO[instance]}')
@@ -180,7 +185,7 @@ for instance in env.instances:
 
     ### Print performance
     print('\n')
-    print(f'Evolution finished finished at {round(process_time() - start,2)}s')
+    print(f'Constructive finished finished at {round(process_time() - start,2)}s')
     print('\tFO \tgap \tEV \ttime to find')
     print(f'dist\t{round(incumbent,1)} \t{round(lab.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
     print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(lab.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')

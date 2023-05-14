@@ -1,4 +1,5 @@
 from E_CVRP_TW import E_CVRP_TW, Experiment
+from numpy.random import seed; seed(0)
 from multiprocess import pool
 import os
 import itertools
@@ -11,14 +12,15 @@ if path[7:15] == 'juanbeta':
     else: computer = 'pc'
 else: computer = 'pc'
 
-Operators = ['Darwinian phi rate']
+Operators = ['evaluated insertion']
 
 Configurations = {'Darwinian phi rate':{'penalization':['regular','cuadratic','cubic'],
                                         'conservation proportion':[0.2, 0.4, 0.7],
                                         'length restriction':[True, False],
                                         },
                   
-                  'evaluated insertion':{'criterion':['Hybrid', 'phi rate', 'visited costumers']}
+                  'evaluated insertion':{'penalization':['regular','cuadratic','cubic'],
+                                         'criterion':['Hybrid', 'phi rate', 'visited costumers']}
                 }
 
 # D_keys = list(Configurations['Darwinian phi rate'].keys())
@@ -30,10 +32,13 @@ Configurations = {'Darwinian phi rate':{'penalization':['regular','cuadratic','c
 # Grid = [{'Darwinian phi rate': {D_keys[i]: D_combination[i] for i in range(len(D_keys))},'evaluated insertion': {e_keys[i]: e_combination[i] for i in range(len(e_keys))} } for D_combination in D_combinations for e_combination in e_combinations]
 
 
-keys = list(Configurations['Darwinian phi rate'].keys())
-combinations = list(itertools.product(*[Configurations['Darwinian phi rate'][key] for key in keys]))
-Grid = [{'Darwinian phi rate': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
+# keys = list(Configurations['Darwinian phi rate'].keys())
+# combinations = list(itertools.product(*[Configurations['Darwinian phi rate'][key] for key in keys]))
+# Grid = [{'Darwinian phi rate': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
 
+keys = list(Configurations['evaluated insertion'].keys())
+combinations = list(itertools.product(*[Configurations['evaluated insertion'][key] for key in keys]))
+Grid = [{'evaluated insertion': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
 
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
@@ -45,9 +50,9 @@ if __name__ == '__main__':
 
         progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
 
-        print(f'-------------- {Operators[0]} / {testing_config} / {progress_percentage}% --------------')
+        print(f'\n-------- {Operators[0]} / {testing_config} / {progress_percentage}% --------')
 
-        lab:Experiment = Experiment(path, Operators, Configs, False, True)
+        lab:Experiment = Experiment(path, Operators, Configs, False, False)
 
         if computer == 'mac':   p = pool.Pool(processes = 8)
         else: p = pool.Pool()

@@ -5,23 +5,16 @@ E-CVRP-TW
 Authors:
 Juan Betancourt
 jm.betancourt@uniandes.edu.co
-
-Daniel Giraldo
-ds.giraldoh@uniandes.edu.co
 '''
-#octoface
 from copy import deepcopy
 from time import process_time
 import matplotlib.pyplot as plt
-from numpy.random import random, choice, seed, randint, binomial
+from numpy.random import choice, seed, randint
 import networkx as nx
 import os
 import pickle
 
-'''
-CE_VRP_TW Class: Parameters and information
-- render method 
-'''
+''' E_CVRP_TW Class: Parameters and information '''
 class E_CVRP_TW(): 
 
     def __init__(self, path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/'):
@@ -238,17 +231,13 @@ class E_CVRP_TW():
                     self.dist[s1, s] = self.dist[s, s1]
     
     
-    '''
-    Compute euclidean distance between two nodes
-    '''
+    ''' Compute euclidean distance between two nodes '''
     def euclidean_distance(self,x: float, y: float):
         distance = ((x['x'] - y['x'])**2 + (x['y'] - y['y'])**2)**(1/2)
         return distance
 
 
-    '''
-    Generates the closest station to each costumer
-    '''
+    ''' Generates the closest station to each costumer '''
     def closest_stations(self):
         self.closest = {}
         for c in self.C:
@@ -256,9 +245,7 @@ class E_CVRP_TW():
             self.closest[c] = min(new_dic, key = new_dic.get)
     
 
-    '''
-    Plots nodes of the VRP
-    '''
+    ''' Plots nodes of the VRP '''
     def render(self, routes: list, save:bool = False):
         G = nx.MultiDiGraph()
 
@@ -378,15 +365,12 @@ class Constructive():
     def __init__(self):
         pass
     
-    '''
-    Reset the environment to restart experimentation (another parent)
-    '''
+    ''' Reset the environment to restart experimentation (another parent) '''
     def reset(self, env: E_CVRP_TW):
         self.pending_c = deepcopy(env.Costumers)
 
 
-    '''
-    BUILD RLC DEPENDING ON:
+    ''' BUILD RLC DEPENDING ON:
     - DISTANCES
     - OPENING TIME WINDOW
     '''
@@ -433,8 +417,7 @@ class Constructive():
             return False, energy_feasible, feasible_energy_candidates
 
 
-    '''
-    Evalutates feasiblity for a node to enter the RCL
+    ''' Evalutates feasiblity for a node to enter the RCL
     Evaluates:
         1. Capacity feasibility
         2. Time windows
@@ -459,9 +442,7 @@ class Constructive():
             return False, energy_feasible, feasible_energy_candidates
 
 
-    '''
-    Find closest station to both the current costumer and the depot
-    '''
+    ''' Find closest station to both the current costumer and the depot '''
     def optimal_station(self, env: E_CVRP_TW, node: str, target: str = 'D'):
         if node != 'D' and target != 'D':
             distances = {s: env.dist[node,s] + env.dist[s,target] for s in env.Stations if s != node}
@@ -473,8 +454,7 @@ class Constructive():
         return min_station
 
 
-    '''
-    Routes vehicle to depot from current node
+    ''' Routes vehicle to depot from current node
     returns:
     -   route in list (excluding current node)
     '''
@@ -571,9 +551,7 @@ class Constructive():
             return t, d , q, k, route + finish_route, dep_t, dep_q
 
 
-    '''
-    Routes between costumers to costumers or stations
-    '''
+    ''' Routes between costumers to costumers or stations '''
     def direct_routing(self, env:E_CVRP_TW, node:str, target:str, t:float, d:float, q:float, k:int, route:list):
         # Time update
         tv = env.dist[node, target] / env.v
@@ -612,8 +590,7 @@ class Constructive():
         return t, d, q, k, route
 
 
-    '''
-    RCL based constructive
+    '''  RCL based constructive
     parametrs:
     -   RCL_alpha
 
@@ -746,8 +723,7 @@ class Feasibility():
         pass
     
 
-    '''
-    Check feasibility for al whole population
+    ''' Check feasibility for al whole population
     '''
     def population_check(self, env: E_CVRP_TW, Population: list):
         # Intial population feasibility check
@@ -758,10 +734,9 @@ class Feasibility():
         return datas
 
 
+    ''' Checks the feasibility of an individual (all the routes)
     '''
-    Checks the feasibility of an individual (all the routes)
-    '''
-    def individual_check(self, env: E_CVRP_TW, individual: list, complete = False):
+    def individual_check(self, env: E_CVRP_TW, individual: list, instance:str, complete = False):
         feasible = True
         distance = 0
         distances = list()
@@ -809,9 +784,9 @@ class Feasibility():
                         count += 1
 
                 if not feasible:
-                    if not _[0]: print(f'Not time or energy feasiblefeasible')
-                    if not _[1]: print(f'Not total load feasible feasible')
-                    if not _[2]: print(f'Not time window feasible')
+                    if not _[0]: print(f'❌ Instance {instance} - Not time or energy feasiblefeasible')
+                    if not _[1]: print(f'❌ Instance {instance} - Not total load feasible feasible')
+                    if not _[2]: print(f'❌ Instance {instance} - Not time window feasible')
                     break
             
             distance += d
@@ -1099,7 +1074,7 @@ class Genetic():
 
     ''' CROSSOVER: Same individual, different routes '''
     # evaluated insertion: A given costumer is iteratively placed on an existing route. 
-    def evaluated_insertion(self, env:E_CVRP_TW, individual:list, Details:list):
+    def evaluated_insertion(self, env:E_CVRP_TW, individual:list, Details:list, config:dict):
         # Select route that visits less costumers and disolve it
         visited_c:list = list()
         n_visited_c:list = list()
@@ -1108,14 +1083,19 @@ class Genetic():
         distances, times, loads, (dep_t_details, dep_q_details) = Details
 
         for idx, route in enumerate(individual):
-            eff_rates.append(distances[idx]/len(route))
+            if config['penalization'] == 'regular': penalization = 1
+            elif config['penalization'] == 'cuadratic': penalization = 2
+            elif config['penalization'] == 'cubic': penalization = 3
+            eff_rates.append(distances[idx]/(len(route)**penalization))
+
             visited_c.append([i for i in route if i[0]=='C'])
             n_visited_c.append(sum([1 for i in route if i[0]=='C']))
 
         rank_index:list = self.rank_indexes(eff_rates)
 
-        worst_route_index = n_visited_c.index(min(n_visited_c))
-        # worst_route_index = rank_index.index(max(rank_index))
+        if config['criterion'] == 'visited costumers:':     worst_route_index = n_visited_c.index(min(n_visited_c))
+        elif config['criterion'] == 'phi rate':             worst_route_index = rank_index.index(max(rank_index))
+        elif config['criterion'] == 'Hybrid':               worst_route_index = choice([rank_index.index(max(rank_index)),n_visited_c.index(min(n_visited_c))])
         
         pending_c = visited_c[worst_route_index]
 
@@ -1135,7 +1115,7 @@ class Genetic():
 
                 if real_index != worst_route_index:
                     # Load feasibility check
-                    if env.C[candidate]['d'] + loads[i] > env.K:    continue
+                    if env.C[candidate]['d'] + loads[real_index] > env.K:    continue
 
                     route = new_individual[real_index]
                     for pos in range(0,len(route[1:])):
@@ -1214,7 +1194,7 @@ class Genetic():
     ''' MUTATION: Same individual, all routes '''
     # Darwinian phi rate: A proportion of best routes of the individual, according to the phi rate (total distance/total costumers)
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
-    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float, config:str):
+    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float, config:dict):
         eff_rates = list()
         distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
@@ -1465,7 +1445,7 @@ class Experiment():
                 
                 # Individual feasibility check
                 if evaluate_feasibility:
-                    feasible, _ = feas_op.individual_check(env, new_individual, complete = True)
+                    feasible, _ = feas_op.individual_check(env, new_individual, instance, complete = True)
                     assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (gen {generation}, ind {i}) / {new_individual}'
 
                 # Store new individual
@@ -1542,7 +1522,7 @@ class Experiment():
             a_file.close()
         
         if not self.verbose:
-            print(f'✅ Instance {instance}')
+            print(f'✅ Instance {instance} - {round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)}%')
     
 
     def compute_gap(self, env: E_CVRP_TW, instance: str, incumbent: float) -> float:
