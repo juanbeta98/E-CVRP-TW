@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
         progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
 
-        print(f'----------------------------- {Operators[0]} / {testing_config} / {progress_percentage}% -----------------------------')
+        print(f'-------------- {Operators[0]} / {testing_config} / {progress_percentage}% --------------')
 
         lab:Experiment = Experiment(path, Operators, Configs, False, True)
 
