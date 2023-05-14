@@ -13,8 +13,6 @@ from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
 '''
 General parameters
 '''
-start: float = process_time()
-
 rd_seed: int = 0
 seed(rd_seed)
 
@@ -57,6 +55,7 @@ colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 '''
 Instance testing
 '''
+start: float = process_time()
 for instance in env.instances:
     # Saving performance
     Results = dict()

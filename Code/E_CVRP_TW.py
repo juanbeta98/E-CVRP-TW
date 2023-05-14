@@ -156,9 +156,9 @@ class E_CVRP_TW():
     '''
     def generate_test_batch(self, computer = 'mac'):
         if computer == 'mac':
-            return self.instances[:3.5*int(len(self.instances)/10)]
+            return self.instances[:int(3.5*len(self.instances)/10)]
         else: 
-            return self.instances[3.5*int(len(self.instances)/10):]
+            return self.instances[int(3.5*len(self.instances)/10):]
     
     
 
@@ -1214,11 +1214,14 @@ class Genetic():
     ''' MUTATION: Same individual, all routes '''
     # Darwinian phi rate: A proportion of best routes of the individual, according to the phi rate (total distance/total costumers)
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
-    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float, ):
+    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float, config:str):
         eff_rates = list()
         distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
-            eff_rates.append(distances[idx]/(len(route)**2))
+            if config['penalization'] == 'regular': penalization = 1
+            elif config['penalization'] == 'cuadratic': penalization = 2
+            elif config['penalization'] == 'cubic': penalization = 3
+            eff_rates.append(distances[idx]/(len(route)**penalization))
         
         rank_index = self.rank_indexes(eff_rates)
 
@@ -1231,20 +1234,23 @@ class Genetic():
         
         pending_c = deepcopy(env.Costumers)
 
-        i = 0
-        prop:float = 0.2
+        i = 0; cont = 0
+        prop:float = config['conservation proportion']
         while i/len(individual) < prop:
             ii = rank_index.index(i)
-            if len(individual[ii]) >= 0.7*max([len(route) for route in individual]):
-                new_individual.append(individual[ii])
-                new_distance += distances[ii];      new_distances.append(distances[ii])
-                new_time += times[ii];              new_times.append(times[ii])
-                new_loads.append(loads[ii])
-                new_dep_t_details.append(dep_t_details[ii]);    new_dep_q_details.append(dep_q_details[ii])
+            cont += 1
+            if cont == len(individual):break
+            if config['length restriction'] and not len(individual[ii]) >= 0.7*max([len(route) for route in individual]):
+                continue
+            new_individual.append(individual[ii])
+            new_distance += distances[ii];      new_distances.append(distances[ii])
+            new_time += times[ii];              new_times.append(times[ii])
+            new_loads.append(loads[ii])
+            new_dep_t_details.append(dep_t_details[ii]);    new_dep_q_details.append(dep_q_details[ii])
 
-                for node in new_individual[-1]:
-                    if node != 'D' and env.node_type[node] == 'c':
-                        pending_c.remove(node)
+            for node in new_individual[-1]:
+                if node != 'D' and env.node_type[node] == 'c':
+                    pending_c.remove(node)
 
             i += 1
 
@@ -1298,10 +1304,12 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, Operators:list[str],  verbose:bool = True, save_results:bool = True):
+    def __init__(self, path:str, Operators:list[str], Configs:dict[str], verbose:bool = True, save_results:bool = True):
         self.path = path
 
         self.Operators = Operators
+        self.configuration = Configs
+
         self.verbose = verbose
         self.save_results = save_results
 
@@ -1371,7 +1379,10 @@ class Experiment():
         min_EV_Incumbents = list()
         min_EV_ploting_Times = list()
         
-
+        testing_config = str()
+        for vals in list(self.configuration[self.Operators[0]].values()): testing_config += str(vals)+'_'
+        testing_config = testing_config[:-1]
+        
         # Setting runnign times depending on instance size
         max_time:int = 60
         if instance in env.sizes['s']:  max_time *= testing_times['s']
@@ -1379,19 +1390,14 @@ class Experiment():
         else:   max_time *= testing_times['l']
     
         # Constructive
-        g_start = process_time()
         env.load_data(instance)
         env.generate_parameters()
         constructive.reset(env)
 
-        oper = str()
-        for operator in self.Operators: oper += f'-{operator}'
-        oper = oper[1:]
-
         # Printing progress
         if self.verbose: 
             print(f'\n\n########################################################################')
-            print(f'             Instance {instance} / {oper} / {progress_percentage}%')
+            print(f'          Instance {instance} / {testing_config} / {progress_percentage}%')
             print(f'########################################################################')
             print(f'- size: {len(list(env.C.keys()))}')
             print(f'- bkFO: {env.bkFO[instance]}')
@@ -1399,7 +1405,7 @@ class Experiment():
 
         # Population generation
         Population, Distances, Times, Details, incumbent, best_individual, min_EV_incumbent, best_min_EV_individual, RCL_alpha = \
-                                genetic.generate_population(env, constructive, training_ind, g_start, instance, self.verbose)
+                                genetic.generate_population(env, constructive, training_ind, start, instance, self.verbose)
         
         constructive_Results['best individual (min dist)'] = best_individual
         constructive_Results['best individual (min EV)'] = best_min_EV_individual
@@ -1413,7 +1419,7 @@ class Experiment():
         # Print progress
         if self.verbose: 
             print('\n')
-            print(f'Population generation finished at {round(process_time() - g_start,2)}s')
+            print(f'Population generation finished at {round(process_time() - start,2)}s')
             print('\tFO \tgap \tEV \ttime to find')
             print(f'dist\t{round(incumbent,1)} \t{round(self.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
             print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(self.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
@@ -1423,7 +1429,7 @@ class Experiment():
         
         # Genetic process
         generation = 0
-        while process_time() - g_start < max_time:
+        while process_time() - start < max_time:
             # print(f'Generation: {generation}')
             ### Elitism
             Elite = genetic.elite_class(Distances)
@@ -1447,13 +1453,14 @@ class Experiment():
                 
 
                 ### Crossover
-                if 'evaluated insertion' in self.Operators: new_individual, new_distance, new_time, details = \
-                                    genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
+                if 'evaluated insertion' in self.Operators: 
+                    new_individual, new_distance, new_time, details = \
+                                genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i], self.configuration['evaluated insertion'])
 
                 ### Mutation
                 if 'Darwinian phi rate' in self.Operators:
                     new_individual, new_distance, new_time, details = \
-                                    genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
+                                genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha, self.configuration['Darwinian phi rate'])
 
                 
                 # Individual feasibility check
@@ -1469,8 +1476,8 @@ class Experiment():
                     incumbent = new_distance
                     best_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
 
-                    if self.verbose:
-                        genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
+                    # if self.verbose:
+                    #     genetic.print_evolution(env, instance, process_time() - start, generation, incumbent, len(new_individual))
 
 
                 # Updating best found solution with least number of vehicles
@@ -1478,17 +1485,17 @@ class Experiment():
                     new_distance < min_EV_incumbent and len(new_individual) <= len(best_min_EV_individual[0]):
 
                     min_EV_incumbent = new_distance
-                    best_min_EV_individual: list = [new_individual, new_distance, new_time, details, process_time() - g_start]
+                    best_min_EV_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
 
                     if self.verbose:
-                        genetic.print_evolution(env, instance, process_time() - g_start, generation, incumbent, len(new_individual))
+                        genetic.print_evolution(env, instance, process_time() - start, generation, min_EV_incumbent, len(new_individual))
 
                 ### Store progress
                 Incumbents.append(incumbent)
-                ploting_Times.append(process_time() - g_start)
+                ploting_Times.append(process_time() - start)
 
                 min_EV_Incumbents.append(min_EV_incumbent)
-                min_EV_ploting_Times.append(process_time() - g_start)
+                min_EV_ploting_Times.append(process_time() - start)
 
             # Update
             Population = New_Population
@@ -1501,7 +1508,7 @@ class Experiment():
         # Print progress
         if self.verbose: 
             print('\n')
-            print(f'Evolution finished finished at {round(process_time() - g_start,2)}s')
+            print(f'Evolution finished finished at {round(process_time() - start,2)}s')
             print('\tFO \tgap \tEV \ttime to find')
             print(f'dist\t{round(incumbent,1)} \t{round(self.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
             print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(self.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
@@ -1530,7 +1537,7 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Operators/{oper}/exponential/results_{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Operators/{self.Operators[0]}/results-{testing_config}-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         
