@@ -1218,7 +1218,7 @@ class Genetic():
         eff_rates = list()
         distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
-            eff_rates.append(distances[idx]/(len(route)**2))
+            eff_rates.append(distances[idx]/(len(route)))
         
         rank_index = self.rank_indexes(eff_rates)
 
