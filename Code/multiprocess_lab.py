@@ -52,7 +52,7 @@ if __name__ == '__main__':
 
         print(f'\n-------- {Operators[0]} / {testing_config} / {progress_percentage}% --------')
 
-        lab:Experiment = Experiment(path, Operators, Configs, False, False)
+        lab:Experiment = Experiment(path, Operators, Configs, False, True)
 
         if computer == 'mac':   p = pool.Pool(processes = 8)
         else: p = pool.Pool()
