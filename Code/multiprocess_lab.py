@@ -4,8 +4,11 @@ import os
 import itertools
 
 path = f'{os.getcwd()}/'
-full_capacity = input('Test on full capacity? [Y/n] ')
-if path[7:15] == 'juanbeta' and full_capacity: computer = 'mac'
+
+if path[7:15] == 'juanbeta':
+    full_capacity = input('Test on full capacity? [Y/n] ')
+    if full_capacity: computer = 'mac'
+    else: computer = 'pc'
 else: computer = 'pc'
 
 Operators = ['Darwinian phi rate']
