@@ -36,7 +36,7 @@ training_prop = 0.5
 constructive: Constructive = Constructive()
 
 RCL_criterions:list = ['distance','TimeWindow','Intra-Hybrid','Exo-Hybrid']
-RCL_criterion: str = RCL_criterions[0]
+RCL_criterion: str = input('RCL criterion to be tested: ')
 
 '''
 Feasibility operators
