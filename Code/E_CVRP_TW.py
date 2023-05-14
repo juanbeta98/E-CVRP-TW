@@ -1218,7 +1218,7 @@ class Genetic():
         eff_rates = list()
         distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
-            eff_rates.append(distances[idx]/(len(route)))
+            eff_rates.append(distances[idx]/(len(route)**2))
         
         rank_index = self.rank_indexes(eff_rates)
 
@@ -1530,7 +1530,7 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Operators/{oper}/regular/results_{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Operators/{oper}/exponential/results_{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         

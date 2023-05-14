@@ -3,7 +3,8 @@ from multiprocess import pool
 import os
 
 path = f'{os.getcwd()}/'
-if path[7:15] == 'juanbeta': computer = 'mac'
+full_capacity = input('Test on full capacity? ')
+if path[7:15] == 'juanbeta' and not full_capacity: computer = 'mac'
 else: computer = 'pc'
 
 Operators = ['Darwinian phi rate']
