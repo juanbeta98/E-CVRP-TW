@@ -6,9 +6,11 @@ path = f'{os.getcwd()}/'
 if path[7:15] == 'juanbeta': computer = 'mac'
 else: computer = 'pc'
 
+Operators = ['Darwinian phi rate']
+
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
-    lab:Experiment = Experiment(path, False, True)
+    lab:Experiment = Experiment(path, Operators, False, True)
 
     test_bed = env.instances
 

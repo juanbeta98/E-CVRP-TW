@@ -1298,7 +1298,7 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, Operators:list,  verbose:bool = True, save_results:bool = True):
+    def __init__(self, path:str, Operators:list[str],  verbose:bool = True, save_results:bool = True):
         self.path = path
 
         self.Operators = Operators
@@ -1336,7 +1336,6 @@ class Experiment():
         mutation_rate:float = 0.5
 
         genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
-        Operators:list[str] = ['Darwinian phi rate']
 
 
         ''' Feasibility operators '''
@@ -1351,11 +1350,11 @@ class Experiment():
         testing_times = {'s':2, 'm':5, 'l':8}
 
         self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
-                Operators, start, evaluate_feasibility, progress_percentage)
+                start, evaluate_feasibility, progress_percentage)
 
 
     def HGA(self, env:E_CVRP_TW, constructive:Constructive, genetic:Genetic, feas_op:Feasibility, instance:str, testing_times:dict, 
-            training_ind:int, Operators:list, start:float, evaluate_feasibility:bool, progress_percentage:float or None):
+            training_ind:int, start:float, evaluate_feasibility:bool, progress_percentage:float or None):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
@@ -1386,7 +1385,7 @@ class Experiment():
         constructive.reset(env)
 
         oper = str()
-        for operator in Operators: oper += f'-{operator}'
+        for operator in self.Operators: oper += f'-{operator}'
         oper = oper[1:]
 
         # Printing progress
@@ -1448,11 +1447,11 @@ class Experiment():
                 
 
                 ### Crossover
-                if 'evaluated insertion' in Operators: new_individual, new_distance, new_time, details = \
+                if 'evaluated insertion' in self.Operators: new_individual, new_distance, new_time, details = \
                                     genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i])
 
                 ### Mutation
-                if 'Darwinian phi rate' in Operators:
+                if 'Darwinian phi rate' in self.Operators:
                     new_individual, new_distance, new_time, details = \
                                     genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha)
 

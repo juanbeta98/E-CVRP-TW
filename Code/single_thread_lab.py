@@ -5,12 +5,14 @@ path = f'{os.getcwd()}/'#Code/'
 if path[7:15] == 'juanbeta': computer = 'mac'
 else: computer = 'pc'
 
+Operators = ['Darwinian phi rate']
+
 verbose = True
 save_results = False
 
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
-    lab:Experiment = Experiment(path, verbose, save_results)
+    lab:Experiment = Experiment(path, Operators, verbose, save_results)
 
     test_bed = env.generate_test_batch(computer)
 
