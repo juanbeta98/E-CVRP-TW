@@ -1298,10 +1298,14 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, verbose:bool = True, save_results:bool = True):
+    def __init__(self, path:str, Operators:list,  verbose:bool = True, save_results:bool = True):
         self.path = path
+
+        self.Operators = Operators
         self.verbose = verbose
         self.save_results = save_results
+
+
     
 
     def experimentation(self, instance:str, progress_percentage:float or None = None):
@@ -1332,7 +1336,7 @@ class Experiment():
         mutation_rate:float = 0.5
 
         genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
-        Operators:list[str] = ['evaluated insertion']
+        Operators:list[str] = ['Darwinian phi rate']
 
 
         ''' Feasibility operators '''
@@ -1527,7 +1531,7 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Operators/{oper}/visited costumers/results_{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Operators/{oper}/regular/results_{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         
