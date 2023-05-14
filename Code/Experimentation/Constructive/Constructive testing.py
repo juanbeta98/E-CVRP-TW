@@ -50,7 +50,7 @@ Variable convention:
 - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
 - best_individual: list with (individual, distance, time, details)
 '''
-lab: Experiment = Experiment(path)
+lab: Experiment = Experiment(path, [])
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
 
