@@ -4,8 +4,8 @@ import sys
 import pickle
 import matplotlib.pyplot as plt
 
-path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
-# path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+# path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
+path: str = 'C:/Users/jm.betancourt/Documents/Research/Energy/E-CVRP-TW/Code/' ##### CHANGE WHEN NECESSARY!!!
 
 sys.path.insert(0,path)
 from E_CVRP_TW import  E_CVRP_TW, Constructive, Experiment, Feasibility
@@ -35,8 +35,8 @@ RCL_alpha_list: list[float] = [0.15, 0.25, 0.35, 0.5]
 training_prop = 0.5
 constructive: Constructive = Constructive()
 
-RCL_criterion: str = 'distance'
-RCL_criterions:list = ['distance','TimeWindow','Intra-Hybrid','Exo-Hybrid']
+RCL_criterion: str = 'Exo-Hybrid'
+# RCL_criterions:list = ['distance','TimeWindow','Intra-Hybrid','Exo-Hybrid']
 
 
 '''
@@ -51,7 +51,7 @@ Variable convention:
 - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
 - best_individual: list with (individual, distance, time, details)
 '''
-lab: Experiment = Experiment()
+lab: Experiment = Experiment(path)
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
 
