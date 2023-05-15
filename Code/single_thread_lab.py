@@ -3,19 +3,24 @@ from E_CVRP_TW import E_CVRP_TW, Experiment
 import os
 import itertools
 
-path = f'{os.getcwd()}/'#/Code/'
+path = f'{os.getcwd()}/'
 if path[7:15] == 'juanbeta': computer = 'mac'
 else: computer = 'pc'
 
 Operators = ['evaluated insertion']
 
-Configurations = {'Darwinian phi rate':{'penalization':['regular','cuadratic','cubic'],
-                                        'conservation proportion':[0.2, 0.4, 0.7],
+Configurations = {'Darwinian phi rate':{'penalization':['cuadratic','cubic'],
+                                        'conservation proportion':[0.4],
                                         'length restriction':[True, False],
                                         },
                   
                   'evaluated insertion':{'penalization':['regular','cuadratic','cubic'],
-                                         'criterion':['Hybrid', 'phi rate', 'visited costumers']}
+                                         #'criterion':['Hybrid', 'phi rate', 'visited costumers']},
+                                         'criterion':['random']},
+
+                  'genetic parameters':{'population size':[1500,3000],
+                                        'crossover rate':[0.3, 0.6],
+                                        'mutation rate':[0.3, 0.6]}
                 }
 
 # D_keys = list(Configurations['Darwinian phi rate'].keys())
@@ -44,7 +49,7 @@ if __name__ == '__main__':
     for Configs in Grid:
         lab:Experiment = Experiment(path, Operators, Configs, verbose, save_results)
 
-        test_batch = env.instances
+        test_batch = ['c109_21.txt']
 
         for num, instance in enumerate(test_batch):
             progress_percentage = round(round((num+1)/len(test_batch),4)*100,2)

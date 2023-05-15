@@ -1116,7 +1116,7 @@ class Genetic():
 
                 if real_index != worst_route_index:
                     # Load feasibility check
-                    if env.C[candidate]['d'] + loads[real_index] > env.K:    continue
+                    if env.C[candidate]['d'] + new_loads[real_index] > env.K:    continue
 
                     route = new_individual[real_index]
                     for pos in range(0,len(route[1:])):
@@ -1370,6 +1370,10 @@ class Experiment():
         env.generate_parameters()
         constructive.reset(env)
 
+        testing_config = str()
+        for vals in list(self.configuration[self.Operators[0]].values()): testing_config += str(vals)+'_'
+        testing_config = testing_config[:-1]
+        
         # Printing progress
         if self.verbose: 
             print(f'\n\n########################################################################')
@@ -1509,9 +1513,6 @@ class Experiment():
         
         ### Save performance
         if self.save_results and self.exp_num == None:
-            testing_config = str()
-            for vals in list(self.configuration[self.Operators[0]].values()): testing_config += str(vals)+'_'
-            testing_config = testing_config[:-1]
             a_file = open(env.path + f'Experimentation/Operators/{self.Operators[0]}/results-{testing_config}-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
