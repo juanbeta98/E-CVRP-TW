@@ -1100,12 +1100,12 @@ class Genetic():
         
         pending_c = visited_c[worst_route_index]
 
-        new_individual = deepcopy(individual);  #del new_individual[worst_route_index]
-        new_distances = deepcopy(distances);    #del new_distances[worst_route_index]
-        new_times = deepcopy(times);    #del new_times[worst_route_index]
-        new_loads = deepcopy(loads);    #del new_loads[worst_route_index]
-        new_dep_t_details = deepcopy(dep_t_details);    #del new_dep_t_details[worst_route_index]
-        new_dep_q_details = deepcopy(dep_q_details);    #del new_dep_q_details[worst_route_index]
+        new_individual = deepcopy(individual);  
+        new_distances = deepcopy(distances);    
+        new_times = deepcopy(times);    
+        new_loads = deepcopy(loads);   
+        new_dep_t_details = deepcopy(dep_t_details);    
+        new_dep_q_details = deepcopy(dep_q_details);    
 
 
         # Relocate costumers from first route
@@ -1318,16 +1318,12 @@ class Experiment():
 
 
         ''' Genetic algorithm '''
-        # Population_size:int = self.configuration['genetic parameters']['population size']
-        Population_size:int = 2000
+        Population_size:int = self.configuration['genetic parameters']['population size']
         training_ind:int = int(round(Population_size * training_ind_prop,0))
-        # Elite_size:int = int(Population_size * 0.25)
-        Elite_size:int = int(Population_size * 0.5)
+        Elite_size:int = int(Population_size * 0.25)
 
-        # crossover_rate:float = self.configuration['genetic parameters']['crossover rate']
-        # mutation_rate:float = self.configuration['genetic parameters']['mutation rate']
-        crossover_rate:float = 1
-        mutation_rate:float = 1
+        crossover_rate:float = self.configuration['genetic parameters']['crossover rate']
+        mutation_rate:float = self.configuration['genetic parameters']['mutation rate']
 
         genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
