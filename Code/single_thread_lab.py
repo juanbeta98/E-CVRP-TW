@@ -42,13 +42,9 @@ if __name__ == '__main__':
     env = E_CVRP_TW(path)
 
     for Configs in Grid:
-        Configs = {'evaluated insertion':{'penalization':'regular', 'criterion':'Hybrid'}}
         lab:Experiment = Experiment(path, Operators, Configs, verbose, save_results)
 
-        # test_batch = env.generate_test_batch_per_size(['s','m'],1)
-        
-        # test_batch = env.generate_test_batch_per_size('l',4)
-        # test_batch = test_batch[0]
+        test_batch = env.instances
 
         for num, instance in enumerate(test_batch):
             progress_percentage = round(round((num+1)/len(test_batch),4)*100,2)
