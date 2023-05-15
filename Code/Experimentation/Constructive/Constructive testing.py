@@ -48,7 +48,7 @@ Variable convention:
 - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
 - best_individual: list with (individual, distance, time, details)
 '''
-lab: Experiment = Experiment(path, [])
+lab: Experiment = Experiment(path,[],{})
 colors: list = ['blue', 'red', 'black', 'purple', 'green', 'orange']
 
 
@@ -133,7 +133,7 @@ for num, instance in enumerate(test_batch):
 
             # Individual feasibility check
             if evaluate_feasibility:
-                feasible, _ = feas_op.individual_check(env, [route], complete = False)
+                feasible, _ = feas_op.individual_check(env, [route], instance, complete = False)
                 assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (ind {ind})'
 
 
