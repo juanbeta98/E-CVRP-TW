@@ -9,7 +9,7 @@ jm.betancourt@uniandes.edu.co
 from copy import deepcopy
 from time import process_time
 import matplotlib.pyplot as plt
-from numpy.random import choice, seed, randint
+from numpy.random import random, choice, seed, randint
 import networkx as nx
 import os
 import pickle
@@ -1284,7 +1284,7 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, Operators:list[str], Configs:dict[str], verbose:bool = True, save_results:bool = True):
+    def __init__(self, path:str, Operators:list[str], Configs:dict[str], verbose:bool = True, save_results:bool = True, exp_num:int or None = None):
         self.path = path
 
         self.Operators = Operators
@@ -1292,6 +1292,7 @@ class Experiment():
 
         self.verbose = verbose
         self.save_results = save_results
+        self.exp_num = exp_num
 
 
     
@@ -1311,17 +1312,21 @@ class Experiment():
 
 
         ''' Constructive heuristic '''
-        training_ind_prop = 0.5
+        training_ind_prop = 0.25
         constructive:Constructive = Constructive()
 
 
         ''' Genetic algorithm '''
+        # Population_size:int = self.configuration['genetic parameters']['population size']
         Population_size:int = 2000
         training_ind:int = int(round(Population_size * training_ind_prop,0))
+        # Elite_size:int = int(Population_size * 0.25)
         Elite_size:int = int(Population_size * 0.5)
 
-        crossover_rate:float = 0.5
-        mutation_rate:float = 0.5
+        # crossover_rate:float = self.configuration['genetic parameters']['crossover rate']
+        # mutation_rate:float = self.configuration['genetic parameters']['mutation rate']
+        crossover_rate:float = 1
+        mutation_rate:float = 1
 
         genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
@@ -1335,14 +1340,14 @@ class Experiment():
         - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
         - best_individual: list with (individual, distance, time, details)
         '''
-        testing_times = {'s':2, 'm':5, 'l':8}
+        testing_times = {'s':1, 'm':2.5, 'l':10}
 
         self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
-                start, evaluate_feasibility, progress_percentage)
+                crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
 
 
     def HGA(self, env:E_CVRP_TW, constructive:Constructive, genetic:Genetic, feas_op:Feasibility, instance:str, testing_times:dict, 
-            training_ind:int, start:float, evaluate_feasibility:bool, progress_percentage:float or None):
+            training_ind:int, crossover_rate:float, mutation_rate:float, start:float, evaluate_feasibility:bool, progress_percentage:float or None):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
@@ -1350,19 +1355,9 @@ class Experiment():
         '''
         # Saving performance 
         constructive_Results = dict()
-
-        Results = dict()
-        Incumbents = list()
-        ploting_Times = list()
-
-        min_EV_Results = dict()
-        min_EV_Incumbents = list()
-        min_EV_ploting_Times = list()
-        
-        testing_config = str()
-        for vals in list(self.configuration[self.Operators[0]].values()): testing_config += str(vals)+'_'
-        testing_config = testing_config[:-1]
-        
+        Results = dict(); Incumbents = list(); ploting_Times = list()
+        min_EV_Results = dict(); min_EV_Incumbents = list(); min_EV_ploting_Times = list()
+                
         # Setting runnign times depending on instance size
         max_time:int = 60
         if instance in env.sizes['s']:  max_time *= testing_times['s']
@@ -1433,12 +1428,12 @@ class Experiment():
                 
 
                 ### Crossover
-                if 'evaluated insertion' in self.Operators: 
+                if 'evaluated insertion' in self.Operators and random() <= crossover_rate: 
                     new_individual, new_distance, new_time, details = \
                                 genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i], self.configuration['evaluated insertion'])
 
                 ### Mutation
-                if 'Darwinian phi rate' in self.Operators:
+                if 'Darwinian phi rate' in self.Operators and random() <= mutation_rate:
                     new_individual, new_distance, new_time, details = \
                                 genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha, self.configuration['Darwinian phi rate'])
 
@@ -1455,10 +1450,6 @@ class Experiment():
                 if new_distance < incumbent:
                     incumbent = new_distance
                     best_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
-
-                    # if self.verbose:
-                    #     genetic.print_evolution(env, instance, process_time() - start, generation, incumbent, len(new_individual))
-
 
                 # Updating best found solution with least number of vehicles
                 if len(new_individual) < len(best_min_EV_individual[0]) or \
@@ -1516,10 +1507,18 @@ class Experiment():
         min_EV_Results['inc times'] = min_EV_ploting_Times
         
         ### Save performance
-        if self.save_results:
+        if self.save_results and self.exp_num == None:
+            testing_config = str()
+            for vals in list(self.configuration[self.Operators[0]].values()): testing_config += str(vals)+'_'
+            testing_config = testing_config[:-1]
             a_file = open(env.path + f'Experimentation/Operators/{self.Operators[0]}/results-{testing_config}-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
+        elif self.self.save_results:
+            a_file = open(env.path + f'Experimentation/Experiment {self.exp_num}/results-{instance}', "wb")
+            pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
+            a_file.close()
+
         
         if not self.verbose:
             print(f'✅ Instance {instance} - {round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)}%')
