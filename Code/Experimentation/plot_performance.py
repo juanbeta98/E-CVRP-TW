@@ -50,13 +50,14 @@ def plot_const_performance(data, instance, testing = 'Constructive', objective =
 
 
 def retrieve_op_performance(instance, path):
-    file = open(path + f'results_{instance}', 'rb')
+    file = open(path, 'rb')
     data = pickle.load(file)
     file.close()
     return data
 
 def plot_op_performance(data, instance, testing = 'Operators', objective = 'min_EV'):
-    colors = ['red', 'orange', 'brown', 'green', 'purple' , 'blue' ,'black', 'pink', ]
+    colors = ['red', 'orange', 'brown', 'green', 'purple' , 'blue' ,'black', 'pink', 'tab:cyan','tab:olive','tab:gray',
+              'lime','lavender','firebrick','palevioletred','magenta','paleturquoise','gold','maroon']
     if objective == 'min_EV':   list_idx = 2
     else:   list_idx = 1
 
