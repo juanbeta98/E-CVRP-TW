@@ -1093,7 +1093,7 @@ class Genetic():
 
         rank_index:list = self.rank_indexes(eff_rates)
 
-        if config['criterion'] == 'visited costumers:':     worst_route_index = n_visited_c.index(min(n_visited_c))
+        if config['criterion'] == 'visited costumers':     worst_route_index = n_visited_c.index(min(n_visited_c))
         elif config['criterion'] == 'phi rate':             worst_route_index = rank_index.index(max(rank_index))
         elif config['criterion'] == 'Hybrid':               worst_route_index = choice([rank_index.index(max(rank_index)),n_visited_c.index(min(n_visited_c))])
         
