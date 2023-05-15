@@ -159,7 +159,7 @@ class E_CVRP_TW():
     - Sets of size 'size' of a given inst_size
     - Sets of size 'size' of a given list of instances
     '''
-    def generate_test_bed_per_size(self, inst_set:str or list, size:int):
+    def generate_test_batch_per_size(self, inst_set:str or list, size:int):
         test_bed = list()
         if type(inst_set) == str:
             inst_set = self.sizes[inst_set]
