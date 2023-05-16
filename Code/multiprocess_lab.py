@@ -37,7 +37,7 @@ Grid = [{'Darwinian phi rate': {D_keys[i]: D_combination[i] for i in range(len(D
 
 env = E_CVRP_TW(path)
 test_batch = env.generate_test_batch_per_size('l',2)
-test_batch_num = int(input('Large instance batch to be tested: '))
+test_batch_num = 0
 test_batch = test_batch[test_batch_num]
 
 
