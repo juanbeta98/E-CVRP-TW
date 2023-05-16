@@ -1406,7 +1406,6 @@ class Experiment():
         # Genetic process
         generation = 0
         while process_time() - start < max_time:
-            # print(f'Generation: {generation}')
             ### Elitism
             Elite = genetic.elite_class(Distances)
 
@@ -1423,6 +1422,7 @@ class Experiment():
             ### Evolution
             New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
             for i in range(genetic.Population_size):
+                # print(generation,i)
                 individual_i = Parents[i][randint(0,2)]
                 mutated = False
 
@@ -1439,8 +1439,8 @@ class Experiment():
                     mutated = True
 
                 # No operator is performed
-                if not mutated: new_individual = \
-                    new_individual = Population[individual_i]; new_distance = sum(Details[1]); new_time = sum(Details[2]); details = Details[3]
+                if not mutated: 
+                    new_individual = Population[individual_i]; new_distance = sum(Details[individual_i][0]); new_time = sum(Details[individual_i][1]); details = Details[individual_i]
                 
 
                 # Individual feasibility check
@@ -1516,7 +1516,7 @@ class Experiment():
             a_file = open(env.path + f'Experimentation/Operators/{self.Operators[0]}/results-{testing_config}-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
-        elif self.self.save_results:
+        elif self.save_results:
             a_file = open(env.path + f'Experimentation/Exp {self.exp_num}/results-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()

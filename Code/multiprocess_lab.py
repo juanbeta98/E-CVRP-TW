@@ -58,5 +58,5 @@ if __name__ == '__main__':
         if computer == 'mac':   p = pool.Pool(processes = 6)
         else: p = pool.Pool()
 
-        p.map(lab.experimentation, env.instances)
+        p.map(lab.experimentation, test_batch)
         p.terminate()
