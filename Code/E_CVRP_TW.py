@@ -1424,6 +1424,7 @@ class Experiment():
             New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
             for i in range(genetic.Population_size):
                 individual_i = Parents[i][randint(0,2)]
+                mutated = False
 
                 ### Shake
                 
@@ -1432,12 +1433,17 @@ class Experiment():
                 if 'evaluated insertion' in self.Operators and random() <= crossover_rate: 
                     new_individual, new_distance, new_time, details = \
                                 genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i], self.configuration['evaluated insertion'])
+                    mutated = True
 
                 ### Mutation
                 if 'Darwinian phi rate' in self.Operators and random() <= mutation_rate:
                     new_individual, new_distance, new_time, details = \
                                 genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha, self.configuration['Darwinian phi rate'])
+                    mutated = True
 
+                if not mutated: new_individual = \
+                    Population[individual_i]; new_distance = sum(Details[1]); new_time = sum(Details[2]); details = Details[3]
+                
                 
                 # Individual feasibility check
                 if evaluate_feasibility:
