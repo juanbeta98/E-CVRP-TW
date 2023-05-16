@@ -51,7 +51,7 @@ if __name__ == '__main__':
             f.write(readme)
 
         progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
-        print(f'\n-------- batch {test_batch_num} /Experiment {num} / {progress_percentage}% --------')
+        print(f'\n-------- batch {test_batch_num} / Experiment {num} / {progress_percentage}% --------')
 
         lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
 
