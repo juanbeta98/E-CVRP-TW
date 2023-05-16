@@ -1426,9 +1426,6 @@ class Experiment():
                 individual_i = Parents[i][randint(0,2)]
                 mutated = False
 
-                ### Shake
-                
-
                 ### Crossover
                 if 'evaluated insertion' in self.Operators and random() <= crossover_rate: 
                     new_individual, new_distance, new_time, details = \
@@ -1441,10 +1438,11 @@ class Experiment():
                                 genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha, self.configuration['Darwinian phi rate'])
                     mutated = True
 
+                # No operator is performed
                 if not mutated: new_individual = \
-                    Population[individual_i]; new_distance = sum(Details[1]); new_time = sum(Details[2]); details = Details[3]
+                    new_individual = Population[individual_i]; new_distance = sum(Details[1]); new_time = sum(Details[2]); details = Details[3]
                 
-                
+
                 # Individual feasibility check
                 if evaluate_feasibility:
                     feasible, _ = feas_op.individual_check(env, new_individual, instance, complete = True)
