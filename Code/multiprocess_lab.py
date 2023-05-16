@@ -35,10 +35,13 @@ Grid = [{'Darwinian phi rate': {D_keys[i]: D_combination[i] for i in range(len(D
          'evaluated insertion': {e_keys[i]: e_combination[i] for i in range(len(e_keys))}, 
          'genetic parameters': {g_keys[i]: g_combination[i] for i in range(len(g_keys))}} for D_combination in D_combinations for e_combination in e_combinations for g_combination in g_combinations]
 
+env = E_CVRP_TW(path)
+test_batch = env.generate_test_batch_per_size('l',2)
+test_batch_num = 0
+test_batch = test_batch[test_batch_num]
+
 
 if __name__ == '__main__':
-    env = E_CVRP_TW(path)
-
     for num, Configs in enumerate(Grid):
         with open(path + f'Experimentation/Experiment {num}/readme.txt', 'w') as f:
             readme = f'Experiment {num}'
@@ -48,15 +51,12 @@ if __name__ == '__main__':
             f.write(readme)
 
         progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
-        print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
+        print(f'\n-------- batch {test_batch_num} /Experiment {num} / {progress_percentage}% --------')
 
         lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
 
         if computer == 'mac':   p = pool.Pool(processes = 6)
         else: p = pool.Pool()
-
-        test_batch = env.generate_test_batch_per_size('l',2)
-        test_batch = test_batch[0]
 
         p.map(lab.experimentation, env.instances)
         p.terminate()
