@@ -64,11 +64,10 @@ def plot_op_performance(data, instance, testing = 'Operators', objective = 'min_
     i = 0
     legend_elements = []
     for key, value in data.items():
-        for key1, value1 in value.items():
-            plt.plot(value1[list_idx]['inc times'], value1[list_idx]['incumbents'], color = colors[i])
-            legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=f'{key}-{key1}', lw=0,
-                            markerfacecolor=colors[i], markersize=8))
-            i+=1
+        plt.plot(value[list_idx]['inc times'], value[list_idx]['incumbents'], color = colors[i])
+        legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=f'{key}', lw=0,
+                        markerfacecolor=colors[i], markersize=8))
+        i+=1
 
     plt.title(f"{testing}'s performance {instance}")
     plt.xlabel('Time (s)')

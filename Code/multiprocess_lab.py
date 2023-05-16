@@ -20,7 +20,7 @@ Configurations = {'Darwinian phi rate':{'penalization':['cuadratic','cubic'],
                                         },
                   
                   'evaluated insertion':{'penalization':['regular','cuadratic','cubic'],
-                                         'criterion':['Hybrid', 'phi rate', 'visited costumers', 'random']},
+                                         'criterion':['random']},
 
                   'genetic parameters':{'population size':[1500,3000],
                                         'crossover rate':[0.3, 0.6],
@@ -52,8 +52,11 @@ if __name__ == '__main__':
 
         lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
 
-        if computer == 'mac':   p = pool.Pool(processes = 8)
+        if computer == 'mac':   p = pool.Pool(processes = 6)
         else: p = pool.Pool()
+
+        test_batch = env.generate_test_batch_per_size('l',2)
+        test_batch = test_batch[0]
 
         p.map(lab.experimentation, env.instances)
         p.terminate()

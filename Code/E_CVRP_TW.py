@@ -1337,7 +1337,7 @@ class Experiment():
         - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
         - best_individual: list with (individual, distance, time, details)
         '''
-        testing_times = {'s':1, 'm':2.5, 'l':10}
+        testing_times = {'s':1.5, 'm':2.5, 'l':8}
 
         self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
                 crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
@@ -1513,7 +1513,7 @@ class Experiment():
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         elif self.self.save_results:
-            a_file = open(env.path + f'Experimentation/Experiment {self.exp_num}/results-{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Exp {self.exp_num}/results-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
 
