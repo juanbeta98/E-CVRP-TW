@@ -37,7 +37,7 @@ Grid = [{'Darwinian phi rate': {D_keys[i]: D_combination[i] for i in range(len(D
 
 env = E_CVRP_TW(path)
 test_batch = env.generate_test_batch_per_size('l',2)
-test_batch_num = 0
+test_batch_num = 1
 test_batch = test_batch[test_batch_num]
 
 # test_batch = env.generate_test_batch_per_size(['s','m'],1)
@@ -46,7 +46,7 @@ test_batch = test_batch[test_batch_num]
 
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid):
-        if num >= 78:
+        if num >= 92:
             # with open(path + f'Experimentation/Exp {num}/readme.txt', 'w') as f:
             #     readme = f'Experiment {num}'
             #     readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
