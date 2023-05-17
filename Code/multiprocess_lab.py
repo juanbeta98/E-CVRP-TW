@@ -36,9 +36,12 @@ Grid = [{'Darwinian phi rate': {D_keys[i]: D_combination[i] for i in range(len(D
          'genetic parameters': {g_keys[i]: g_combination[i] for i in range(len(g_keys))}} for D_combination in D_combinations for e_combination in e_combinations for g_combination in g_combinations]
 
 env = E_CVRP_TW(path)
-test_batch = env.generate_test_batch_per_size('l',2)
-test_batch_num = 0
-test_batch = test_batch[test_batch_num]
+# test_batch = env.generate_test_batch_per_size('l',2)
+# test_batch_num = 0
+# test_batch = test_batch[test_batch_num]
+
+test_batch = env.generate_test_batch_per_size(['s','m'],1)
+test_batch_num = 's & m'
 
 
 if __name__ == '__main__':
@@ -55,7 +58,7 @@ if __name__ == '__main__':
 
         lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
 
-        if computer == 'mac':   p = pool.Pool(processes = 6)
+        if computer == 'mac':   p = pool.Pool(processes = 8)
         else: p = pool.Pool()
 
         p.map(lab.experimentation, test_batch)
