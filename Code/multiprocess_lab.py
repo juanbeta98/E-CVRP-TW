@@ -46,7 +46,7 @@ test_batch = test_batch[test_batch_num]
 
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid):
-        if num >= 92:
+        if num >= 78:
             # with open(path + f'Experimentation/Exp {num}/readme.txt', 'w') as f:
             #     readme = f'Experiment {num}'
             #     readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
