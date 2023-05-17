@@ -49,7 +49,7 @@ def plot_const_performance(data, instance, testing = 'Constructive', objective =
         plt.show()
 
 
-def retrieve_op_performance(instance, path):
+def retrieve_op_performance(path):
     file = open(path, 'rb')
     data = pickle.load(file)
     file.close()
