@@ -77,3 +77,27 @@ def plot_op_performance(data, instance, testing = 'Operators', objective = 'min_
     ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
     
     plt.show()
+
+def plot_exp_performance(data, instance, experiments , objective = 'min_EV'):
+    colors = ['red', 'orange', 'brown', 'green', 'purple' , 'blue' ,'black', 'pink', 'tab:cyan','tab:olive','tab:gray',
+            'lime','lavender','firebrick','palevioletred','magenta','paleturquoise','gold','maroon']
+    if objective == 'min_EV':   list_idx = 2
+    else:   list_idx = 1
+
+    i = 0
+    legend_elements = []
+    for key, value in data.items():
+        if key in experiments:
+            plt.plot(value[list_idx]['inc times'], value[list_idx]['incumbents'], color = colors[i])
+            legend_elements.append(Line2D([0], [0], marker='_', color=colors[i], label=f'{key}', lw=0,
+                            markerfacecolor=colors[i], markersize=8))
+            i+=1
+
+    plt.title(f"{'experiment'}'s performance {instance}")
+    plt.xlabel('Time (s)')
+    plt.ylabel('Incumbent')
+
+    ax = plt.gca()
+    ax.legend(handles=legend_elements, loc='upper right', fontsize=8)
+    
+    plt.show()
