@@ -88,7 +88,7 @@ test_batch = env.sizes['l']
 
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid[::-1]): 
-            num = 10-num
+            num = 9-num
             with open(path + f'Experimentation/Second phase (l)/Exp {num}/readme.txt', 'w') as f:
                 readme = f'Experiment {num}'
                 readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
