@@ -125,7 +125,7 @@ Grid = [
 
 
 
-# env = E_CVRP_TW(path)
+env = E_CVRP_TW(path)
 # test_batch = env.sizes['l']
 
 test_batch = env.generate_test_batch_per_size(['s','m'],1)
