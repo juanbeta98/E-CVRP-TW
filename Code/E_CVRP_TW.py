@@ -1339,8 +1339,9 @@ class Experiment():
         '''
         testing_times = {'s':1.5, 'm':2.5, 'l':15}
 
-        self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
+        avg_gap = self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
                 crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
+        return avg_gap
 
 
     def HGA(self, env:E_CVRP_TW, constructive:Constructive, genetic:Genetic, feas_op:Feasibility, instance:str, testing_times:dict, 
