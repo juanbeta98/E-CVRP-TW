@@ -148,7 +148,7 @@ if __name__ == '__main__':
         lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
 
         if computer == 'mac':   p = pool.Pool(processes = 8)
-        else: p = pool.Pool(processes = 6)
+        else: p = pool.Pool(processes = 4)
 
         Results = p.map(lab.experimentation, test_batch)
         print(f'Average gap: {sum(Results)/len(Results)}')
