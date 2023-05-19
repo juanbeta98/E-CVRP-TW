@@ -134,7 +134,7 @@ test_batch_num = 's & m'
 
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid): 
-        with open(path + f'Experimentation/Second phase (l)/Exp {num}/readme.txt', 'w') as f:
+        with open(path + f'Experimentation/Second phase (s-m)/Exp {num}/readme.txt', 'w') as f:
             readme = f'Experiment {num}'
             readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
             readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
