@@ -1337,7 +1337,7 @@ class Experiment():
         - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
         - best_individual: list with (individual, distance, time, details)
         '''
-        testing_times = {'s':1.5, 'm':2.5, 'l':8}
+        testing_times = {'s':1.5, 'm':2.5, 'l':15}
 
         self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
                 crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
@@ -1517,13 +1517,14 @@ class Experiment():
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
         elif self.save_results:
-            a_file = open(env.path + f'Experimentation/Exp {self.exp_num}/results-{instance}', "wb")
+            a_file = open(env.path + f'Experimentation/Second phase (l)/Exp {self.exp_num}/results-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
 
         
         if not self.verbose:
             print(f'✅ Instance {instance} - {round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)}%')
+            return round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)
     
 
     def compute_gap(self, env: E_CVRP_TW, instance: str, incumbent: float) -> float:
