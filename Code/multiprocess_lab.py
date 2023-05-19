@@ -88,7 +88,7 @@ test_batch = env.sizes['l']
 
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid):
-            with open(path + f'Experimentation/Exp {num}/readme.txt', 'w') as f:
+            with open(path + f'Experimentation/Second phase (l)/Exp {num}/readme.txt', 'w') as f:
                 readme = f'Experiment {num}'
                 readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
                 readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
@@ -106,5 +106,5 @@ if __name__ == '__main__':
 
             Results = p.map(lab.experimentation, test_batch)
             print(f'Average gap: {sum(Results)/len(Results)}')
-            
+
             p.terminate()
