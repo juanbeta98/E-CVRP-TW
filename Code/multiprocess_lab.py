@@ -35,7 +35,7 @@ Operators = ['Darwinian phi rate', 'evaluated insertion']
 #          'evaluated insertion': {e_keys[i]: e_combination[i] for i in range(len(e_keys))}, 
 #          'genetic parameters': {g_keys[i]: g_combination[i] for i in range(len(g_keys))}} for D_combination in D_combinations for e_combination in e_combinations for g_combination in g_combinations]
 
-###### l instances
+###### s-m instances instances
 Grid = [
          {'Darwinian phi rate':{'penalization':'cuadratic', 'conservation proportion':0.4, 'length restriction':True }, #0
          'evaluated insertion':{'penalization':'cubic', 'criterion':'random'},
@@ -125,33 +125,32 @@ Grid = [
 
 
 
-env = E_CVRP_TW(path)
-test_batch = env.sizes['l']
+# env = E_CVRP_TW(path)
+# test_batch = env.sizes['l']
 
-# test_batch = env.generate_test_batch_per_size(['s','m'],1)
-# test_batch_num = 's & m'
+test_batch = env.generate_test_batch_per_size(['s','m'],1)
+test_batch_num = 's & m'
 
 
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid): 
-        
-            with open(path + f'Experimentation/Second phase (l)/Exp {num}/readme.txt', 'w') as f:
-                readme = f'Experiment {num}'
-                readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
-                readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
-                readme += f'\ngenetic configuration: \t{Configs["genetic parameters"]["population size"]} - {Configs["genetic parameters"]["crossover rate"]} - {Configs["genetic parameters"]["mutation rate"]}'
-                f.write(readme)
-                    
+        with open(path + f'Experimentation/Second phase (l)/Exp {num}/readme.txt', 'w') as f:
+            readme = f'Experiment {num}'
+            readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
+            readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
+            readme += f'\ngenetic configuration: \t{Configs["genetic parameters"]["population size"]} - {Configs["genetic parameters"]["crossover rate"]} - {Configs["genetic parameters"]["mutation rate"]}'
+            f.write(readme)
+                
 
-            progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
-            print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
+        progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
+        print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
 
-            lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
+        lab:Experiment = Experiment(path, Operators, Configs, False, True, num)
 
-            if computer == 'mac':   p = pool.Pool(processes = 8)
-            else: p = pool.Pool(processes = 8)
+        if computer == 'mac':   p = pool.Pool(processes = 8)
+        else: p = pool.Pool(processes = 6)
 
-            Results = p.map(lab.experimentation, test_batch)
-            print(f'Average gap: {sum(Results)/len(Results)}')
+        Results = p.map(lab.experimentation, test_batch)
+        print(f'Average gap: {sum(Results)/len(Results)}')
 
-            p.terminate()
+        p.terminate()
