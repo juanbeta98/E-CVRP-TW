@@ -7,7 +7,7 @@ path = f'{os.getcwd()}/'
 if path[7:15] == 'juanbeta': computer = 'mac'
 else: computer = 'pc'
 
-Operators = ['evaluated insertion']
+Operators = ['Darwinian phi rate', 'evaluated insertion']
 
 Configurations = {'Darwinian phi rate':{'penalization':['cuadratic','cubic'],
                                         'conservation proportion':[0.4],
@@ -36,23 +36,55 @@ Configurations = {'Darwinian phi rate':{'penalization':['cuadratic','cubic'],
 # Grid = [{'Darwinian phi rate': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
 
 
-keys = list(Configurations['evaluated insertion'].keys())
-combinations = list(itertools.product(*[Configurations['evaluated insertion'][key] for key in keys]))
-Grid = [{'evaluated insertion': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
+# keys = list(Configurations['evaluated insertion'].keys())
+# combinations = list(itertools.product(*[Configurations['evaluated insertion'][key] for key in keys]))
+# Grid = [{'evaluated insertion': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
 
-verbose = True
-save_results = False
+verbose = False
+save_results = True
+
+Grid = [
+         {'Darwinian phi rate':{'penalization':'cuadratic', 'conservation proportion':0.4, 'length restriction':False }, #1
+         'evaluated insertion':{'penalization':'cubic', 'criterion':'random'},
+         'genetic parameters':{'population size':3000, 'crossover rate': 0.3, 'mutation rate':0.6}},
+         
+         {'Darwinian phi rate':{'penalization':'cubic', 'conservation proportion':0.4, 'length restriction':False }, #2
+         'evaluated insertion':{'penalization':'cubic', 'criterion':'random'},
+         'genetic parameters':{'population size':3000, 'crossover rate': 0.3, 'mutation rate':0.6}},
+
+         {'Darwinian phi rate':{'penalization':'cuadratic', 'conservation proportion':0.4, 'length restriction':False }, #3
+         'evaluated insertion':{'penalization':'cuadratic', 'criterion':'random'},
+         'genetic parameters':{'population size':3000, 'crossover rate': 0.6, 'mutation rate':0.6}},
+
+         {'Darwinian phi rate':{'penalization':'cuadratic', 'conservation proportion':0.4, 'length restriction':False }, #4
+         'evaluated insertion':{'penalization':'cuadratic', 'criterion':'random'},
+         'genetic parameters':{'population size':3000, 'crossover rate': 0.3, 'mutation rate':0.6}},
+
+         {'Darwinian phi rate':{'penalization':'cuadratic', 'conservation proportion':0.4, 'length restriction':False }, #5
+         'evaluated insertion':{'penalization':'regular', 'criterion':'random'},
+         'genetic parameters':{'population size':1500, 'crossover rate': 0.6, 'mutation rate':0.3}},
+         ]
 
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
 
-    for Configs in Grid:
-        lab:Experiment = Experiment(path, Operators, Configs, verbose, save_results)
+    for num, Configs in enumerate(Grid): 
+        with open(path + f'Experimentation/Third phase/Exp {num}/readme.txt', 'w') as f:
+            readme = f'Experiment {num}'
+            readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
+            readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
+            readme += f'\ngenetic configuration: \t{Configs["genetic parameters"]["population size"]} - {Configs["genetic parameters"]["crossover rate"]} - {Configs["genetic parameters"]["mutation rate"]}'
+            f.write(readme)
+                
 
-        test_batch = ['c109_21.txt']
+        progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
+        print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
 
-        for num, instance in enumerate(test_batch):
-            progress_percentage = round(round((num+1)/len(test_batch),4)*100,2)
-            lab.experimentation(instance, progress_percentage)
+        lab:Experiment = Experiment(path, Operators, Configs, verbose, save_results, num)
+        test_batch = env.sizes['l']
+
+        for inst_num, instance in enumerate(test_batch):
+            Results = lab.experimentation(instance)
+
 
 
