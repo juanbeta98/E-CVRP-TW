@@ -1305,7 +1305,7 @@ class Experiment():
         rd_seed: int = 0
         seed(rd_seed)
 
-        evaluate_feasibility: bool = True
+        evaluate_feasibility: bool = False
 
 
         ''' Environment '''
