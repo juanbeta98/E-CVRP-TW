@@ -1221,7 +1221,7 @@ class Genetic():
             ii = rank_index.index(i)
             cont += 1
             if cont == len(individual):break
-            if config['length restriction'] and not len(individual[ii]) >= 0.7*max([len(route) for route in individual]):
+            if config['length restriction'] and not len(individual[ii]) >= 0.5*max([len(route) for route in individual]):
                 continue
             new_individual.append(individual[ii])
             new_distance += distances[ii];      new_distances.append(distances[ii])
@@ -1285,8 +1285,12 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, Operators:list[str], Configs:dict[str], verbose:bool = True, save_results:bool = True, exp_num:int or None = None):
+    def __init__(self, path:str, Operators:list[str], Configs:dict[str], verbose:bool = True, save_results:bool = True, exp_num:int or None = None, saving_path:None or str = None):
         self.path = path
+        if saving_path == None:
+            self.saving_path = self.path
+        else:
+            self.saving_path = saving_path
 
         self.Operators = Operators
         self.configuration = Configs
@@ -1337,7 +1341,7 @@ class Experiment():
         - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
         - best_individual: list with (individual, distance, time, details)
         '''
-        testing_times = {'s':3, 'm':5, 'l':20}
+        testing_times = {'s':3, 'm':7, 'l':20}
 
         avg_gap = self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
                 crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
@@ -1514,7 +1518,7 @@ class Experiment():
         
         ### Save performance
         if self.save_results:
-            a_file = open(env.path + f'Experimentation/Third phase/Exp {self.exp_num}/results-{instance}', "wb")
+            a_file = open(self.saving_path + f'/Exp {self.exp_num}/results-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
 
