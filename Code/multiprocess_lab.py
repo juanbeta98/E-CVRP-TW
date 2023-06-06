@@ -53,7 +53,7 @@ if __name__ == '__main__':
         iter_start = process_time()
         print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
 
-        lab:Experiment = Experiment(path, saving_path, Operators, Configs, False, True, num)
+        lab:Experiment = Experiment(path, Operators, Configs, False, True, num, saving_path)
 
         if not full_capacity:   p = pool.Pool(processes = 8)
         else: p = pool.Pool()
