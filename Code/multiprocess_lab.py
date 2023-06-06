@@ -41,7 +41,7 @@ test_batch = env.instances
 if __name__ == '__main__':
     for num, Configs in enumerate(Grid): 
         os.mkdir(path + f'Exp {num}')
-        with open(path + f'Exp {num}/readme.txt', 'w') as f:
+        with open(saving_path + f'Exp {num}/readme.txt', 'w') as f:
             readme = f'Experiment {num}'
             readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
             readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
