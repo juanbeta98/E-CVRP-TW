@@ -7,7 +7,7 @@ from time import process_time
 
 path = f'{os.getcwd()}/'
 saving_path = os.path.abspath('/')
-saving_path += (f'Documents/Experimentation 1.0/')
+saving_path += (f'Users/jm.betancourt/Documents/Experimentation 1.0/')
 
 full_capacity = True
 
