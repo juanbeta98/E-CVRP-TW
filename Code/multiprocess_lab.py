@@ -3,7 +3,7 @@ from numpy.random import seed; seed(0)
 from multiprocess import pool
 import os
 import itertools
-from time import process_time
+from time import process_time, time
 
 path = f'{os.getcwd()}/'
 saving_path = os.path.abspath('/')
@@ -50,7 +50,7 @@ if __name__ == '__main__':
                 
 
         progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
-        iter_start = process_time()
+        iter_start = time()
         print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
 
         lab:Experiment = Experiment(path, Operators, Configs, False, True, num, saving_path)
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         else: p = pool.Pool()
 
         Results = p.map(lab.experimentation, test_batch)
-        print(f'Average gap: {round(sum(Results)/len(Results),2)}')
-        print(f'Running time: {round(process_time() - iter_start)}')
+        print(f'Average gap: {round(sum(Results)/len(Results),2)}%')
+        print(f'Running time: {round(time() - iter_start,2)}s')
 
         p.terminate()
