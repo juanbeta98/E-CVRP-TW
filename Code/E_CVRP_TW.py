@@ -989,17 +989,20 @@ class Genetic():
     def intermediate_population(self, Distances):
         # Fitness function
         tots = sum(Distances)
-        fit_f = [tots/Distances[i] for i in range(len(Distances))]
-        probs = [fit_f[i]/sum(fit_f) for i in range(len(Distances))]
+        fit_f:list = list()
+        probs:list = list()
+        for i in range(len(Distances)):
+            fit_f.append(tots/Distances[i])
+            probs.append(fit_f[i]/sum(fit_f))
 
         return choice([i for i in range(self.Population_size)], size = int(self.Population_size - self.Elite_size), replace = True, p = probs)
 
 
     ''' Tournament '''
-    def tournament(self, inter_population: list, Distances: list):
-        Parents = []
+    def tournament(self, inter_population: list, Distances: list) -> list:
+        Parents:list = list()
         for i in range(self.Population_size):
-            parents = []
+            parents:list = list()
             for j in range(2):
                 candidate1 = choice(inter_population);  val1 = Distances[candidate1]
                 candidate2 = choice(inter_population);  val2 = Distances[candidate2]
