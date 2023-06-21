@@ -991,7 +991,7 @@ class Genetic():
         tots = sum(Distances)
         fit_f:list = list()
         probs:list = list()
-        for i in range(len(Distances)):
+        for i in range(self.Population_size):
             fit_f.append(tots/Distances[i])
             probs.append(fit_f[i]/sum(fit_f))
 
