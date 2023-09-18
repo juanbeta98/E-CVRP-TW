@@ -68,7 +68,7 @@ Grid = [
 if __name__ == '__main__':
     env = E_CVRP_TW(path)
 
-    for num, Configs in enumerate(Grid): 
+    for num, Configs in enumerate(Grid):
         if num >= 3:
             with open(path + f'Experimentation/Third phase/Exp {num}/readme.txt', 'w') as f:
                 readme = f'Experiment {num}'

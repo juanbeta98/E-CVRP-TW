@@ -879,7 +879,7 @@ class Reparator(Constructive):
 
 
 
-''' Genetic algorithm:  '''
+''' Genetic algorithm  '''
 class Genetic():
 
     def __init__(self, Population_size: int, Elite_size: int, crossover_rate: float, mutation_rate: float) -> None:
@@ -1302,8 +1302,6 @@ class Experiment():
         self.save_results = save_results
         self.exp_num = exp_num
 
-
-    
 
     def experimentation(self, instance:str, progress_percentage:float or None = None):
         ''' General parameters '''
