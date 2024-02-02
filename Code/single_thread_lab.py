@@ -69,23 +69,22 @@ if __name__ == '__main__':
     env = E_CVRP_TW(path)
 
     for num, Configs in enumerate(Grid):
-        if num >= 3:
-            with open(path + f'Experimentation/Third phase/Exp {num}/readme.txt', 'w') as f:
-                readme = f'Experiment {num}'
-                readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
-                readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
-                readme += f'\ngenetic configuration: \t{Configs["genetic parameters"]["population size"]} - {Configs["genetic parameters"]["crossover rate"]} - {Configs["genetic parameters"]["mutation rate"]}'
-                f.write(readme)
-                    
+        with open(path + f'Experimentation/Third phase/Exp {num}/readme.txt', 'w') as f:
+            readme = f'Experiment {num}'
+            readme += f'\nDarwinian phi rate: \t{Configs["Darwinian phi rate"]["penalization"]} - {Configs["Darwinian phi rate"]["length restriction"]}'
+            readme += f'\nevaluated insertion: \t{Configs["evaluated insertion"]["penalization"]} - {Configs["evaluated insertion"]["criterion"]}'
+            readme += f'\ngenetic configuration: \t{Configs["genetic parameters"]["population size"]} - {Configs["genetic parameters"]["crossover rate"]} - {Configs["genetic parameters"]["mutation rate"]}'
+            f.write(readme)
+                
 
-            progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
-            print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
+        progress_percentage = round(round((num+1)/len(Grid),4)*100,2)
+        print(f'\n-------- Experiment {num} / {progress_percentage}% --------')
 
-            lab:Experiment = Experiment(path, Operators, Configs, verbose, save_results, num)
-            test_batch = env.sizes['l']
+        lab:Experiment = Experiment(path, Operators, Configs, verbose, save_results, num)
+        test_batch = env.sizes['l']
 
-            for inst_num, instance in enumerate(test_batch):
-                Results = lab.experimentation(instance)
+        for inst_num, instance in enumerate(test_batch):
+            Results = lab.experimentation(instance)
 
 
 

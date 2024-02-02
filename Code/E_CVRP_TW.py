@@ -872,12 +872,6 @@ class Feasibility():
 
 
 
-''' Reparation class '''
-class Reparator(Constructive):
-    pass
-
-
-
 
 ''' Genetic algorithm  '''
 class Genetic():
@@ -1332,10 +1326,6 @@ class Experiment():
 
         genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
 
-
-        ''' Feasibility operators '''
-        feas_op: Feasibility = Feasibility()
-
         '''
         EXPERIMENTATION
         Variable convention:
@@ -1346,6 +1336,7 @@ class Experiment():
 
         avg_gap = self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
                 crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
+        
         return avg_gap
 
 
