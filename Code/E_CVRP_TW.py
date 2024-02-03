@@ -874,11 +874,15 @@ class Constructive(Feasibility):
 ''' Genetic algorithm  '''
 class Genetic():
 
-    def __init__(self,Population_size:int,Elite_size:int,crossover_rate:float,mutation_rate:float) -> None:
+    def __init__(self,Population_size:int,Elite_size:int,crossover_rate:float,mutation_rate:float,
+                 darwinian_configuration,eval_insert_configuration) -> None:
         self.Population_size: int = Population_size
         self.Elite_size: int = Elite_size
         self.crossover_rate: float = crossover_rate
         self.mutation_rate: float = mutation_rate
+
+        self.darwinian_configuration = darwinian_configuration
+        self.eval_insert_configuration = eval_insert_configuration
 
     ''' Initial population generator '''
     def generate_population(self,env:E_CVRP_TW,constructive:Constructive,start:float=0,
@@ -914,11 +918,6 @@ class Genetic():
                 t,d,q,k,route,_ = constructive.RCL_based_constructive(env,RCL_alpha,RCL_criterion)
                 tr_distance += d
             alpha_performance[RCL_alpha] += 1/tr_distance
-        
-        if verbose:
-            print(f'\n- Generated {training_ind} training ind in {round(process_time() - start,2)}s')
-            print(f'\n- Starting real population generation')
-            print(f'\nTime \t \tInd \t \tIncumbent \tgap \t \t#EV')
 
         # Generating initial population
         for ind in range(self.Population_size):
@@ -1069,7 +1068,7 @@ class Genetic():
 
     ''' CROSSOVER: Same individual, different routes '''
     # evaluated insertion: A given costumer is iteratively placed on an existing route. 
-    def evaluated_insertion(self, env:E_CVRP_TW, individual:list, Details:list, config:dict):
+    def evaluated_insertion(self,env:E_CVRP_TW,individual:list,Details:list):
         # Select route that visits less costumers and disolve it
         visited_c:list = list()
         n_visited_c:list = list()
@@ -1078,9 +1077,9 @@ class Genetic():
         distances, times, loads, (dep_t_details, dep_q_details) = Details
 
         for idx, route in enumerate(individual):
-            if config['penalization'] == 'regular': penalization = 1
-            elif config['penalization'] == 'cuadratic': penalization = 2
-            elif config['penalization'] == 'cubic': penalization = 3
+            if self.eval_insert_configuration['penalization'] == 'regular': penalization = 1
+            elif self.eval_insert_configuration['penalization'] == 'cuadratic': penalization = 2
+            elif self.eval_insert_configuration['penalization'] == 'cubic': penalization = 3
             eff_rates.append(distances[idx]/(len(route)**penalization))
 
             visited_c.append([i for i in route if i[0]=='C'])
@@ -1088,10 +1087,10 @@ class Genetic():
 
         rank_index:list = self.rank_indexes(eff_rates)
 
-        if config['criterion'] == 'visited costumers':      worst_route_index = n_visited_c.index(min(n_visited_c))
-        elif config['criterion'] == 'phi rate':             worst_route_index = rank_index.index(max(rank_index))
-        elif config['criterion'] == 'Hybrid':               worst_route_index = choice([rank_index.index(max(rank_index)),n_visited_c.index(min(n_visited_c))])
-        elif config['criterion'] == 'random':               worst_route_index = randint(0,len(individual))
+        if self.eval_insert_configuration['criterion'] == 'visited costumers':      worst_route_index = n_visited_c.index(min(n_visited_c))
+        elif self.eval_insert_configuration['criterion'] == 'phi rate':             worst_route_index = rank_index.index(max(rank_index))
+        elif self.eval_insert_configuration['criterion'] == 'Hybrid':               worst_route_index = choice([rank_index.index(max(rank_index)),n_visited_c.index(min(n_visited_c))])
+        elif self.eval_insert_configuration['criterion'] == 'random':               worst_route_index = randint(0,len(individual))
         
         pending_c = visited_c[worst_route_index]
 
@@ -1190,13 +1189,13 @@ class Genetic():
     ''' MUTATION: Same individual, all routes '''
     # Darwinian phi rate: A proportion of best routes of the individual, according to the phi rate (total distance/total costumers)
     # are advanced to the offspring. The resting routes are disolved and new routes are built with the RCL-based constructive. 
-    def Darwinian_phi_rate(self, env:E_CVRP_TW, constructive:Constructive, individual:list, Details:tuple, RCL_alpha:float, config:dict):
+    def Darwinian_phi_rate(self,env:E_CVRP_TW,constructive:Constructive,individual:list,Details:tuple,RCL_alpha:float):
         eff_rates = list()
         distances, times, loads, (dep_t_details, dep_q_details) = Details
         for idx, route in enumerate(individual):
-            if config['penalization'] == 'regular': penalization = 1
-            elif config['penalization'] == 'cuadratic': penalization = 2
-            elif config['penalization'] == 'cubic': penalization = 3
+            if self.darwinian_configuration['penalization'] == 'regular': penalization = 1
+            elif self.darwinian_configuration['penalization'] == 'cuadratic': penalization = 2
+            elif self.darwinian_configuration['penalization'] == 'cubic': penalization = 3
             eff_rates.append(distances[idx]/(len(route)**penalization))
         
         rank_index = self.rank_indexes(eff_rates)
@@ -1211,12 +1210,12 @@ class Genetic():
         pending_c = deepcopy(env.Costumers)
 
         i = 0; cont = 0
-        prop:float = config['conservation proportion']
+        prop:float = self.darwinian_configuration['conservation proportion']
         while i/len(individual) < prop:
             ii = rank_index.index(i)
             cont += 1
             if cont == len(individual):break
-            if config['length restriction'] and not len(individual[ii]) >= 0.5*max([len(route) for route in individual]):
+            if self.darwinian_configuration['length restriction'] and not len(individual[ii]) >= 0.5*max([len(route) for route in individual]):
                 continue
             new_individual.append(individual[ii])
             new_distance += distances[ii];      new_distances.append(distances[ii])
@@ -1269,8 +1268,11 @@ class Genetic():
 
 
     def print_evolution(self, env: E_CVRP_TW, instance: str, t: float, generation: int, Incumbent: float, routes: int):
-        gap = round((Incumbent - env.bkFO[instance])/env.bkFO[instance],4)
-        print(*[round(t,2), generation, round(Incumbent,2), f'{round(gap*100,2)}%', routes], sep = '\t \t')
+        gap = round((Incumbent-env.bkFO[instance])/env.bkFO[instance],4)
+        if gap < 100:
+            print(f'{round(t,2)} \t {generation} \t{round(Incumbent,2)}\t {round(gap*100,1)}% \t {routes}')
+        else:
+            print(f'{round(t,2)} \t {generation} \t{round(Incumbent,2)}\t {round(gap*100)}% \t {routes}')
 
 
 
@@ -1286,13 +1288,20 @@ class Experiment():
         self.verbose = verbose
         self.save_results = save_results
 
-        self.times = {'s':1,'m':4,'l':6}
+        self.times = {'s':5,'m':4,'l':8}
 
 
     def experiment(self,instance:str,configs:dict[str]):
+        '''
+        EXPERIMENTATION
+        Variable convention:
+        - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
+        - best_individual: list with (individual,distance,time,details)
+        '''
+
         ''' General parameters '''
         start: float = process_time()
-        evaluate_feasibility:bool=False
+        evaluate_feasibility:bool=True
 
         # Setting runnign times depending on instance size
         if instance in env.sizes['s']:  max_time=60*self.times['s']
@@ -1311,22 +1320,24 @@ class Experiment():
         Population_size:int = configs['gen-population size']
         Elite_size:int = int(Population_size*configs['gen-elite size'])
 
-        crossover_rate:float = self.configuration['gen-crossover rate']
-        mutation_rate:float = self.configuration['gen-mutation rate']
+        crossover_rate:float = configs['gen-crossover rate']
+        mutation_rate:float = configs['gen-mutation rate']
 
-        genetic: Genetic = Genetic(Population_size,Elite_size,crossover_rate,mutation_rate)
+        darwinian_configuration = {'penalization':configs['Dar-penalization'],
+                                   'conservation proportion':configs['Dar-conservation proportion'],
+                                   'length restriction':configs['Dar-length restriction']}
+        eval_insert_configuration = {'penalization':configs['eval-penalization'],
+                                    'criterion':configs['eval-criterion']}                                   
 
-        '''
-        EXPERIMENTATION
-        Variable convention:
-        - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
-        - best_individual: list with (individual,distance,time,details)
-        '''
+        genetic: Genetic = Genetic(Population_size,Elite_size,crossover_rate,mutation_rate,
+                                   darwinian_configuration,eval_insert_configuration)
         
+        gaps = list()
         for rd_seed in range(30):
-            gap = self.HGA(env,constructive,genetic,instance,max_time,start,evaluate_feasibility)
-        
-        return gap
+            gap = self.HGA(env,constructive,genetic,instance,max_time,start,evaluate_feasibility,rd_seed)
+            gaps.append(gap)
+
+        return gaps
 
 
     def HGA(self,env:E_CVRP_TW,constructive:Constructive,genetic:Genetic,instance:str,max_time:float, 
@@ -1368,7 +1379,7 @@ class Experiment():
 
         # Print progress
         if self.verbose: 
-            print(f' {round(best_min_EV_individual[4],2)} \t -1 \t{round(min_EV_incumbent,1)} \t {round(self.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t {len(best_min_EV_individual[0])}')     
+            print(f'{round(best_min_EV_individual[4],2)} \tinit \t{round(min_EV_incumbent,1)} \t {round(self.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t {len(best_min_EV_individual[0])}')     
         
         # Genetic process
         generation = 0
@@ -1395,13 +1406,13 @@ class Experiment():
                 ### Crossover
                 if random() <= genetic.crossover_rate: 
                     new_individual, new_distance, new_time, details = \
-                                genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i], self.configuration['evaluated insertion'])
+                                genetic.evaluated_insertion(env,Population[individual_i],Details[individual_i])
                     mutated = True
 
                 ### Mutation
                 if random() <= genetic.mutation_rate:
                     new_individual, new_distance, new_time, details = \
-                                genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha, self.configuration['Darwinian phi rate'])
+                                genetic.Darwinian_phi_rate(env, constructive,Population[individual_i],Details[individual_i],RCL_alpha)
                     mutated = True
 
                 # No operator is performed
@@ -1430,7 +1441,7 @@ class Experiment():
                     best_min_EV_individual: list = [new_individual, new_distance, new_time, details, process_time() - start]
 
                     if self.verbose:
-                        genetic.print_evolution(env, instance, process_time() - start, generation, min_EV_incumbent, len(new_individual))
+                        genetic.print_evolution(env,instance,process_time()-start,generation,min_EV_incumbent,len(new_individual))
 
                 ### Store progress
                 Incumbents.append(incumbent)
