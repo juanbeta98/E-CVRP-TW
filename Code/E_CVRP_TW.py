@@ -355,12 +355,169 @@ class E_CVRP_TW():
 
 
 
+'''
+Factibility checks
+'''
+class Feasibility():
+
+    def __init__(self):
+        pass
+    
+
+    ''' Check feasibility for al whole population
+    '''
+    def population_check(self, env: E_CVRP_TW, Population: list):
+        # Intial population feasibility check
+        datas = []
+        for individual in Population:
+            feasible = self.individual_check(env, individual)
+            datas.append(int(feasible))
+        return datas
+
+
+    ''' Checks the feasibility of an individual (all the routes)
+    '''
+    def individual_check(self, env: E_CVRP_TW, individual: list, instance:str, complete = False):
+        feasible = True
+        distance = 0
+        distances = list()
+        ttime = 0
+        times = list()
+        loads = list()
+        dep_t_details = list()
+        dep_q_details = list()
+
+        if complete:
+            count = 0
+            visited = list()
+
+            
+        for num, route in enumerate(individual):
+            t: float = 0
+            d: float = 0
+            q: float = env.Q
+            k: int = 0 
+
+            dep_t = [0] # Auxiliary list with departure times
+            dep_q = [env.Q]
+
+            for i in range(len(route)-1):
+                node = route[i]
+                target = route[i + 1]
+                station_depot_route = False
+                if target != 'D' and env.node_type[target]=='s' and route[i+2] == 'D':
+                    station_depot_route = True
+                feasible, t, q, k, _ = self.transition_check(env, node, target, station_depot_route, t, q, k)
+
+                d += env.dist[node,target]
+
+                if i < len(route)-2:
+                    dep_t.append(t)
+                    dep_q.append(q)
+
+                if complete and env.node_type[target] == 'c':
+                    if target in visited:
+                        feasible = False
+                        print(f'Costumer visited more than once')
+                        break
+                    else:
+                        visited.append(target)
+                        count += 1
+
+                if not feasible:
+                    if not _[0]: print(f'❌ Instance {instance} - Not time or energy feasiblefeasible')
+                    if not _[1]: print(f'❌ Instance {instance} - Not total load feasible feasible')
+                    if not _[2]: print(f'❌ Instance {instance} - Not time window feasible')
+                    break
+            
+            distance += d
+            distances.append(d)
+            ttime += t
+            times.append(t)
+            loads.append(k)
+            dep_t_details.append(dep_t)
+            dep_q_details.append(dep_q)
+
+            if not feasible:
+                break
+        
+        if complete and feasible and count != len(env.Costumers):
+            feasible = False
+            print(f'Individual only visited {count} costumers')
+
+        return feasible, (distance, ttime, (distances, times, loads, (dep_t_details, dep_q_details)))
+
+                
+    def transition_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float, k: int):
+        if target != 'D' and env.node_type[target] == 'c':    time_window_feasible = self.time_window_check(env, node, target, t)
+        else:           time_window_feasible = True
+        time_energy_feasible, t, q = self.time_energy_check(env, node, target, station_depot_route, t, q)
+        load_feasible, k = self.load_check(env, target, k)
+
+        if time_energy_feasible and load_feasible and time_window_feasible:
+            return True, t, q ,k, ''
+        else:
+            return False, t, q, k, (time_energy_feasible,load_feasible,time_window_feasible)
+
+
+    def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
+        return t <= env.C[target]['DueDate']
+    
+
+    def time_energy_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float):
+        travel_time = env.dist[node,target] / env.v
+
+        q -= env.dist[node, target] / env.r
+        if q < -0.001: return False, t, q
+
+        # Total time check
+        if target in env.Costumers:
+            arrival = max(t+travel_time, env.C[target]['ReadyTime'])
+            new_t = arrival + env.C[target]['ServiceTime']
+            if new_t > env.T:      
+                return False, t, q
+            else:                       
+                return True, new_t, q
+
+        elif target in env.Stations:
+            if not station_depot_route:
+                recharge = (env.Q - q)
+            else:
+                recharge = max(0, env.dist[target,'D']/env.r - q)
+            
+            update = travel_time + recharge * env.g
+
+            if t + update > env.T:      
+                return False, t, q
+            else:
+                return True, t+update, q + recharge
+
+        elif target == 'D':
+            update = travel_time 
+            if t + update > env.T:      
+                return False, t, q
+            else:                       
+                return True, t+update, q
+            
+
+    def load_check(self, env:E_CVRP_TW, target:str, k:int):
+        if target in env.Costumers:
+            if k + env.C[target]['d'] <= env.K:
+                k += env.C[target]['d']
+                return True, k
+            else:
+                return False, k
+        else:
+            return True, k
+
+
+
 
 '''
 Algorithms Class: Compilation of heuristics to generate a feasible route
 - RCL based constructive
 '''
-class Constructive():
+class Constructive(Feasibility):
 
     def __init__(self):
         pass
@@ -374,7 +531,7 @@ class Constructive():
     - DISTANCES
     - OPENING TIME WINDOW
     '''
-    def generate_candidate_from_RCL(self, env: E_CVRP_TW, RCL_alpha: float, RCL_criterion: str, node: str, t: float, q: float, k: int):
+    def generate_candidate_from_RCL(self,env:E_CVRP_TW,RCL_alpha:float,RCL_criterion:str,node:str,t:float,q:float,k:int):
         feasible_candidates:list = list()
         feasible_energy_candidates:list = list()
         max_crit:float = -1e9
@@ -710,165 +867,6 @@ class Constructive():
     def print_constructive(self, env: E_CVRP_TW, instance: str, t: float, ind: int, Incumbent: float, routes: int):
         gap = round((Incumbent - env.bkFO[instance])/env.bkFO[instance],4)
         print(*[round(t,2), ind, round(Incumbent,2), f'{round(gap*100,2)}%', routes], sep = '\t \t')
-        
-        
-
-
-'''
-Factibility checks
-'''
-class Feasibility():
-
-    def __init__(self):
-        pass
-    
-
-    ''' Check feasibility for al whole population
-    '''
-    def population_check(self, env: E_CVRP_TW, Population: list):
-        # Intial population feasibility check
-        datas = []
-        for individual in Population:
-            feasible = self.individual_check(env, individual)
-            datas.append(int(feasible))
-        return datas
-
-
-    ''' Checks the feasibility of an individual (all the routes)
-    '''
-    def individual_check(self, env: E_CVRP_TW, individual: list, instance:str, complete = False):
-        feasible = True
-        distance = 0
-        distances = list()
-        ttime = 0
-        times = list()
-        loads = list()
-        dep_t_details = list()
-        dep_q_details = list()
-
-        if complete:
-            count = 0
-            visited = list()
-
-            
-        for num, route in enumerate(individual):
-            t: float = 0
-            d: float = 0
-            q: float = env.Q
-            k: int = 0 
-
-            dep_t = [0] # Auxiliary list with departure times
-            dep_q = [env.Q]
-
-            for i in range(len(route)-1):
-                node = route[i]
-                target = route[i + 1]
-                station_depot_route = False
-                if target != 'D' and env.node_type[target]=='s' and route[i+2] == 'D':
-                    station_depot_route = True
-                feasible, t, q, k, _ = self.transition_check(env, node, target, station_depot_route, t, q, k)
-
-                d += env.dist[node,target]
-
-                if i < len(route)-2:
-                    dep_t.append(t)
-                    dep_q.append(q)
-
-                if complete and env.node_type[target] == 'c':
-                    if target in visited:
-                        feasible = False
-                        print(f'Costumer visited more than once')
-                        break
-                    else:
-                        visited.append(target)
-                        count += 1
-
-                if not feasible:
-                    if not _[0]: print(f'❌ Instance {instance} - Not time or energy feasiblefeasible')
-                    if not _[1]: print(f'❌ Instance {instance} - Not total load feasible feasible')
-                    if not _[2]: print(f'❌ Instance {instance} - Not time window feasible')
-                    break
-            
-            distance += d
-            distances.append(d)
-            ttime += t
-            times.append(t)
-            loads.append(k)
-            dep_t_details.append(dep_t)
-            dep_q_details.append(dep_q)
-
-            if not feasible:
-                break
-        
-        if complete and feasible and count != len(env.Costumers):
-            feasible = False
-            print(f'Individual only visited {count} costumers')
-
-        return feasible, (distance, ttime, (distances, times, loads, (dep_t_details, dep_q_details)))
-
-                
-    def transition_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float, k: int):
-        if target != 'D' and env.node_type[target] == 'c':    time_window_feasible = self.time_window_check(env, node, target, t)
-        else:           time_window_feasible = True
-        time_energy_feasible, t, q = self.time_energy_check(env, node, target, station_depot_route, t, q)
-        load_feasible, k = self.load_check(env, target, k)
-
-        if time_energy_feasible and load_feasible and time_window_feasible:
-            return True, t, q ,k, ''
-        else:
-            return False, t, q, k, (time_energy_feasible,load_feasible,time_window_feasible)
-
-
-    def time_window_check(self, env:E_CVRP_TW, node:str, target:str, t:float):
-        return t <= env.C[target]['DueDate']
-    
-
-    def time_energy_check(self, env: E_CVRP_TW, node: str, target: str, station_depot_route:bool, t: float, q: float):
-        travel_time = env.dist[node,target] / env.v
-
-        q -= env.dist[node, target] / env.r
-        if q < -0.001: return False, t, q
-
-        # Total time check
-        if target in env.Costumers:
-            arrival = max(t+travel_time, env.C[target]['ReadyTime'])
-            new_t = arrival + env.C[target]['ServiceTime']
-            if new_t > env.T:      
-                return False, t, q
-            else:                       
-                return True, new_t, q
-
-        elif target in env.Stations:
-            if not station_depot_route:
-                recharge = (env.Q - q)
-            else:
-                recharge = max(0, env.dist[target,'D']/env.r - q)
-            
-            update = travel_time + recharge * env.g
-
-            if t + update > env.T:      
-                return False, t, q
-            else:
-                return True, t+update, q + recharge
-
-        elif target == 'D':
-            update = travel_time 
-            if t + update > env.T:      
-                return False, t, q
-            else:                       
-                return True, t+update, q
-            
-
-    def load_check(self, env:E_CVRP_TW, target:str, k:int):
-        if target in env.Costumers:
-            if k + env.C[target]['d'] <= env.K:
-                k += env.C[target]['d']
-                return True, k
-            else:
-                return False, k
-        else:
-            return True, k
-
 
 
 
@@ -876,15 +874,15 @@ class Feasibility():
 ''' Genetic algorithm  '''
 class Genetic():
 
-    def __init__(self,Population_size:int,Elite_size:int,crossover_rate: float,mutation_rate:float) -> None:
+    def __init__(self,Population_size:int,Elite_size:int,crossover_rate:float,mutation_rate:float) -> None:
         self.Population_size: int = Population_size
         self.Elite_size: int = Elite_size
         self.crossover_rate: float = crossover_rate
         self.mutation_rate: float = mutation_rate
 
     ''' Initial population generator '''
-    def generate_population(self, env: E_CVRP_TW, constructive: Constructive, training_ind:int = 500, start:float = 0,
-                            instance:str = '', verbose: bool = False) -> tuple[list, list[float], list[float], list[tuple]]:
+    def generate_population(self,env:E_CVRP_TW,constructive:Constructive,start:float=0,
+                            instance:str = '',verbose:bool=False) -> tuple[list, list[float], list[float], list[tuple]]:
 
         # Initalizing data storage
         Population:list = list()
@@ -907,13 +905,13 @@ class Genetic():
         alpha_performance = {alpha:0 for alpha in RCL_alpha_list}
 
         # Calibrating alphas
-        for tr_ind in range(training_ind):
+        for tr_ind in range(int(self.Population_size*0.2)):
             constructive.reset(env)
             tr_distance: float = 0
             RCL_alpha = choice(RCL_alpha_list)
             while len(constructive.pending_c) > 0:
-                RCL_criterion = choice(['distance', 'TimeWindow'])
-                t, d, q, k, route, _ = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+                RCL_criterion = choice(['distance','TimeWindow'])
+                t,d,q,k,route,_ = constructive.RCL_based_constructive(env,RCL_alpha,RCL_criterion)
                 tr_distance += d
             alpha_performance[RCL_alpha] += 1/tr_distance
         
@@ -940,7 +938,7 @@ class Genetic():
             # Generating individual
             while len(constructive.pending_c) > 0:
                 RCL_criterion = choice(['distance', 'TimeWindow'])
-                t, d, q, k, route, dep_details = constructive.RCL_based_constructive(env, RCL_alpha, RCL_criterion)
+                t,d,q,k,route,dep_details = constructive.RCL_based_constructive(env,RCL_alpha,RCL_criterion)
                 individual.append(route)
                 distance += d;      distances.append(d)
                 t_time += t;        times.append(t)
@@ -970,8 +968,8 @@ class Genetic():
             Times.append(t_time)
             Details.append((distances, times, loads, (dep_t_details,dep_q_details)))
 
-        return Population, Distances, Times, Details, incumbent, best_individual, \
-                min_EV_incumbent, best_min_EV_individual, max(alpha_performance, key = alpha_performance.get)
+        return Population,Distances,Times,Details, (incumbent,best_individual), \
+                (min_EV_incumbent,best_min_EV_individual),max(alpha_performance,key=alpha_performance.get)
 
 
     ''' Elite class '''
@@ -980,14 +978,14 @@ class Genetic():
 
 
     ''' Intermediate population '''
-    def intermediate_population(self, Distances):
+    def intermediate_population(self,Distances):
         # Fitness function
         tots = sum(Distances)
         fit_f:list = list()
-        probs:list = list()
         for i in range(self.Population_size):
             fit_f.append(tots/Distances[i])
-            probs.append(fit_f[i]/sum(fit_f))
+            # probs.append(fit_f[i]/sum(fit_f))
+        probs = [func/sum(fit_f) for func in fit_f]
 
         return choice([i for i in range(self.Population_size)], size = int(self.Population_size - self.Elite_size), replace = True, p = probs)
 
@@ -1282,103 +1280,82 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self, path:str, Operators:list[str], Configs:dict[str], verbose:bool = True, save_results:bool = True, exp_num:int or None = None, saving_path:None or str = None):
+    def __init__(self,path:str,verbose:bool=True,save_results:bool=True):
         self.path = path
-        if saving_path == None:
-            self.saving_path = self.path
-        else:
-            self.saving_path = saving_path
-
-        self.Operators = Operators
-        self.configuration = Configs
 
         self.verbose = verbose
         self.save_results = save_results
-        self.exp_num = exp_num
+
+        self.times = {'s':1,'m':4,'l':6}
 
 
-    def experimentation(self, instance:str, progress_percentage:float or None = None):
+    def experiment(self,instance:str,configs:dict[str]):
         ''' General parameters '''
         start: float = process_time()
+        evaluate_feasibility:bool=False
 
-        rd_seed: int = 0
-        seed(rd_seed)
-
-        evaluate_feasibility: bool = False
-
+        # Setting runnign times depending on instance size
+        if instance in env.sizes['s']:  max_time=60*self.times['s']
+        elif instance in env.sizes['m']:  max_time=60*self.times['m']
+        else:   max_time=60*self.times['l']
 
         ''' Environment '''
-        env:E_CVRP_TW = E_CVRP_TW(self.path)
+        env:E_CVRP_TW = E_CVRP_TW()
 
 
         ''' Constructive heuristic '''
-        training_ind_prop = 0.25
         constructive:Constructive = Constructive()
 
 
         ''' Genetic algorithm '''
-        Population_size:int = self.configuration['genetic parameters']['population size']
-        training_ind:int = int(round(Population_size * training_ind_prop,0))
-        Elite_size:int = int(Population_size * 0.25)
+        Population_size:int = configs['gen-population size']
+        Elite_size:int = int(Population_size*configs['gen-elite size'])
 
-        crossover_rate:float = self.configuration['genetic parameters']['crossover rate']
-        mutation_rate:float = self.configuration['genetic parameters']['mutation rate']
+        crossover_rate:float = self.configuration['gen-crossover rate']
+        mutation_rate:float = self.configuration['gen-mutation rate']
 
-        genetic: Genetic = Genetic(Population_size, Elite_size, crossover_rate, mutation_rate)
+        genetic: Genetic = Genetic(Population_size,Elite_size,crossover_rate,mutation_rate)
 
         '''
         EXPERIMENTATION
         Variable convention:
         - Details: List of tuples (individual), where the tuple (distances, times) are discriminated per route
-        - best_individual: list with (individual, distance, time, details)
+        - best_individual: list with (individual,distance,time,details)
         '''
-        testing_times = {'s':3, 'm':7, 'l':20}
-
-        avg_gap = self.HGA(env, constructive, genetic, feas_op, instance, testing_times, training_ind,
-                crossover_rate, mutation_rate, start, evaluate_feasibility, progress_percentage)
         
-        return avg_gap
+        for rd_seed in range(30):
+            gap = self.HGA(env,constructive,genetic,instance,max_time,start,evaluate_feasibility)
+        
+        return gap
 
 
-    def HGA(self, env:E_CVRP_TW, constructive:Constructive, genetic:Genetic, feas_op:Feasibility, instance:str, testing_times:dict, 
-            training_ind:int, crossover_rate:float, mutation_rate:float, start:float, evaluate_feasibility:bool, progress_percentage:float or None):
+    def HGA(self,env:E_CVRP_TW,constructive:Constructive,genetic:Genetic,instance:str,max_time:float, 
+            start:float,evaluate_feasibility:bool,rd_seed:float):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
         ------------------------------------------------------------------------------------------------
         '''
+        seed(rd_seed)
+
         # Saving performance 
         constructive_Results = dict()
         Results = dict(); Incumbents = list(); ploting_Times = list()
         min_EV_Results = dict(); min_EV_Incumbents = list(); min_EV_ploting_Times = list()
                 
-        # Setting runnign times depending on instance size
-        max_time:int = 60
-        if instance in env.sizes['s']:  max_time *= testing_times['s']
-        elif instance in env.sizes['m']:  max_time *= testing_times['m']
-        else:   max_time *= testing_times['l']
-    
         # Constructive
         env.load_data(instance)
         env.generate_parameters()
         constructive.reset(env)
-
-        testing_config = str()
-        for vals in list(self.configuration[self.Operators[0]].values()): testing_config += str(vals)+'_'
-        testing_config = testing_config[:-1]
         
         # Printing progress
         if self.verbose: 
-            print(f'\n\n########################################################################')
-            print(f'          Instance {instance} / {testing_config} / {progress_percentage}%')
-            print(f'########################################################################')
-            print(f'- size: {len(list(env.C.keys()))}')
-            print(f'- bkFO: {env.bkFO[instance]}')
-            print(f'- bkEV: {env.bkEV[instance]}')
+            print(f'----- Instance {instance[:-4]} - M{len(list(env.C.keys()))} - {env.bkFO[instance]} - {env.bkEV[instance]} -----')
+            print(f' t \t gen \t FO \t gap \t #EV')
 
         # Population generation
-        Population, Distances, Times, Details, incumbent, best_individual, min_EV_incumbent, best_min_EV_individual, RCL_alpha = \
-                                genetic.generate_population(env, constructive, training_ind, start, instance, self.verbose)
+        Population,Distances,Times,Details,(incumbent,best_individual),(min_EV_incumbent,best_min_EV_individual),RCL_alpha = \
+                                genetic.generate_population(env,constructive,start,instance,False)
         
         constructive_Results['best individual (min dist)'] = best_individual
         constructive_Results['best individual (min EV)'] = best_min_EV_individual
@@ -1391,18 +1368,11 @@ class Experiment():
 
         # Print progress
         if self.verbose: 
-            print('\n')
-            print(f'Population generation finished at {round(process_time() - start,2)}s')
-            print('\tFO \tgap \tEV \ttime to find')
-            print(f'dist\t{round(incumbent,1)} \t{round(self.compute_gap(env, instance, incumbent)*100,1)}% \t{len(best_individual[0])} \t{round(best_individual[4],2)}')
-            print(f'min_EV \t{round(min_EV_incumbent,1)} \t{round(self.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t{len(best_min_EV_individual[0])} \t{round(best_min_EV_individual[4],2)}')
-            print('\n')
-            print('Genetic process started')
-            print(f'\nTime \t \tgen \t \tIncumbent \tgap \t \t#EV')
+            print(f' {round(best_min_EV_individual[4],2)} \t -1 \t{round(min_EV_incumbent,1)} \t {round(self.compute_gap(env, instance, min_EV_incumbent)*100,1)}% \t {len(best_min_EV_individual[0])}')     
         
         # Genetic process
         generation = 0
-        while process_time() - start < max_time:
+        while process_time()-start<max_time:
             ### Elitism
             Elite = genetic.elite_class(Distances)
 
@@ -1415,7 +1385,6 @@ class Experiment():
             ### Tournament: Select two individuals and leave the best to reproduce
             Parents = genetic.tournament(inter_population, Distances)
 
-
             ### Evolution
             New_Population:list = list();   New_Distances:list = list();   New_Times:list = list();   New_Details:list = list()
             for i in range(genetic.Population_size):
@@ -1424,13 +1393,13 @@ class Experiment():
                 mutated = False
 
                 ### Crossover
-                if 'evaluated insertion' in self.Operators and random() <= crossover_rate: 
+                if random() <= genetic.crossover_rate: 
                     new_individual, new_distance, new_time, details = \
                                 genetic.evaluated_insertion(env, Population[individual_i], Details[individual_i], self.configuration['evaluated insertion'])
                     mutated = True
 
                 ### Mutation
-                if 'Darwinian phi rate' in self.Operators and random() <= mutation_rate:
+                if random() <= genetic.mutation_rate:
                     new_individual, new_distance, new_time, details = \
                                 genetic.Darwinian_phi_rate(env, constructive, Population[individual_i], Details[individual_i], RCL_alpha, self.configuration['Darwinian phi rate'])
                     mutated = True
@@ -1442,7 +1411,7 @@ class Experiment():
 
                 # Individual feasibility check
                 if evaluate_feasibility:
-                    feasible, _ = feas_op.individual_check(env, new_individual, instance, complete = True)
+                    feasible, _ = constructive.individual_check(env,new_individual,instance,complete=True)
                     assert feasible, f'!!!!!!!!!!!!!! \tNon feasible individual generated (gen {generation}, ind {i}) / {new_individual}'
 
                 # Store new individual
