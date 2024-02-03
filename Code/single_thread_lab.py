@@ -7,7 +7,7 @@ path = f'{os.getcwd()}/'
 if path[7:15] == 'juanbeta': computer = 'mac'
 else: computer = 'pc'
 
-Operators = ['Darwinian phi rate', 'evaluated insertion']
+Operators = ['Darwinian phi rate','evaluated insertion']
 
 Configurations = {'Darwinian phi rate':{'penalization':['cuadratic','cubic'],
                                         'conservation proportion':[0.4],
@@ -22,23 +22,6 @@ Configurations = {'Darwinian phi rate':{'penalization':['cuadratic','cubic'],
                                         'crossover rate':[0.3, 0.6],
                                         'mutation rate':[0.3, 0.6]}
                 }
-
-# D_keys = list(Configurations['Darwinian phi rate'].keys())
-# e_keys = list(Configurations['evaluated insertion'].keys())
-
-# D_combinations = list(itertools.product(*[Configurations['Darwinian phi rate'][key] for key in D_keys]))
-# e_combinations = list(itertools.product(*[Configurations['evaluated insertion'][key] for key in e_keys]))
-
-# Grid = [{'Darwinian phi rate': {D_keys[i]: D_combination[i] for i in range(len(D_keys))},'evaluated insertion': {e_keys[i]: e_combination[i] for i in range(len(e_keys))} } for D_combination in D_combinations for e_combination in e_combinations]
-
-# keys = list(Configurations['Darwinian phi rate'].keys())
-# combinations = list(itertools.product(*[Configurations['Darwinian phi rate'][key] for key in keys]))
-# Grid = [{'Darwinian phi rate': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
-
-
-# keys = list(Configurations['evaluated insertion'].keys())
-# combinations = list(itertools.product(*[Configurations['evaluated insertion'][key] for key in keys]))
-# Grid = [{'evaluated insertion': {keys[i]: combination[i] for i in range(len(keys))}} for combination in combinations]
 
 verbose = False
 save_results = True

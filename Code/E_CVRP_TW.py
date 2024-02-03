@@ -17,8 +17,8 @@ import pickle
 ''' E_CVRP_TW Class: Parameters and information '''
 class E_CVRP_TW(): 
 
-    def __init__(self, path: str = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/'):
-        self.path = path
+    def __init__(self):
+        self.path = '/Users/juanbeta/My Drive/Research/Energy/E-CVRP-TW/Code/'
         self.colors = ['black', 'red', 'green', 'blue', 'purple', 'orange', 'pink', 'grey', 
                        'yellow', 'tab:red', 'tab:green', 'tab:blue', 'tab:purple', 'tab:orange', 
                        'tab:pink', 'tab:grey', 
@@ -95,8 +95,8 @@ class E_CVRP_TW():
 
 
     ''' Load data from txt file '''
-    def load_data(self, instance: str):
-        file = open(self.path + 'Instances/' + instance, mode = 'r');     file = file.readlines()
+    def load_data(self,instance:str):
+        file = open(self.path + 'Instances/'+instance,mode='r');     file = file.readlines()
         
         fila = 1
         att = [i for i in str(file[fila]).split(' ') if i != '']
@@ -147,7 +147,7 @@ class E_CVRP_TW():
     - Sets of size 'size' of a given inst_size
     - Sets of size 'size' of a given list of instances
     '''
-    def generate_test_batch(self, computer = 'mac'):
+    def generate_test_batch(self,computer='mac'):
         if computer == 'mac':
             return self.instances[:int(3.5*len(self.instances)/10)]
         else: 
@@ -876,7 +876,7 @@ class Feasibility():
 ''' Genetic algorithm  '''
 class Genetic():
 
-    def __init__(self, Population_size: int, Elite_size: int, crossover_rate: float, mutation_rate: float) -> None:
+    def __init__(self,Population_size:int,Elite_size:int,crossover_rate: float,mutation_rate:float) -> None:
         self.Population_size: int = Population_size
         self.Elite_size: int = Elite_size
         self.crossover_rate: float = crossover_rate
