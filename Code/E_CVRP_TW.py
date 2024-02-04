@@ -9,10 +9,12 @@ jm.betancourt@uniandes.edu.co
 from copy import deepcopy
 from time import process_time
 import matplotlib.pyplot as plt
+import numpy as np
 from numpy.random import random, choice, seed, randint
 import networkx as nx
 import os
 import pickle
+import scipy.stats as stats
 
 ''' E_CVRP_TW Class: Parameters and information '''
 class E_CVRP_TW(): 
@@ -544,7 +546,7 @@ class Constructive(Feasibility):
         for target in self.pending_c:
             distance = env.dist[node,target]
 
-            global_c, energy_feasible, feasible_energy_candidates = self.evaluate_candidate(env, target, distance, t, q, k, energy_feasible, feasible_energy_candidates)
+            global_c,energy_feasible, easible_energy_candidates = self.evaluate_candidate(env, target, distance, t, q, k, energy_feasible, feasible_energy_candidates)
 
             if global_c:
                 feasible_candidates.append(target)
@@ -770,7 +772,7 @@ class Constructive(Feasibility):
 
         # Adding nodes to route
         while True:
-            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env, RCL_alpha, RCL_criterion, node, t, q, k)
+            target, energy_feasible, feasible_energy_candiadates = self.generate_candidate_from_RCL(env,RCL_alpha,RCL_criterion, node, t, q, k)
 
             # Found a target
             if target != False:
@@ -1282,16 +1284,12 @@ class Genetic():
 '''
 class Experiment():
 
-    def __init__(self,path:str,verbose:bool=True,save_results:bool=True):
+    def __init__(self,path:str,):
         self.path = path
+        self.times = {'s':2,'m':3,'l':6}
+        self.verbose = False
 
-        self.verbose = verbose
-        self.save_results = save_results
-
-        self.times = {'s':5,'m':4,'l':8}
-
-
-    def experiment(self,instance:str,configs:dict[str]):
+    def experiment(self,instance:str,configs:dict[str],verbose:bool,save_results:bool):
         '''
         EXPERIMENTATION
         Variable convention:
@@ -1300,17 +1298,15 @@ class Experiment():
         '''
 
         ''' General parameters '''
-        start: float = process_time()
         evaluate_feasibility:bool=True
+
+        ''' Environment '''
+        env:E_CVRP_TW = E_CVRP_TW()
 
         # Setting runnign times depending on instance size
         if instance in env.sizes['s']:  max_time=60*self.times['s']
         elif instance in env.sizes['m']:  max_time=60*self.times['m']
         else:   max_time=60*self.times['l']
-
-        ''' Environment '''
-        env:E_CVRP_TW = E_CVRP_TW()
-
 
         ''' Constructive heuristic '''
         constructive:Constructive = Constructive()
@@ -1333,15 +1329,27 @@ class Experiment():
                                    darwinian_configuration,eval_insert_configuration)
         
         gaps = list()
+        times = list()
         for rd_seed in range(30):
-            gap = self.HGA(env,constructive,genetic,instance,max_time,start,evaluate_feasibility,rd_seed)
-            gaps.append(gap)
+            start:float = process_time()
+            time_to_find,gap = self.HGA(env,constructive,genetic,instance,max_time,start,evaluate_feasibility,rd_seed,False)
 
+            Experiment._update_lists((gaps,times),(gap,time_to_find))
+
+        if verbose:
+            mean_value,median_value,std_deviation,min_value,max_value,confidence_interval = Experiment._compute_stats(gaps)
+            print(f'{round(np.mean(times),2)} \t {mean_value} \t {median_value} \t {std_deviation} \t {min_value} \t {max_value} \t {round(confidence_interval[0],2)} \t {round(confidence_interval[1],2)}')
+        
+        if save_results:
+            a_file = open(self.path + f'/Baseline/{instance}',"wb")
+            pickle.dump(gaps,a_file)
+            a_file.close()
+        
         return gaps
 
 
     def HGA(self,env:E_CVRP_TW,constructive:Constructive,genetic:Genetic,instance:str,max_time:float, 
-            start:float,evaluate_feasibility:bool,rd_seed:float):
+            start:float,evaluate_feasibility:bool,rd_seed:float,save_result:bool):
         '''
         ------------------------------------------------------------------------------------------------
         Genetic proccess
@@ -1489,17 +1497,27 @@ class Experiment():
         min_EV_Results['inc times'] = min_EV_ploting_Times
         
         ### Save performance
-        if self.save_results:
+        if save_result:
             a_file = open(self.saving_path + f'/Exp {self.exp_num}/results-{instance}', "wb")
             pickle.dump([constructive_Results, Results, min_EV_Results], a_file)
             a_file.close()
 
         
         if not self.verbose:
-            print(f'✅ Instance {instance} - {round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)}%')
-            return round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)
+            # print(f'✅ Instance {instance} - {round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)}%')
+            return best_min_EV_individual[4], round(self.compute_gap(env, instance, min_EV_incumbent)*100,2)
     
 
     def compute_gap(self, env: E_CVRP_TW, instance: str, incumbent: float) -> float:
         return round((incumbent - env.bkFO[instance])/env.bkFO[instance],4)
-
+    
+    @staticmethod
+    def _update_lists(updating_list:tuple[list],values:tuple):
+        for i in range(len(updating_list)):
+            updating_list[i].append(values[i])
+        return updating_list
+    
+    @staticmethod
+    def _compute_stats(gaps):
+        return  round(np.mean(gaps),2),round(np.median(gaps),2),round(np.std(gaps),2),np.min(gaps),np.max(gaps),\
+                stats.t.interval(0.95, len(gaps)-1,loc=np.mean(gaps),scale=stats.sem(gaps))
