@@ -50,7 +50,7 @@ lab:Experiment = Experiment(experiment_path)
 print(' t \t Mean \tMedian \t Std \t Min \t Max \t low \t high')
 
 # lab.HGA(env,constructive,genetic,instance,300,process_time(),True,rd_seed,False)
-for instance in env.instances:
+for instance in env.instances[::-1]:
     gaps = lab.experiment(instance,configs,verbose=True,save_results=True)
 
 
