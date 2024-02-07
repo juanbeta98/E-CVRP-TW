@@ -1198,7 +1198,7 @@ class Genetic():
             if self.darwinian_configuration['penalization'] == 'regular': penalization = 1
             elif self.darwinian_configuration['penalization'] == 'cuadratic': penalization = 2
             elif self.darwinian_configuration['penalization'] == 'cubic': penalization = 3
-            eff_rates.append(distances[idx]/(len(route)**penalization))
+            eff_rates.append(   /(len(route)**penalization))
         
         rank_index = self.rank_indexes(eff_rates)
 
@@ -1212,8 +1212,7 @@ class Genetic():
         pending_c = deepcopy(env.Costumers)
 
         i = 0; cont = 0
-        prop:float = self.darwinian_configuration['conservation proportion']
-        while i/len(individual) < prop:
+        while i/len(individual) < self.darwinian_configuration['conservation proportion']
             ii = rank_index.index(i)
             cont += 1
             if cont == len(individual):break
