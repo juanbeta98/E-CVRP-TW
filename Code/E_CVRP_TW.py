@@ -582,7 +582,7 @@ class Constructive(Feasibility):
         2. Time windows
         3. Charge at least to go to target and go to closest station 
     '''
-    def evaluate_candidate(self, env: E_CVRP_TW, target: str, distance: float, t: float, q: float, k: int, energy_feasible: bool, feasible_energy_candidates: list):
+    def evaluate_candidate(self,env:E_CVRP_TW,target:str,distance:float,t:float,q:float,k:int,energy_feasible:bool,feasible_energy_candidates:list):
         capacity_c = k + env.C[target]['d'] <= env.K
         time_c = t + distance / env.v  <= env.C[target]['DueDate']
         t_time_c = t + distance / env.v + env.C[target]['ServiceTime']  + env.dist[target,'D'] / env.v < env.T
@@ -602,7 +602,7 @@ class Constructive(Feasibility):
 
 
     ''' Find closest station to both the current costumer and the depot '''
-    def optimal_station(self, env: E_CVRP_TW, node: str, target: str = 'D'):
+    def optimal_station(self,env:E_CVRP_TW,node:str,target:str='D'):
         if node != 'D' and target != 'D':
             distances = {s: env.dist[node,s] + env.dist[s,target] for s in env.Stations if s != node}
             min_station = min(distances, key = distances.get)
@@ -617,7 +617,7 @@ class Constructive(Feasibility):
     returns:
     -   route in list (excluding current node)
     '''
-    def route_to_depot(self, env: E_CVRP_TW, node: str, t: float, d: float, q: float, k: int, route: list, dep_t: list[float], dep_q: list[float]):
+    def route_to_depot(self,env:E_CVRP_TW,node:str,t:float,d:float,q:float,k:int,route:list,dep_t:list[float],dep_q:list[float]):
         finish_route:list = list()
         extra_t:float = 0
         extra_d:float = 0
@@ -627,7 +627,7 @@ class Constructive(Feasibility):
         extra_dep_q = list()
 
         # The vehicle can go directly to depot
-        if env.dist[node,'D'] / env.v < q:
+        if env.dist[node,'D'] / env.r < q:
 
             finish_route += ['D']
             extra_t += env.dist[node,'D'] / env.v
